@@ -98,7 +98,7 @@ Shell（min-h-dvh 纵向 flex）
 ```
 src/
 ├── main.tsx / app.tsx      # 启动引导 + Provider 树 + payload 分发
-├── pages/                  # *Page.tsx（PascalCase）+ lazyPages.ts 按需加载
+├── pages/                  # *Page.tsx（PascalCase）+ registry.ts 每页一 chunk
 ├── features/<域>/          # 领域特性（组件 + 就近 api/hook，kebab-case 辅助模块）
 ├── components/             # 通用组件，PascalCase.tsx
 ├── lib/                    # 领域无关：router / theme / i18n / styles / format / link / cn …
@@ -117,6 +117,7 @@ src/
 ## 9. SPA 契约（fetch-and-swap 路由）
 
 - 每条路由都预渲染完整 HTML（SEO/首屏），内嵌 `<script id="page-data">` JSON payload。
+- 首帧水合契约：SSR 经 `SyncPages`（tools/ssr.tsx）同步渲染真实内容（renderToString 等不了 lazy）；客户端在 `main.tsx` 里先取好当前页 chunk 再 hydrateRoot，首帧即真实内容、零 CLS。Suspense 骨架（PageFallback）只在站内换页 chunk 未就绪时兜底。
 - payload 是判别联合（`globals.page` 判别），类型守卫分发页面；换页 = `fetch(URL)` → DOMParser 提取 payload → `pushState`，popstate 按 URL 重取；payload 携带 `title/description` 同步文档头。
 - 重依赖一律进视口惰性加载（先例：Mermaid ~2.7MB、GitHub 评论取数）。
 

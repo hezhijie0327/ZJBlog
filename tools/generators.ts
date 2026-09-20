@@ -48,7 +48,7 @@ ${items}
 export function generateSitemap(): string {
   const { blogs, projects } = loadContent();
   // 与 trailingSlash 语义一致：所有 URL 带尾斜杠
-  const staticPaths = ["", "/blogs", "/archives", "/projects", "/donation"];
+  const staticPaths = ["", "/blogs", "/archives", "/projects", "/support"];
   const urls = [
     ...staticPaths.map((p) => ({
       loc: `${siteConfig.url}${p}/`,
@@ -135,7 +135,7 @@ export function generateLlms(): string {
     `- [全部文章 / Blog](${abs("/blogs/")}): 技术文章列表，共 ${blogs.length} 篇。`,
     `- [归档 / Archives](${abs("/archives/")}): 按年份分组的全部文章。`,
     `- [项目 / Projects](${abs("/projects/")}): 个人项目与精选开源项目，共 ${projects.length} 个。`,
-    `- [支持 / Support](${abs("/donation/")}): 赞赏与赞助方式。`,
+    `- [支持 / Support](${abs("/support/")}): 赞赏与赞助方式。`,
     "",
     "## 文章 / Blog Posts",
     ...blogs.map(

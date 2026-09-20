@@ -2,7 +2,9 @@
 // <script id="page-data" type="application/json">；站内换页时从目标页 HTML 中
 // 提取同名脚本（ZJSearch 同款契约）。globals.page 是判别标签，分发见 src/app.tsx。
 
-export type PageKind = "home" | "blogs" | "blog-post" | "projects" | "project" | "archives" | "donation" | "not-found";
+import type { ComponentType } from "react";
+
+export type PageKind = "home" | "blogs" | "blog-post" | "projects" | "project" | "archives" | "support" | "not-found";
 
 export interface PageGlobals {
   page: PageKind;
@@ -69,8 +71,8 @@ export interface ArchivesData {
   blogs: BlogListItem[];
 }
 
-export interface DonationData {
-  globals: PageGlobals & { page: "donation" };
+export interface SupportData {
+  globals: PageGlobals & { page: "support" };
 }
 
 export interface NotFoundData {
@@ -84,7 +86,7 @@ export type AnyPageData =
   | ProjectsData
   | ProjectData
   | ArchivesData
-  | DonationData
+  | SupportData
   | NotFoundData;
 
 // 类型守卫（ZJSearch 同款分发方式；嵌套判别字段无法直接 switch 收窄）
@@ -106,6 +108,18 @@ export function isProjectData(data: AnyPageData): data is ProjectData {
 export function isArchivesData(data: AnyPageData): data is ArchivesData {
   return data.globals.page === "archives";
 }
-export function isDonationData(data: AnyPageData): data is DonationData {
-  return data.globals.page === "donation";
+export function isSupportData(data: AnyPageData): data is SupportData {
+  return data.globals.page === "support";
+}
+
+/** SSR/预渲染用的同步页面组件表：renderToString 无法等待 React.lazy，
+ *  服务端经此表直接渲染真实内容（客户端走 pages/registry.ts 分块 + Suspense）。 */
+export interface SyncPages {
+  home: ComponentType<{ data: HomeData }>;
+  blogs: ComponentType<{ data: BlogsData }>;
+  "blog-post": ComponentType<{ data: BlogPostData }>;
+  projects: ComponentType<{ data: ProjectsData }>;
+  project: ComponentType<{ data: ProjectData }>;
+  archives: ComponentType<{ data: ArchivesData }>;
+  support: ComponentType;
 }

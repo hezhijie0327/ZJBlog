@@ -10,6 +10,14 @@ import path from "node:path";
 import { renderToString } from "react-dom/server";
 import { App } from "../src/app.tsx";
 import { THEME_BOOTSTRAP } from "../src/lib/theme.ts";
+import type { PageKind, SyncPages } from "../src/lib/types.ts";
+import { ArchivesPage } from "../src/pages/ArchivesPage.tsx";
+import { BlogPostPage } from "../src/pages/BlogPostPage.tsx";
+import { BlogsPage } from "../src/pages/BlogsPage.tsx";
+import { IndexPage } from "../src/pages/IndexPage.tsx";
+import { ProjectPage } from "../src/pages/ProjectPage.tsx";
+import { ProjectsPage } from "../src/pages/ProjectsPage.tsx";
+import { SupportPage } from "../src/pages/SupportPage.tsx";
 import {
   generateLlms,
   generateLlmsFull,
@@ -20,9 +28,34 @@ import {
 } from "./generators.ts";
 import { allRoutes, buildPayload } from "./payloads.ts";
 
+/** SSR 用同步页面表：renderToString 无法等待 React.lazy，经此表直接渲染
+ *  真实内容（客户端由 main.tsx 预取 chunk 后水合，见 pages/registry.ts）。 */
+const SYNC_PAGES: SyncPages = {
+  home: IndexPage,
+  blogs: BlogsPage,
+  "blog-post": BlogPostPage,
+  projects: ProjectsPage,
+  project: ProjectPage,
+  archives: ArchivesPage,
+  support: SupportPage,
+};
+
+/** 页面 payload kind → registry 里对应 chunk 的源文件（manifest 键）。 */
+const PAGE_CHUNK_SOURCES: Record<Exclude<PageKind, "not-found">, string> = {
+  home: "src/pages/IndexPage.tsx",
+  blogs: "src/pages/BlogsPage.tsx",
+  "blog-post": "src/pages/BlogPostPage.tsx",
+  projects: "src/pages/ProjectsPage.tsx",
+  project: "src/pages/ProjectPage.tsx",
+  archives: "src/pages/ArchivesPage.tsx",
+  support: "src/pages/SupportPage.tsx",
+};
+
 interface AssetUrls {
   js: string;
   css: string[];
+  /** 生产构建完整 manifest，用于解析每页 chunk 的 modulepreload */
+  manifest?: Record<string, { file: string }>;
 }
 
 const DIST_DIR = path.resolve("dist");
@@ -38,7 +71,16 @@ function clientAssets(): AssetUrls {
   if (!entry) {
     throw new Error("manifest 中找不到客户端入口");
   }
-  return { js: `/${entry.file}`, css: (entry.css ?? []).map((file) => `/${file}`) };
+  return { js: `/${entry.file}`, css: (entry.css ?? []).map((file) => `/${file}`), manifest };
+}
+
+/** 当前页 chunk 的 modulepreload（与入口 JS 并行取块，水合前就绪）。 */
+function pagePreload(kind: PageKind, assets: AssetUrls): string {
+  if (kind === "not-found" || !assets.manifest) {
+    return "";
+  }
+  const chunk = assets.manifest[PAGE_CHUNK_SOURCES[kind]]?.file;
+  return chunk ? `\n    <link rel="modulepreload" crossorigin href="/${chunk}">` : "";
 }
 
 /** Dev 模式资产：源码入口 + vite client（CSS 经 JS 模块注入）。 */
@@ -69,7 +111,7 @@ function normalizePathname(raw: string): string {
 export async function renderRoute(rawPath: string, assets?: AssetUrls): Promise<string> {
   const pathname = normalizePathname(rawPath);
   const payload = buildPayload(pathname);
-  const appHtml = renderToString(<App initialData={payload} />);
+  const appHtml = renderToString(<App initialData={payload} syncPages={SYNC_PAGES} />);
   const a = assets ?? DEV_ASSETS;
   const g = payload.globals;
   const canonical =
@@ -107,6 +149,7 @@ export async function renderRoute(rawPath: string, assets?: AssetUrls): Promise<
     <link rel="alternate" type="application/rss+xml" title="${escapeHtml(g.siteName)}" href="/rss.xml">
     <script>${THEME_BOOTSTRAP}</script>
     ${cssLinks}
+    ${pagePreload(g.page, a)}
     ${devClient}
   </head>
   <body>

@@ -165,7 +165,7 @@ async function main() {
   }
   resolveBrowserPath();
 
-  // LH_ONLY="/blogs/,/donation" 可只审计路径前缀匹配的页面（快速迭代用）
+  // LH_ONLY="/blogs/,/support" 可只审计路径前缀匹配的页面（快速迭代用）
   const only = process.env.LH_ONLY;
   const allPaths = pagesFromSitemap();
   const paths = only ? allPaths.filter((p) => only.split(",").some((prefix) => p.startsWith(prefix.trim()))) : allPaths;

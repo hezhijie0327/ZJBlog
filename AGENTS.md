@@ -32,8 +32,8 @@ pnpm run ci
 
 ```
 src/
-├── main.tsx / app.tsx   # 启动引导；Provider 树；payload 守卫分发（isXxxData）
-├── pages/               # *Page.tsx + lazyPages.ts（次级页面按需加载；首页/404 急加载）
+├── main.tsx / app.tsx   # 启动引导（水合前预取页面 chunk）；Provider 树；payload 守卫分发（isXxxData）
+├── pages/               # *Page.tsx + registry.ts（每页一个 chunk；客户端懒取块，SSR 同步渲染）
 ├── features/
 │   ├── comments/        # GitHubComments.tsx + api.ts（客户端懒取数）
 │   └── markdown/        # Prose（注入构建期编译的 HTML）+ MermaidRenderer（进视口懒加载）

@@ -7,10 +7,22 @@ import { hydrateRoot } from "react-dom/client";
 import { App } from "@/app.tsx";
 import { parseEmbeddedPageData } from "@/lib/pageData.ts";
 import { watchSystemTheme } from "@/lib/theme.ts";
+import { pageLoaders } from "@/pages/registry.ts";
 import "./styles/global.css";
 
 const container = document.getElementById("app");
 if (container) {
   watchSystemTheme();
-  hydrateRoot(container, <App initialData={parseEmbeddedPageData()} />);
+  const data = parseEmbeddedPageData();
+  void (async () => {
+    if (data) {
+      // 首帧水合前取好当前页 chunk：水合首帧即真实内容，与预渲染 HTML 一致。
+      // 无此步 Suspense 会先用骨架顶掉 SSR 内容（CLS + #419 水合报错）。
+      const { page } = data.globals;
+      if (page !== "not-found") {
+        await pageLoaders[page]();
+      }
+    }
+    hydrateRoot(container, <App initialData={data} />);
+  })();
 }

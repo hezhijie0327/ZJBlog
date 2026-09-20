@@ -37,13 +37,13 @@ export function Navigation() {
         return "/projects/";
       case "archives":
         return "/archives/";
-      case "donation":
-        return "/donation/";
+      case "support":
+        return "/support/";
       default:
         return null;
     }
   })();
-  const isSupport = data?.globals.page === "donation";
+  const isSupport = data?.globals.page === "support";
 
   const openSearch = () => {
     window.dispatchEvent(new CustomEvent("open-command-palette"));
@@ -124,7 +124,7 @@ export function Navigation() {
               aria-current={isSupport ? "page" : undefined}
               aria-label={t("nav.support")}
               className={cn(ICON_BTN, isSupport && "text-accent-strong")}
-              href="/donation/"
+              href="/support/"
               title={t("nav.support")}
             >
               <Heart aria-hidden="true" className="size-4" />

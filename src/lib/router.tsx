@@ -33,9 +33,12 @@ function applyDocumentHead(data: AnyPageData) {
 
 export function RouterProvider({
   initialData,
+  onPageData,
   children,
 }: {
   initialData: AnyPageData | null;
+  /** payload 提取后、渲染前回调（预取目标页 chunk，让 Suspense 骨架尽量不出现）。 */
+  onPageData?: (data: AnyPageData) => void;
   children: React.ReactNode;
 }) {
   const [data, setData] = useState<AnyPageData | null>(initialData);
@@ -46,50 +49,54 @@ export function RouterProvider({
   const abortRef = useRef<AbortController | null>(null);
   const seqRef = useRef(0);
 
-  const load = useCallback(async (url: string, historyMode: "push" | "replace" | "none" = "push") => {
-    const seq = ++seqRef.current;
-    abortRef.current?.abort();
-    const controller = new AbortController();
-    abortRef.current = controller;
-    setLoading(true);
-    setError(null);
+  const load = useCallback(
+    async (url: string, historyMode: "push" | "replace" | "none" = "push") => {
+      const seq = ++seqRef.current;
+      abortRef.current?.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
+      setLoading(true);
+      setError(null);
 
-    try {
-      const resp = await fetch(url, {
-        signal: controller.signal,
-        headers: { Accept: "text/html" },
-      });
-      if (!resp.ok) {
-        throw new Error(`HTTP ${resp.status}`);
+      try {
+        const resp = await fetch(url, {
+          signal: controller.signal,
+          headers: { Accept: "text/html" },
+        });
+        if (!resp.ok) {
+          throw new Error(`HTTP ${resp.status}`);
+        }
+        const html = await resp.text();
+        const pageData = extractPageData(html);
+        if (seq !== seqRef.current) {
+          return; // 已被更新的导航取代
+        }
+        onPageData?.(pageData);
+        if (historyMode !== "none") {
+          // payload 不进 history state：数据在 React 状态里，popstate 按 URL 重取
+          window.history[historyMode === "replace" ? "replaceState" : "pushState"](null, "", url);
+        }
+        setHref(new URL(url, window.location.href).href);
+        setData(pageData);
+        setLoading(false);
+        applyDocumentHead(pageData);
+        // 有意立即跳顶（"auto" 不与 reduced-motion 对抗）
+        window.scrollTo(0, 0);
+      } catch (err) {
+        if (controller.signal.aborted || seq !== seqRef.current) {
+          return;
+        }
+        // 网络/CORS 失败：整页加载兜底
+        if (err instanceof TypeError) {
+          window.location.assign(url);
+          return;
+        }
+        setError(err instanceof Error ? err.message : String(err));
+        setLoading(false);
       }
-      const html = await resp.text();
-      const pageData = extractPageData(html);
-      if (seq !== seqRef.current) {
-        return; // 已被更新的导航取代
-      }
-      if (historyMode !== "none") {
-        // payload 不进 history state：数据在 React 状态里，popstate 按 URL 重取
-        window.history[historyMode === "replace" ? "replaceState" : "pushState"](null, "", url);
-      }
-      setHref(new URL(url, window.location.href).href);
-      setData(pageData);
-      setLoading(false);
-      applyDocumentHead(pageData);
-      // 有意立即跳顶（"auto" 不与 reduced-motion 对抗）
-      window.scrollTo(0, 0);
-    } catch (err) {
-      if (controller.signal.aborted || seq !== seqRef.current) {
-        return;
-      }
-      // 网络/CORS 失败：整页加载兜底
-      if (err instanceof TypeError) {
-        window.location.assign(url);
-        return;
-      }
-      setError(err instanceof Error ? err.message : String(err));
-      setLoading(false);
-    }
-  }, []);
+    },
+    [onPageData],
+  );
 
   const navigate = useCallback(
     (url: string, options?: NavigateOptions) => {

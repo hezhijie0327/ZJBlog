@@ -88,16 +88,16 @@ export const ZH_CN: Record<StringKey, string> = {
   "search.hintOpen": "↵ 打开",
   "search.hintClose": "ESC 关闭",
 
-  // 赞赏
-  "donation.wechat": "微信支付",
-  "donation.alipay": "支付宝",
-  "donation.lede1": "如果这里的文章或项目对你有帮助，",
-  "donation.lede2": "欢迎请我喝杯咖啡 ☕",
-  "donation.sub": "每一份支持都是持续创作与维护的动力。",
-  "donation.wechatHint": "扫描二维码进行微信支付",
-  "donation.alipayHint": "扫描二维码进行支付宝支付",
-  "donation.thanks": "谢谢你的支持",
-  "donation.metaDesc": "如果这个站点的内容对你有帮助，欢迎支持我继续创作",
+  // 支持页
+  "support.wechat": "微信支付",
+  "support.alipay": "支付宝",
+  "support.lede1": "如果这里的文章或项目对你有帮助，",
+  "support.lede2": "欢迎请我喝杯咖啡 ☕",
+  "support.sub": "每一份支持都是持续创作与维护的动力。",
+  "support.wechatHint": "扫描二维码进行微信支付",
+  "support.alipayHint": "扫描二维码进行支付宝支付",
+  "support.thanks": "谢谢你的支持",
+  "support.metaDesc": "如果这个站点的内容对你有帮助，欢迎支持我继续创作",
 
   // 评论（GitHub）
   "comments.discussions": "讨论与评论",

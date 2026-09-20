@@ -88,16 +88,16 @@ export const EN = {
   "search.hintOpen": "↵ open",
   "search.hintClose": "ESC close",
 
-  // 赞赏
-  "donation.wechat": "WeChat Pay",
-  "donation.alipay": "Alipay",
-  "donation.lede1": "If a post or project here helped you,",
-  "donation.lede2": "buying me a coffee is always appreciated ☕",
-  "donation.sub": "Every bit of support keeps the writing and maintenance going.",
-  "donation.wechatHint": "Scan to tip via WeChat Pay",
-  "donation.alipayHint": "Scan to tip via Alipay",
-  "donation.thanks": "Thank you for your support",
-  "donation.metaDesc": "If this site helped you, support me to keep creating",
+  // 支持页
+  "support.wechat": "WeChat Pay",
+  "support.alipay": "Alipay",
+  "support.lede1": "If a post or project here helped you,",
+  "support.lede2": "buying me a coffee is always appreciated ☕",
+  "support.sub": "Every bit of support keeps the writing and maintenance going.",
+  "support.wechatHint": "Scan to tip via WeChat Pay",
+  "support.alipayHint": "Scan to tip via Alipay",
+  "support.thanks": "Thank you for your support",
+  "support.metaDesc": "If this site helped you, support me to keep creating",
 
   // 评论（GitHub）
   "comments.discussions": "Discussions",

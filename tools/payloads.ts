@@ -73,7 +73,7 @@ export function allRoutes(): string[] {
     "/archives/",
     "/projects/",
     ...projects.map((project) => `/projects/${encodeURIComponent(project.slug)}/`),
-    "/donation/",
+    "/support/",
   ];
 }
 
@@ -100,8 +100,8 @@ export function buildPayload(pathname: string): AnyPageData {
   if (pathname === "/projects/") {
     return { globals: globals("projects", t("page.projects.title"), siteConfig.description), projects: projectLists };
   }
-  if (pathname === "/donation/") {
-    return { globals: globals("donation", t("page.support.title"), t("donation.metaDesc")) };
+  if (pathname === "/support/") {
+    return { globals: globals("support", t("page.support.title"), t("support.metaDesc")) };
   }
 
   const blogMatch = pathname.match(/^\/blogs\/(.+)\/$/);
