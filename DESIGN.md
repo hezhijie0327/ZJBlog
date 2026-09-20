@@ -86,7 +86,8 @@ Shell（min-h-dvh 纵向 flex）
 ├── ProgressBar        # 换页顶部进度条（loading 时）
 ├── Navigation         # sticky 毛玻璃 h-14：品牌区 / 链接组(active 下划线+aria-current) / 搜索·主题·RSS·GitHub / 移动端抽屉
 ├── <main>             # 页面内容（每页一个语义区块）
-└── Footer             # 格言 · 版权 · 网络彩蛋 · 返回顶部
+├── Footer             # 版权一行
+└── BackToTop          # 右下角悬浮返回顶部（滚动超过 400px 出现）
 ```
 
 - 图标按钮必须有 `aria-label`；当前导航项 `aria-current="page"`；全局 `:focus-visible` 焦点环在 base.css。
@@ -110,7 +111,7 @@ src/
 - 导入用 `@/` 别名 + **显式扩展名**（`@/lib/i18n.ts`）；`verbatimModuleSyntax` + `useImportType`。
 - TypeScript 全严格（含 `noUncheckedIndexedAccess`）；Lint 用 **Biome**（含 sorted-attributes、2 空格、120 列）。
 - TypeScript strict 下禁 `any`；外部宽松响应用 `Raw*` 接口 + 显式收窄。
-- 文案边界：界面词汇 → i18n 词库；个人内容（姓名/格言/时间线）→ `config/site.ts`；产品内容 → content/。
+- 文案边界：界面词汇 → i18n 词库；个人内容（姓名/格言）→ `config/site.ts`；产品内容 → content/。
 - 包管理器：**pnpm**（唯一 lockfile：pnpm-lock.yaml）。
 
 ## 9. SPA 契约（fetch-and-swap 路由）

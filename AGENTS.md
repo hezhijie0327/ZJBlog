@@ -48,7 +48,7 @@ src/
 │   ├── styles.ts        # 设计片段单一来源（DESIGN.md §6）
 │   └── cn / format / link
 ├── styles/              # global.css 入口 → tokens → base → prose → behaviors
-└── config/site.ts       # 站点元数据、社交链接、Hero、时间线（个人内容）
+└── config/site.ts       # 站点元数据、社交链接、Hero（个人内容）
 tools/
 ├── content.ts           # 构建期内容管线：content/*.md → frontmatter + 编译 HTML（Node 专用）
 ├── payloads.ts          # 路由 → payload（含 title/description/OG）

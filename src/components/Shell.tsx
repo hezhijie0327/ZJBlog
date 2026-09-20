@@ -1,6 +1,7 @@
 // 页面骨架：SPA Link（拦截站内导航）+ 顶部加载进度条 + Shell（导航/主区/页脚）。
 
 import type { MouseEvent, ReactNode } from "react";
+import { BackToTop } from "@/components/BackToTop.tsx";
 import { Footer } from "@/components/Footer.tsx";
 import { Navigation } from "@/components/Navigation.tsx";
 import { isModifiedClick, newTabLinkProps } from "@/lib/link.ts";
@@ -64,7 +65,7 @@ function ProgressBar({ active }: { active: boolean }) {
   );
 }
 
-/** 页面骨架：与迁移前 layout 的结构一致（sticky 导航 + main + 页脚）。 */
+/** 页面骨架：与迁移前 layout 的结构一致（sticky 导航 + main + 页脚 + 悬浮返回顶部）。 */
 export function Shell({ children }: { children: ReactNode }) {
   const { loading } = useRouter();
   return (
@@ -73,6 +74,7 @@ export function Shell({ children }: { children: ReactNode }) {
       <Navigation />
       <main className="flex-1 pb-12">{children}</main>
       <Footer />
+      <BackToTop />
     </div>
   );
 }

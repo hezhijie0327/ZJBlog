@@ -34,6 +34,8 @@ export function applyThemeStyle(style: ThemeStyle) {
     paletteAnimTimer = window.setTimeout(() => root.classList.remove("zjs-palette-anim"), 350);
   }
   root.classList.toggle("dark", dark);
+  // 图标显隐等纯展示逻辑依此属性（CSS 驱动，pre-paint 即正确，无需 JS 状态）
+  root.setAttribute("data-theme-mode", style);
 }
 
 /** auto 模式下实时跟随系统明暗切换。 */
@@ -45,5 +47,5 @@ export function watchSystemTheme() {
   });
 }
 
-/** 预渲染 HTML <head> 内联脚本：首帧前挂好 .dark，避免明暗闪烁。 */
-export const THEME_BOOTSTRAP = `(function(){try{var s=localStorage.getItem("zj-theme");if(s!=="light"&&s!=="dark")s="auto";var d=s==="dark"||(s==="auto"&&window.matchMedia("(prefers-color-scheme: dark)").matches);if(d)document.documentElement.classList.add("dark");}catch(e){}})();`;
+/** 预渲染 HTML <head> 内联脚本：首帧前挂好 .dark 与 data-theme-mode，避免明暗/图标闪烁。 */
+export const THEME_BOOTSTRAP = `(function(){try{var s=localStorage.getItem("zj-theme");if(s!=="light"&&s!=="dark")s="auto";var d=s==="dark"||(s==="auto"&&window.matchMedia("(prefers-color-scheme: dark)").matches);var r=document.documentElement;if(d)r.classList.add("dark");r.setAttribute("data-theme-mode",s);}catch(e){}})();`;

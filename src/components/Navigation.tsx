@@ -1,6 +1,6 @@
-// 顶部导航：sticky 毛玻璃、桌面链接 + 移动端抽屉、搜索/主题/RSS/GitHub 操作区。
+// 顶部导航：sticky 毛玻璃、桌面链接 + 移动端抽屉、搜索/主题/RSS/GitHub/支持操作区。
 
-import { Menu, Rss, Search, X } from "lucide-react";
+import { Heart, Menu, Rss, Search, X } from "lucide-react";
 import { useState } from "react";
 import { GithubIcon } from "@/components/icons.tsx";
 import { Link } from "@/components/Shell.tsx";
@@ -21,7 +21,6 @@ export function Navigation() {
     { name: t("nav.projects"), href: "/projects/" },
     { name: t("nav.blogs"), href: "/blogs/" },
     { name: t("nav.archives"), href: "/archives/" },
-    { name: t("nav.support"), href: "/donation/" },
   ];
 
   // 激活态从 payload 的页面类型推导（而非 window.location）：
@@ -44,6 +43,7 @@ export function Navigation() {
         return null;
     }
   })();
+  const isSupport = data?.globals.page === "donation";
 
   const openSearch = () => {
     window.dispatchEvent(new CustomEvent("open-command-palette"));
@@ -119,6 +119,16 @@ export function Navigation() {
             >
               <GithubIcon className="size-4" />
             </a>
+            {/* 支持：精简页入口（右上角图标，不再占导航 tab） */}
+            <Link
+              aria-current={isSupport ? "page" : undefined}
+              aria-label={t("nav.support")}
+              className={cn(ICON_BTN, isSupport && "text-accent-strong")}
+              href="/donation/"
+              title={t("nav.support")}
+            >
+              <Heart aria-hidden="true" className="size-4" />
+            </Link>
             <button
               aria-expanded={isMenuOpen}
               aria-label={isMenuOpen ? t("nav.closeMenu") : t("nav.openMenu")}

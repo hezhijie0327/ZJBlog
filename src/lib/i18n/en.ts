@@ -12,7 +12,9 @@ export const EN = {
   "nav.support": "Support",
   "nav.search": "Search",
   "nav.searchTitle": "Search (Ctrl+K)",
-  "nav.theme": "Toggle theme",
+  "nav.themeAuto": "Theme: system",
+  "nav.themeLight": "Theme: light",
+  "nav.themeDark": "Theme: dark",
   "nav.rss": "RSS Feed",
   "nav.github": "GitHub",
   "nav.openMenu": "Open menu",
@@ -31,20 +33,13 @@ export const EN = {
   // 首页章节
   "home.featured.title": "Featured Projects",
   "home.featured.en": "Selected Work",
-  "home.journey.title": "My Journey",
-  "home.journey.en": "The Journey",
   "home.recent.title": "Latest Writing",
   "home.recent.en": "Recent Posts",
-  "home.contact.title": "Stay in Touch",
-  "home.contact.en": "Say Hello",
   "home.cta.projects": "View Projects",
   "home.cta.blogs": "Read the Blog",
   "home.moreProjects": "MORE PROJECTS",
   "home.viewAllProjects": "View all projects",
   "home.viewAllPosts": "View all posts",
-  "home.contactBlurb":
-    "Questions or ideas about a post or project? Reach me by email, or open an issue or discussion on GitHub.",
-  "home.sendEmail": "Send Email",
   "home.emptyPosts": "No posts yet — stay tuned.",
 
   // 计数
@@ -101,7 +96,6 @@ export const EN = {
   "donation.sub": "Every bit of support keeps the writing and maintenance going.",
   "donation.wechatHint": "Scan to tip via WeChat Pay",
   "donation.alipayHint": "Scan to tip via Alipay",
-  "donation.sponsorsHint": "Developers can support me through GitHub Sponsors",
   "donation.thanks": "Thank you for your support",
   "donation.metaDesc": "If this site helped you, support me to keep creating",
 
@@ -125,19 +119,12 @@ export const EN = {
   "comments.submitIssue": "Submit Issue",
   "comments.createDiscussion": "New Discussion",
 
-  // 页脚
-  "footer.loading": "Loading…",
-  "footer.unavailable": "Unavailable",
-  "footer.pqProtected": "Post-quantum encryption",
-  "footer.detecting": "Detecting…",
-  "footer.standard": "Standard encryption",
-  "footer.backToTop": "Back to top",
-
   // 404
   "notFound.blurb": "This page doesn't exist or has moved.",
   "notFound.back": "Back to home",
 
   // 杂项
+  "misc.backToTop": "Back to top",
   "markdown.empty": "Content is empty or failed to load.",
   "mermaid.loading": "Rendering diagram…",
   "mermaid.failed": "Mermaid rendering failed",

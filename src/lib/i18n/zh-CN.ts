@@ -12,7 +12,9 @@ export const ZH_CN: Record<StringKey, string> = {
   "nav.support": "支持",
   "nav.search": "搜索",
   "nav.searchTitle": "搜索 (Ctrl+K)",
-  "nav.theme": "切换明暗主题",
+  "nav.themeAuto": "主题：跟随系统",
+  "nav.themeLight": "主题：亮色",
+  "nav.themeDark": "主题：暗色",
   "nav.rss": "RSS 订阅",
   "nav.github": "GitHub",
   "nav.openMenu": "打开菜单",
@@ -31,19 +33,13 @@ export const ZH_CN: Record<StringKey, string> = {
   // 首页章节
   "home.featured.title": "精选项目",
   "home.featured.en": "Selected Work",
-  "home.journey.title": "个人经历",
-  "home.journey.en": "The Journey",
   "home.recent.title": "最新思考",
   "home.recent.en": "Recent Posts",
-  "home.contact.title": "保持联系",
-  "home.contact.en": "Say Hello",
   "home.cta.projects": "查看项目",
   "home.cta.blogs": "阅读博客",
   "home.moreProjects": "MORE PROJECTS · 更多项目",
   "home.viewAllProjects": "查看全部项目",
   "home.viewAllPosts": "查看全部文章",
-  "home.contactBlurb": "对文章或项目有想法？欢迎邮件交流，或在 GitHub 上提出 Issue 与讨论。",
-  "home.sendEmail": "发送邮件",
   "home.emptyPosts": "还没有文章，敬请期待。",
 
   // 计数
@@ -100,7 +96,6 @@ export const ZH_CN: Record<StringKey, string> = {
   "donation.sub": "每一份支持都是持续创作与维护的动力。",
   "donation.wechatHint": "扫描二维码进行微信支付",
   "donation.alipayHint": "扫描二维码进行支付宝支付",
-  "donation.sponsorsHint": "如果你是开发者，可以通过 Sponsors 支持我",
   "donation.thanks": "谢谢你的支持",
   "donation.metaDesc": "如果这个站点的内容对你有帮助，欢迎支持我继续创作",
 
@@ -123,19 +118,12 @@ export const ZH_CN: Record<StringKey, string> = {
   "comments.submitIssue": "提交 Issue",
   "comments.createDiscussion": "创建讨论",
 
-  // 页脚
-  "footer.loading": "获取中...",
-  "footer.unavailable": "无法获取",
-  "footer.pqProtected": "后量子加密保护",
-  "footer.detecting": "检测中...",
-  "footer.standard": "标准加密",
-  "footer.backToTop": "返回顶部",
-
   // 404
   "notFound.blurb": "页面不存在或已被移动。",
   "notFound.back": "返回首页",
 
   // 杂项
+  "misc.backToTop": "返回顶部",
   "markdown.empty": "内容为空或加载失败。",
   "mermaid.loading": "正在渲染流程图...",
   "mermaid.failed": "Mermaid 渲染失败",

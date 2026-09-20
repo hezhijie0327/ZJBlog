@@ -1,15 +1,14 @@
-// 首页：Hero + 精选项目 + 个人经历 + 最新文章 + 联系。
+// 首页：Hero + 精选项目 + 最新文章。
 
-import { ArrowRight, ArrowUpRight, Mail } from "lucide-react";
-import { GithubIcon } from "@/components/icons.tsx";
+import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { SectionHeading } from "@/components/SectionHeading.tsx";
 import { Link } from "@/components/Shell.tsx";
-import { featuredProjectCount, siteConfig, timeline } from "@/config/site.ts";
+import { featuredProjectCount, siteConfig } from "@/config/site.ts";
 import { cn } from "@/lib/cn.ts";
 import { formatDateISO } from "@/lib/format.ts";
 import { useT } from "@/lib/i18n.ts";
 import { hostOf } from "@/lib/link.ts";
-import { BTN_OUTLINE, BTN_PRIMARY, CARD, CARD_HOVER, LIST_CONTAINER, SECTION } from "@/lib/styles.ts";
+import { BTN_OUTLINE, BTN_PRIMARY, CARD_HOVER, LIST_CONTAINER, SECTION } from "@/lib/styles.ts";
 import type { HomeData } from "@/lib/types.ts";
 
 export function IndexPage({ data }: { data: HomeData }) {
@@ -124,32 +123,12 @@ export function IndexPage({ data }: { data: HomeData }) {
         </div>
       </section>
 
-      {/* 02 个人经历 */}
-      <section className={SECTION}>
-        <SectionHeading en={t("home.journey.en")} index="02" title={t("home.journey.title")} />
-        <ol className="relative ml-2 space-y-10 border-l border-line pl-8 sm:ml-6">
-          {timeline.map((entry) => (
-            <li className="relative" key={entry.period}>
-              <span
-                aria-hidden="true"
-                className="absolute -left-[35px] top-1.5 grid size-2.5 place-items-center rounded-full border-2 border-accent-strong bg-bg"
-              />
-              <p className="font-mono text-xs tracking-wide text-ink-3">{entry.period}</p>
-              <h3 className="mt-1.5 font-serif text-lg font-semibold text-ink">{entry.title}</h3>
-              {entry.description && (
-                <p className="mt-1 max-w-xl text-sm leading-relaxed text-ink-2">{entry.description}</p>
-              )}
-            </li>
-          ))}
-        </ol>
-      </section>
-
-      {/* 03 最新博客 */}
+      {/* 02 最新博客 */}
       <section className={SECTION}>
         <SectionHeading
           en={t("home.recent.en")}
           hint={t("count.posts", { n: data.blogs.length })}
-          index="03"
+          index="02"
           title={t("home.recent.title")}
         />
         <div className={LIST_CONTAINER}>
@@ -191,38 +170,6 @@ export function IndexPage({ data }: { data: HomeData }) {
             {t("home.viewAllPosts")}
             <ArrowRight aria-hidden="true" className="size-3.5" />
           </Link>
-        </div>
-      </section>
-
-      {/* 04 联系 */}
-      <section className={cn(SECTION, "pb-20 sm:pb-24")}>
-        <SectionHeading en={t("home.contact.en")} index="04" title={t("home.contact.title")} />
-        <div className={cn(CARD, "flex flex-col items-start gap-8 p-8 sm:p-12")}>
-          <div className="flex items-center gap-4">
-            <img
-              alt={siteConfig.author}
-              className="size-14 rounded-full object-cover ring-1 ring-line"
-              height={56}
-              loading="lazy"
-              src="/avatar.jpg"
-              width={56}
-            />
-            <div>
-              <p className="font-serif text-xl font-semibold text-ink">{siteConfig.author}</p>
-              <p className="text-sm text-ink-2">{siteConfig.hero.role}</p>
-            </div>
-          </div>
-          <p className="max-w-lg text-sm leading-relaxed text-ink-2">{t("home.contactBlurb")}</p>
-          <div className="flex flex-wrap items-center gap-3">
-            <a className={BTN_PRIMARY} href={siteConfig.social.email}>
-              <Mail aria-hidden="true" className="size-4" />
-              {t("home.sendEmail")}
-            </a>
-            <a className={BTN_OUTLINE} href={siteConfig.social.github} rel="noopener noreferrer" target="_blank">
-              <GithubIcon className="size-4" />
-              GitHub
-            </a>
-          </div>
         </div>
       </section>
     </div>
