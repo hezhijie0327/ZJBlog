@@ -1,12 +1,21 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist_Mono, Inter, Noto_Serif_SC } from "next/font/google";
 import type { ReactNode } from "react";
+import { ThemeProvider } from "next-themes";
 import "./globals.css";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import CommandPalette from "@/components/CommandPalette";
+import { siteConfig } from "@/config/site";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+});
+
+const notoSerifSC = Noto_Serif_SC({
+  variable: "--font-noto-serif-sc",
+  weight: ["400", "600", "900"],
   subsets: ["latin"],
 });
 
@@ -16,14 +25,15 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteConfig.url),
   title: {
-    default: "治杰 Online",
-    template: "%s | 治杰 Online",
+    default: siteConfig.title,
+    template: `%s | ${siteConfig.title}`,
   },
-  description: "个人技术博客和项目展示网站",
-  keywords: ["技术博客", "开源项目", "前端开发", "后端开发", "个人作品"],
-  authors: [{ name: "何治杰" }],
-  creator: "何治杰",
+  description: siteConfig.description,
+  keywords: siteConfig.keywords,
+  authors: [{ name: siteConfig.author }],
+  creator: siteConfig.author,
   icons: {
     icon: "/apple-touch-icon.png",
     shortcut: "/apple-touch-icon.png",
@@ -31,19 +41,24 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: "website",
-    locale: "zh_CN",
-    url: "https://hezhijie0327.github.io",
-    title: "治杰 Online",
-    description: "个人技术博客和项目展示网站",
+    locale: siteConfig.locale,
+    url: siteConfig.url,
+    title: siteConfig.title,
+    description: siteConfig.description,
   },
   twitter: {
     card: "summary_large_image",
-    title: "治杰 Online",
-    description: "个人技术博客和项目展示网站",
+    title: siteConfig.title,
+    description: siteConfig.description,
   },
   robots: {
     index: true,
     follow: true,
+  },
+  alternates: {
+    types: {
+      "application/rss+xml": "/rss.xml",
+    },
   },
 };
 
@@ -55,11 +70,14 @@ export default function RootLayout({
   return (
     <html lang="zh" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} min-h-screen bg-background text-foreground antialiased flex flex-col`}
+        className={`${inter.variable} ${notoSerifSC.variable} ${geistMono.variable} min-h-screen bg-background font-sans text-foreground antialiased flex flex-col`}
       >
-        <Navigation />
-        <main className="flex-1 pt-16 pb-6">{children}</main>
-        <Footer className="flex-shrink-0" />
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <Navigation />
+          <main className="flex-1 pb-12">{children}</main>
+          <Footer className="flex-shrink-0" />
+          <CommandPalette />
+        </ThemeProvider>
       </body>
     </html>
   );

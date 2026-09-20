@@ -59,7 +59,7 @@ export interface GitHubRepoInfo {
 
 // 缓存相关
 const CACHE_DURATION = 5 * 60 * 1000 // 5分钟缓存
-const cache = new Map<string, { data: any; timestamp: number }>()
+const cache = new Map<string, { data: unknown; timestamp: number }>()
 
 // GitHub Discussions 默认分类的 emoji 映射
 const emojiMap: Record<string, string> = {
@@ -80,13 +80,53 @@ const emojiMap: Record<string, string> = {
   'help_wanted': '🤝'
 }
 
+// GitHub API 原始响应的宽松类型（仅覆盖用到的字段）
+interface RawRepoResponse {
+  name: string
+  full_name: string
+  description: string | null
+  html_url: string
+  stargazers_count: number
+  forks_count: number
+  open_issues_count: number
+  has_discussions?: boolean
+}
+
+interface RawDiscussionItem {
+  id: number | string
+  title: string
+  body?: string | null
+  html_url: string
+  user: { login: string; avatar_url: string; html_url: string }
+  created_at: string
+  updated_at: string
+  reactions?: { total_count?: number }
+  comments?: number
+  category?: { name?: string; emoji?: string }
+}
+
+interface RawIssueItem {
+  id: number | string
+  title: string
+  body?: string | null
+  html_url: string
+  number: number
+  state: string
+  user: { login: string; avatar_url: string; html_url: string }
+  created_at: string
+  updated_at: string
+  comments?: number
+  pull_request?: unknown
+  labels: { name: string; color: string }[]
+}
+
 // 获取仓库信息
 export async function getGitHubRepoInfo(repo: string): Promise<GitHubRepoInfo | null> {
   const cacheKey = `repo-${repo}`
   const cached = cache.get(cacheKey)
 
   if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-    return cached.data
+    return cached.data as GitHubRepoInfo
   }
 
   try {
@@ -106,12 +146,12 @@ export async function getGitHubRepoInfo(repo: string): Promise<GitHubRepoInfo | 
       return null
     }
 
-    const data = await response.json()
+    const data = (await response.json()) as RawRepoResponse
 
     const repoInfo: GitHubRepoInfo = {
       name: data.name,
       fullName: data.full_name,
-      description: data.description,
+      description: data.description ?? '',
       url: data.html_url,
       stargazersCount: data.stargazers_count,
       forksCount: data.forks_count,
@@ -135,7 +175,7 @@ export async function getGitHubDiscussions(
   const cached = cache.get(cacheKey)
 
   if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-    return cached.data
+    return cached.data as GitHubDiscussion[]
   }
 
   try {
@@ -155,9 +195,9 @@ export async function getGitHubDiscussions(
       return []
     }
 
-    const data = await response.json()
+    const data = (await response.json()) as RawDiscussionItem[]
 
-    const discussions: GitHubDiscussion[] = data.map((item: any) => {
+    const discussions: GitHubDiscussion[] = data.map((item) => {
       // 处理 emoji
       const rawEmoji = item.category?.emoji?.replace(/:/g, '')?.toLowerCase() || 'general'
       const categoryName = item.category?.name?.toLowerCase() || 'general'
@@ -207,7 +247,7 @@ export async function hasDiscussionsEnabled(repo: string): Promise<boolean> {
 
     if (!response.ok) return false
 
-    const data = await response.json()
+    const data = (await response.json()) as RawRepoResponse
     return data.has_discussions === true
   } catch (error) {
     console.error(`Error checking Discussions for ${repo}:`, error)
@@ -225,7 +265,7 @@ export async function getGitHubIssues(
   const cached = cache.get(cacheKey)
 
   if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-    return cached.data
+    return cached.data as GitHubIssue[]
   }
 
   try {
@@ -244,18 +284,18 @@ export async function getGitHubIssues(
       return []
     }
 
-    const data = await response.json()
+    const data = (await response.json()) as RawIssueItem[]
 
     // 过滤掉 pull requests，因为 GitHub API 会将 PR 也作为 Issues 返回
     const issues: GitHubIssue[] = data
-      .filter((item: any) => !item.pull_request)
-      .map((item: any) => ({
+      .filter((item) => !item.pull_request)
+      .map((item) => ({
         id: item.id.toString(),
         title: item.title,
         body: item.body || '',
         url: item.html_url,
         number: item.number,
-        state: item.state,
+        state: item.state === 'closed' ? 'closed' : 'open',
         author: {
           login: item.user.login,
           avatarUrl: item.user.avatar_url,
@@ -266,7 +306,7 @@ export async function getGitHubIssues(
         comments: {
           totalCount: item.comments || 0
         },
-        labels: item.labels.map((label: any) => ({
+        labels: item.labels.map((label) => ({
           name: label.name,
           color: label.color
         }))

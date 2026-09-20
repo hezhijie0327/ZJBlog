@@ -1,118 +1,94 @@
-import Link from "next/link";
+import type { Metadata } from "next";
 import Image from "next/image";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
-import { Heart, GitBranch } from "lucide-react";
+import SectionHeading from "@/components/SectionHeading";
+import { Heart } from "lucide-react";
+import { GithubIcon } from "@/components/icons";
+import { siteConfig } from "@/config/site";
+
+export const metadata: Metadata = {
+  title: "支持",
+  description: "如果这个站点的内容对你有帮助，欢迎支持我继续创作",
+};
+
+const donations = [
+  {
+    name: "微信支付",
+    hint: "扫描二维码进行微信支付",
+    image: { src: "/wechat.png", alt: "微信支付二维码" },
+  },
+  {
+    name: "支付宝",
+    hint: "扫描二维码进行支付宝支付",
+    image: { src: "/alipay.png", alt: "支付宝二维码" },
+  },
+] as const;
 
 export default function DonationPage() {
   return (
     <div className="min-h-full">
-      <div className="container mx-auto px-4 py-16 sm:py-24">
-        <div className="mb-12 text-center">
-          <div className="flex items-center justify-center mb-6">
-            <Heart className="mr-3 h-8 w-8 text-rose-500" />
-            <h1 className="bg-gradient-to-r from-rose-500 to-fuchsia-500 bg-clip-text text-4xl font-bold text-transparent sm:text-5xl">
-              支持治杰 Online
-            </h1>
-          </div>
-          <p className="text-xl text-foreground/80">
-            觉得有用？欢迎支持继续创作和维护
+      <div className="container mx-auto px-4 py-14 sm:py-20">
+        <SectionHeading index="00" title="支持" en="Support" />
+
+        <div className="mx-auto mb-12 max-w-2xl text-center">
+          <p className="font-serif text-xl leading-relaxed text-ink sm:text-2xl">
+            如果这里的文章或项目对你有帮助，
+            <br />
+            欢迎请我喝杯咖啡 ☕
+          </p>
+          <p className="mt-4 text-sm text-ink-2">
+            每一份支持都是持续创作与维护的动力。
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 max-w-6xl mx-auto">
-          {/* WeChat Pay */}
-          <div>
-            <Card className="h-full border-border/70 bg-card/80 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg">
-              <CardHeader className="text-center pb-4">
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Heart className="w-8 h-8 text-green-600" />
-                </div>
-                <CardTitle className="text-2xl text-green-600">
-                  微信支付
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="text-center">
-                <div className="w-44 h-44 mx-auto bg-slate-100 dark:bg-slate-700 rounded-lg p-3 flex items-center justify-center">
-                  <Image
-                    src="/wechat.png"
-                    alt="微信支付二维码"
-                    width={160}
-                    height={160}
-                    className="w-full h-full object-contain rounded-lg"
-                  />
-                </div>
-                <p className="mt-4 text-sm text-foreground/80">
-                  扫描二维码进行微信支付
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Alipay */}
-          <div>
-            <Card className="h-full border-border/70 bg-card/80 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg">
-              <CardHeader className="text-center pb-4">
-                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Heart className="w-8 h-8 text-blue-600" />
-                </div>
-                <CardTitle className="text-2xl text-blue-600">支付宝</CardTitle>
-              </CardHeader>
-              <CardContent className="text-center">
-                <div className="w-44 h-44 mx-auto bg-slate-100 dark:bg-slate-700 rounded-lg p-3 flex items-center justify-center">
-                  <Image
-                    src="/alipay.png"
-                    alt="支付宝二维码"
-                    width={160}
-                    height={160}
-                    className="w-full h-full object-contain rounded-lg"
-                  />
-                </div>
-                <p className="mt-4 text-sm text-foreground/80">
-                  扫描二维码进行支付宝支付
-                </p>
-              </CardContent>
-            </Card>
-          </div>
+        <div className="mx-auto grid max-w-3xl grid-cols-1 gap-4 sm:grid-cols-3">
+          {donations.map((item) => (
+            <div
+              key={item.name}
+              className="flex flex-col items-center rounded-2xl border border-line bg-surface p-6 shadow-card transition-shadow hover:shadow-pop"
+            >
+              <div className="mb-5 size-48 rounded-xl border border-line bg-white p-3">
+                <Image
+                  src={item.image.src}
+                  alt={item.image.alt}
+                  width={192}
+                  height={192}
+                  className="size-full rounded-lg object-contain"
+                />
+              </div>
+              <h3 className="font-serif text-lg font-semibold text-ink">
+                {item.name}
+              </h3>
+              <p className="mt-1.5 text-xs text-ink-3">{item.hint}</p>
+            </div>
+          ))}
 
           {/* GitHub Sponsors */}
-          <div>
-            <Card className="h-full border-border/70 bg-card/80 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg">
-              <CardHeader className="text-center pb-4">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <GitBranch className="w-8 h-8 text-gray-800" />
-                </div>
-                <CardTitle className="text-2xl text-gray-800 dark:text-foreground">
-                  GitHub Sponsors
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="text-center">
-                <div className="w-44 h-44 mx-auto bg-slate-100 dark:bg-slate-700 rounded-lg p-3 flex items-center justify-center">
-                  <Link
-                    href="https://github.com/sponsors/hezhijie0327"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group flex h-full w-full flex-col items-center justify-center rounded-lg bg-gray-800 transition-all duration-300 hover:bg-gray-700 hover:shadow-md dark:bg-gray-700 dark:hover:bg-gray-600"
-                  >
-                    <GitBranch className="w-12 h-12 text-white mb-2" />
-                    <span className="text-white text-sm font-medium">
-                      GitHub
-                    </span>
-                    <span className="text-white text-xs">Sponsors</span>
-                  </Link>
-                </div>
-                <p className="mt-4 text-sm text-foreground/80">
-                  如果您是开发者，可以通过 GitHub Sponsors 支持我
-                </p>
-              </CardContent>
-            </Card>
-          </div>
+          <a
+            href={`https://github.com/sponsors/hezhijie0327`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex flex-col items-center rounded-2xl border border-line bg-surface p-6 shadow-card transition-shadow hover:shadow-pop"
+          >
+            <div className="mb-5 grid size-48 place-items-center rounded-xl border border-line bg-surface-2">
+              <GithubIcon className="size-16 text-ink transition-transform group-hover:scale-105" />
+            </div>
+            <h3 className="font-serif text-lg font-semibold text-ink">
+              GitHub Sponsors
+            </h3>
+            <p className="mt-1.5 text-xs text-ink-3">
+              如果你是开发者，可以通过 Sponsors 支持我
+            </p>
+          </a>
         </div>
 
-        <div className="text-center">
-          <p className="text-slate-600 dark:text-foreground/70">
-            每一份支持都是前进的动力 💙
-          </p>
-        </div>
+        <p className="mt-12 flex items-center justify-center gap-1.5 text-center text-sm text-ink-2">
+          <Heart className="size-3.5 text-accent-strong" />
+          谢谢你的支持
+        </p>
+
+        <p className="mt-4 text-center font-mono text-[11px] text-ink-3">
+          {siteConfig.author} · {siteConfig.name}
+        </p>
       </div>
     </div>
   );

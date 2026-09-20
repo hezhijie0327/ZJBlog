@@ -5,6 +5,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+// 中文长日期：2024年12月21日
 export function formatDate(date: string): string {
   return new Date(date).toLocaleDateString('zh-CN', {
     year: 'numeric',
@@ -13,19 +14,11 @@ export function formatDate(date: string): string {
   })
 }
 
-export function slugify(text: string): string {
-  return text
-    .toString()
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, '-')
-    .replace(/[^\w\-]+/g, '')
-    .replace(/\-\-+/g, '-')
-    .replace(/^-+/, '')
-    .replace(/-+$/, '')
-}
-
-export function truncateText(text: string, length: number): string {
-  if (text.length <= length) return text
-  return text.slice(0, length) + '...'
+// 等宽紧凑日期：2024/12/21
+export function formatDateISO(date: string): string {
+  const d = new Date(date)
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}/${m}/${day}`
 }

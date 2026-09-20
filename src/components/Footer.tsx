@@ -1,7 +1,10 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 import { useState, useEffect } from "react";
+import { siteConfig } from "@/config/site";
+import { ArrowUp } from "lucide-react";
 
 interface FooterProps {
   className?: string;
@@ -131,13 +134,13 @@ export default function Footer({ className = "" }: FooterProps) {
 
   const getPostQuantumInfo = () => {
     if (cfInfo.kex === "X25519MLKEM768") {
-      return { text: "后量子加密保护", color: "text-green-500", icon: "🔒" };
+      return { text: "后量子加密保护", cls: "text-ok" };
     } else if (cfInfo.kex === "loading") {
-      return { text: "检测中...", color: "text-yellow-500", icon: "⏳" };
+      return { text: "检测中...", cls: "text-ink-3" };
     } else if (cfInfo.kex === "unavailable") {
-      return { text: "环境不支持检测", color: "text-slate-500", icon: "ℹ️" };
+      return { text: "", cls: "" };
     } else {
-      return { text: "标准加密", color: "text-orange-500", icon: "🔓" };
+      return { text: "标准加密", cls: "text-ink-3" };
     }
   };
 
@@ -145,36 +148,51 @@ export default function Footer({ className = "" }: FooterProps) {
 
   return (
     <footer
-      className={cn(
-        "border-t border-border/70 bg-background/80 backdrop-blur-md",
-        className,
-      )}
+      className={cn("border-t border-line/80 bg-background", className)}
     >
-      <div className="container mx-auto px-4 py-2">
-        <div className="flex flex-col items-center justify-center space-y-1 text-center text-xs text-foreground/60">
-          {/* 版权信息 */}
-          <span>© {currentYear} Zhijie Online</span>
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex flex-col items-center gap-4 text-center">
+          {/* 格言 */}
+          <p className="font-serif text-sm text-ink-2">
+            {siteConfig.footerMotto.zh}
+            <span className="mx-2 text-line">·</span>
+            <span className="font-mono text-xs tracking-wide">
+              {siteConfig.footerMotto.en}
+            </span>
+          </p>
 
-          {/* 网络和安全信息 */}
-          <div className="flex flex-col items-center space-y-1 rounded-full border border-border/60 bg-card/70 px-4 py-1">
-            {/* IP 地址和位置信息 */}
-            <div className="flex items-center space-x-4 text-xs">
-              <span className={cfInfo.warp === "on" ? "text-blue-500" : ""}>
-                🌐 {cfInfo.ip}
-                {cfInfo.loc !== "unknown" && cfInfo.loc !== ""
-                  ? ` (${cfInfo.loc})`
-                  : ""}
-              </span>
-            </div>
+          {/* 版权 */}
+          <p className="text-xs text-ink-3">
+            © {currentYear} {siteConfig.author} · {siteConfig.name}
+          </p>
 
-            {/* 加密信息 */}
-            <div className="flex items-center space-x-1 text-xs">
-              <span>{encryptionInfo.icon}</span>
-              <span className={encryptionInfo.color}>
+          {/* 网络和安全信息（Cloudflare 部署时的彩蛋） */}
+          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 font-mono text-[11px] text-ink-3">
+            <span>
+              IP {cfInfo.ip}
+              {cfInfo.loc !== "unknown" && cfInfo.loc !== ""
+                ? ` · ${cfInfo.loc}`
+                : ""}
+            </span>
+            {encryptionInfo.text && (
+              <span className={encryptionInfo.cls}>
                 {encryptionInfo.text}
               </span>
-            </div>
+            )}
           </div>
+
+          {/* 返回顶部 */}
+          <Link
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            className="inline-flex items-center gap-1.5 text-xs text-ink-3 transition-colors hover:text-ink"
+          >
+            <ArrowUp className="size-3" />
+            返回顶部
+          </Link>
         </div>
       </div>
     </footer>

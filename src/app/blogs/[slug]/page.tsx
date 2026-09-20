@@ -1,15 +1,12 @@
 import { Metadata } from "next";
-import { getAllContent, getAllContentSlugs, BlogItem } from "@/lib/content";
+import { getAllContentSlugs, BlogItem } from "@/lib/content";
 import { getContentBySlug } from "@/lib/content";
 import { notFound } from "next/navigation";
-import ReactMarkdown from "react-markdown";
-
-// Import MDX components type for better typing
-import { Card, CardContent, CardHeader } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
+import Link from "next/link";
+import MarkdownRenderer from "@/components/MarkdownRenderer";
 import GitHubComments from "@/components/GitHubComments";
-import MermaidRenderer from "@/components/MermaidRenderer";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatDateISO } from "@/lib/utils";
+import { ArrowLeft, Clock } from "lucide-react";
 
 interface BlogPostParams {
   params: Promise<{
@@ -58,160 +55,60 @@ export default async function BlogPost({ params }: BlogPostParams) {
     notFound();
   }
 
-  const markdownContent = post.content;
-
   return (
-    <div className="h-full bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-800 overflow-y-auto">
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
-          <Card className="bg-white/80 backdrop-blur-sm dark:bg-slate-800/80">
-            <CardHeader className="pb-6">
-              <div className="space-y-4">
-                <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white leading-tight">
-                  {post.title}
-                </h1>
-                <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                  <time dateTime={post.date || ""} className="font-medium">
-                    {post.date ? formatDate(post.date) : "未知日期"}
-                  </time>
-                  <span>•</span>
-                  <span className="font-medium">{post.readingTime}</span>
-                  {post.category && (
-                    <>
-                      <span>•</span>
-                      <Badge variant="secondary">{post.category}</Badge>
-                    </>
-                  )}
-                </div>
-                {post.tags && post.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-2 pt-2">
-                    {post.tags.map((tag: string) => (
-                      <Badge key={tag} variant="outline" className="text-xs">
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </CardHeader>
+    <div className="container mx-auto px-4 py-12 sm:py-16">
+      <article className="mx-auto max-w-3xl">
+        {/* 返回链接 */}
+        <Link
+          href="/blogs"
+          className="inline-flex items-center gap-1.5 font-mono text-xs text-ink-3 transition-colors hover:text-ink"
+        >
+          <ArrowLeft className="size-3.5" />
+          BLOG / 全部文章
+        </Link>
 
-            <CardContent className="prose prose-lg dark:prose-invert max-w-none">
-              <div className="prose-headings:font-semibold prose-headings:text-gray-900 dark:prose-headings:text-white prose-p:text-gray-700 dark:prose-p:text-gray-300 prose-a:text-blue-600 hover:prose-a:text-blue-800 dark:prose-a:text-blue-400 dark:hover:prose-a:text-blue-300">
-                <div className="markdown-content-wrapper">
-                  {markdownContent ? (
-                    <ReactMarkdown
-                      components={{
-                        h1: ({ children, ...props }) => (
-                          <h1
-                            className="text-3xl font-bold mb-4 text-gray-900 dark:text-white"
-                            {...props}
-                          >
-                            {children}
-                          </h1>
-                        ),
-                        h2: ({ children, ...props }) => (
-                          <h2
-                            className="text-2xl font-semibold mb-3 text-gray-800 dark:text-gray-200 mt-6"
-                            {...props}
-                          >
-                            {children}
-                          </h2>
-                        ),
-                        h3: ({ children, ...props }) => (
-                          <h3
-                            className="text-xl font-semibold mb-2 text-gray-700 dark:text-gray-300 mt-4"
-                            {...props}
-                          >
-                            {children}
-                          </h3>
-                        ),
-                        p: ({ children, ...props }) => (
-                          <p
-                            className="mb-4 text-slate-700 dark:text-foreground/80 leading-relaxed"
-                            {...props}
-                          >
-                            {children}
-                          </p>
-                        ),
-                        ul: ({ children, ...props }) => (
-                          <ul
-                            className="list-disc pl-6 mb-4 text-slate-700 dark:text-foreground/80"
-                            {...props}
-                          >
-                            {children}
-                          </ul>
-                        ),
-                        ol: ({ children, ...props }) => (
-                          <ol
-                            className="list-decimal pl-6 mb-4 text-slate-700 dark:text-foreground/80"
-                            {...props}
-                          >
-                            {children}
-                          </ol>
-                        ),
-                        li: ({ children, ...props }) => (
-                          <li className="mb-2" {...props}>
-                            {children}
-                          </li>
-                        ),
-                        code: ({ children, ...props }) => (
-                          <code
-                            className="bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 px-2 py-1 rounded text-sm font-mono"
-                            {...props}
-                          >
-                            {children}
-                          </code>
-                        ),
-                        pre: ({ children, ...props }) => {
-                          const codeChild = Array.isArray(children)
-                            ? children[0]
-                            : children;
-                          const className = codeChild?.props?.className || "";
-                          const isMermaidBlock =
-                            className.includes("language-mermaid");
-                          const chartText = String(
-                            codeChild?.props?.children || "",
-                          ).trim();
+        {/* 文章头部 */}
+        <header className="mt-8 mb-10 border-b border-line pb-8">
+          <h1 className="font-serif text-3xl font-black leading-tight tracking-tight text-ink sm:text-4xl">
+            {post.title}
+          </h1>
+          <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 font-mono text-xs text-ink-3">
+            {post.date && (
+              <time dateTime={post.date}>{formatDateISO(post.date)}</time>
+            )}
+            <span className="inline-flex items-center gap-1">
+              <Clock className="size-3" />
+              {post.readingTime}
+            </span>
+            {post.category && (
+              <span className="rounded-full border border-line px-2.5 py-0.5">
+                {post.category}
+              </span>
+            )}
+          </div>
+          {post.tags && post.tags.length > 0 && (
+            <div className="mt-4 flex flex-wrap gap-x-3 gap-y-1 text-xs text-ink-3">
+              {post.tags.map((tag: string) => (
+                <span key={tag}>#{tag}</span>
+              ))}
+            </div>
+          )}
+          {post.date && (
+            <p className="mt-4 text-[11px] text-ink-3">
+              发布于 {formatDate(post.date)}
+            </p>
+          )}
+        </header>
 
-                          if (isMermaidBlock && chartText) {
-                            return <MermaidRenderer chart={chartText} />;
-                          }
+        {/* 正文 */}
+        <MarkdownRenderer content={post.content} />
 
-                          return (
-                            <div className="bg-gray-900 dark:bg-gray-800 text-gray-100 p-4 rounded-lg mb-4 overflow-x-auto">
-                              <pre {...props}>{children}</pre>
-                            </div>
-                          );
-                        },
-                        blockquote: ({ children, ...props }) => (
-                          <blockquote
-                            className="border-l-4 border-blue-500 pl-4 py-2 my-4 bg-blue-50 dark:bg-blue-900/20 italic text-slate-700 dark:text-foreground/80"
-                            {...props}
-                          >
-                            {children}
-                          </blockquote>
-                        ),
-                      }}
-                    >
-                      {markdownContent}
-                    </ReactMarkdown>
-                  ) : (
-                    <div className="text-red-500 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                      <p>Error: Content is empty or undefined</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* GitHub Comments */}
-          <GitHubComments
-            repo="hezhijie0327/blog"
-            title={`关于文章 "${post.title}" 的讨论`}
-          />
-        </div>
-      </div>
+        {/* GitHub 评论 */}
+        <GitHubComments
+          repo="hezhijie0327/blog"
+          title={`关于文章 "${post.title}" 的讨论`}
+        />
+      </article>
     </div>
   );
 }

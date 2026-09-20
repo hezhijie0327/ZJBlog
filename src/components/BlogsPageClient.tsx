@@ -1,9 +1,7 @@
 import Link from "next/link";
-import { Card, CardContent, CardHeader } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
-import { formatDate } from "@/lib/utils";
-import { PenTool, Calendar, Clock, ArrowRight } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
+import SectionHeading from "@/components/SectionHeading";
+import { formatDateISO } from "@/lib/utils";
 
 interface Blog {
   slug: string;
@@ -22,109 +20,71 @@ interface BlogsPageClientProps {
 export default function BlogsPageClient({ blogs }: BlogsPageClientProps) {
   return (
     <div className="min-h-full">
-      <div className="container mx-auto px-4 py-16">
-        {/* Page Header */}
-        <div className="mx-auto mb-16 max-w-4xl text-center">
-          <div className="flex items-center justify-center mb-6">
-            <PenTool className="mr-3 h-8 w-8 text-emerald-500" />
-            <h1 className="bg-gradient-to-r from-emerald-500 to-sky-500 bg-clip-text text-4xl font-bold text-transparent sm:text-5xl">
-              技术博客
-            </h1>
-          </div>
-          <p className="text-xl leading-relaxed text-foreground/80">
-            分享技术学习心得、项目经验和实用教程
-          </p>
-        </div>
+      <div className="container mx-auto px-4 py-14 sm:py-20">
+        <SectionHeading
+          index="00"
+          title="全部文章"
+          en="Blog"
+          hint={`共 ${blogs.length} 篇`}
+        />
 
-        {/* Blog Posts Grid */}
-        <div className="max-w-4xl mx-auto space-y-6">
+        <div className="mx-auto max-w-3xl">
           {blogs.length > 0 ? (
-            blogs.map((blog) => (
-              <div key={blog.slug}>
-                <Card className="group border-border/70 bg-card/80 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg">
-                  <CardHeader className="pb-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                      <h2 className="text-xl sm:text-2xl font-bold">
-                        <Link
-                          href={`/blogs/${blog.slug}/`}
-                          className="text-foreground transition-colors hover:text-emerald-500 group-hover:underline"
-                        >
-                          {blog.title}
-                        </Link>
+            <div className="divide-y divide-line/70">
+              {blogs.map((blog) => (
+                <article key={blog.slug} className="group py-8 first:pt-0">
+                  <Link href={`/blogs/${blog.slug}/`} className="block">
+                    <div className="flex items-baseline justify-between gap-4">
+                      <h2 className="font-serif text-xl font-semibold leading-snug text-ink transition-colors group-hover:text-accent-text sm:text-2xl">
+                        {blog.title}
                       </h2>
+                      <ArrowUpRight className="size-5 shrink-0 text-ink-3 transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-accent-text" />
+                    </div>
+
+                    <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 font-mono text-xs text-ink-3">
+                      {blog.date && (
+                        <time dateTime={blog.date}>
+                          {formatDateISO(blog.date)}
+                        </time>
+                      )}
+                      {blog.readingTime && <span>{blog.readingTime}</span>}
                       {blog.category && (
-                        <Badge variant="secondary" className="w-fit">
+                        <span className="rounded-full border border-line px-2 py-0.5">
                           {blog.category}
-                        </Badge>
+                        </span>
                       )}
                     </div>
+
                     {blog.description && (
-                      <p className="text-slate-700 dark:text-foreground/70 leading-relaxed mt-2">
+                      <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-2 sm:text-[15px]">
                         {blog.description}
                       </p>
                     )}
-                  </CardHeader>
-
-                  <CardContent className="pt-0">
-                    <div className="flex flex-wrap items-center justify-between gap-4">
-                      <div className="flex items-center gap-6 text-sm text-muted-foreground">
-                        {blog.date && (
-                          <div className="flex items-center gap-1">
-                            <Calendar className="w-4 h-4" />
-                            <time dateTime={blog.date}>
-                              {formatDate(blog.date)}
-                            </time>
-                          </div>
-                        )}
-                        <div className="flex items-center gap-1">
-                          <Clock className="w-4 h-4" />
-                          <span>{blog.readingTime}</span>
-                        </div>
-                      </div>
-
-                      <Button variant="ghost" asChild className="group">
-                        <Link
-                          href={`/blogs/${blog.slug}/`}
-                          className="flex items-center gap-2"
-                        >
-                          阅读全文
-                          <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                        </Link>
-                      </Button>
-                    </div>
 
                     {blog.tags && blog.tags.length > 0 && (
-                      <div className="mt-4 flex flex-wrap gap-2 border-t border-border/80 pt-4">
+                      <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1">
                         {blog.tags.map((tag) => (
-                          <Badge
+                          <span
                             key={tag}
-                            variant="outline"
-                            className="text-xs"
+                            className="text-xs text-ink-3 transition-colors group-hover:text-ink-2"
                           >
                             #{tag}
-                          </Badge>
+                          </span>
                         ))}
                       </div>
                     )}
-                  </CardContent>
-                </Card>
-              </div>
-            ))
+                  </Link>
+                </article>
+              ))}
+            </div>
           ) : (
-            <div className="py-16 text-center">
-              <Card className="mx-auto max-w-md border-border/70 bg-card/80">
-                <CardContent className="pt-8">
-                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted/60">
-                    <PenTool className="h-8 w-8 text-muted-foreground" />
-                  </div>
-                  <h3 className="mb-2 text-xl font-semibold text-foreground">
-                    暂无博客文章
-                  </h3>
-                  <p className="text-muted-foreground">
-                    博客内容正在整理中，敬请期待！
-                  </p>
-                </CardContent>
-              </Card>
+            <div className="rounded-2xl border border-line bg-surface px-6 py-16 text-center shadow-card">
+              <h3 className="font-serif text-lg font-semibold text-ink">
+                暂无文章
+              </h3>
+              <p className="mt-2 text-sm text-ink-3">
+                内容正在整理中，敬请期待。
+              </p>
             </div>
           )}
         </div>

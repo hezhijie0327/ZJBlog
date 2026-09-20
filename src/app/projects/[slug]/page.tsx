@@ -1,21 +1,16 @@
 import { Metadata } from "next";
 import {
-  getAllContent,
   getAllContentSlugs,
   getAllProjects,
-  type ProjectItem,
+  getContentBySlug,
 } from "@/lib/content";
-import { getContentBySlug } from "@/lib/content";
 import { notFound } from "next/navigation";
-import Image from "next/image";
-import ReactMarkdown from "react-markdown";
-import { Card, CardContent, CardHeader } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
+import Link from "next/link";
+import MarkdownRenderer from "@/components/MarkdownRenderer";
 import GitHubComments from "@/components/GitHubComments";
-import MermaidRenderer from "@/components/MermaidRenderer";
-import { formatDate } from "@/lib/utils";
-import { GitBranch, Calendar, Clock } from "lucide-react";
+import { formatDate, formatDateISO } from "@/lib/utils";
+import { ArrowLeft, ArrowUpRight, Clock } from "lucide-react";
+import { GithubIcon } from "@/components/icons";
 
 interface ProjectParams {
   params: Promise<{
@@ -51,8 +46,8 @@ export async function generateMetadata({
       description: project.description,
       type: "article",
       publishedTime: project.date,
-      images: (project as any).frontmatter?.image
-        ? [{ url: (project as any).frontmatter.image }]
+      images: project.frontmatter?.image
+        ? [{ url: project.frontmatter.image }]
         : [],
       tags: project.tags,
     },
@@ -67,202 +62,96 @@ export default async function Project({ params }: ProjectParams) {
     notFound();
   }
 
-  // 获取包含 githubRepo 信息的完整项目数据
   const projects = getAllProjects();
   const projectData = projects.find((p) => p.slug === slug);
   const githubRepo = projectData?.githubRepo;
-
-  const markdownContent = project.content;
   const frontmatter = project.frontmatter;
 
   return (
-    <div className="h-full bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-800 overflow-y-auto">
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-5xl mx-auto">
-          <Card className="bg-white/80 backdrop-blur-sm dark:bg-slate-800/80">
-            <CardHeader className="pb-6">
-              <div className="flex flex-col lg:flex-row items-start gap-8">
-                {frontmatter.image && (
-                  <div className="flex-shrink-0 w-full lg:w-64">
-                    <img
-                      src={frontmatter.image}
-                      alt={project.title}
-                      className="w-full h-48 lg:h-64 object-cover rounded-xl shadow-lg"
-                    />
-                  </div>
-                )}
-                <div className="flex-1 space-y-4">
-                  <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white leading-tight">
-                    {project.title}
-                  </h1>
-                  <p className="text-lg text-slate-700 dark:text-foreground/80 leading-relaxed">
-                    {project.description}
-                  </p>
-                  <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4" />
-                      <time
-                        dateTime={project.date || ""}
-                        className="font-medium"
-                      >
-                        {project.date ? formatDate(project.date) : "未知日期"}
-                      </time>
-                    </div>
-                    <span>•</span>
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4" />
-                      <span className="font-medium">{project.readingTime}</span>
-                    </div>
-                  </div>
-                  {project.tags && project.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {project.tags.map((tag: string) => (
-                        <Badge key={tag} variant="outline">
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </CardHeader>
+    <div className="container mx-auto px-4 py-12 sm:py-16">
+      <article className="mx-auto max-w-3xl">
+        {/* 返回链接 */}
+        <Link
+          href="/projects"
+          className="inline-flex items-center gap-1.5 font-mono text-xs text-ink-3 transition-colors hover:text-ink"
+        >
+          <ArrowLeft className="size-3.5" />
+          PROJECTS / 全部项目
+        </Link>
 
-            <CardContent className="prose prose-lg dark:prose-invert max-w-none">
-              <div className="prose-headings:font-semibold prose-headings:text-gray-900 dark:prose-headings:text-white prose-p:text-gray-700 dark:prose-p:text-gray-300 prose-a:text-blue-600 hover:prose-a:text-blue-800 dark:prose-a:text-blue-400 dark:hover:prose-a:text-blue-300 prose-code:bg-gray-100 dark:prose-code:bg-gray-800 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-sm">
-                {markdownContent ? (
-                  <ReactMarkdown
-                    components={{
-                      h1: ({ children, ...props }) => (
-                        <h1
-                          className="text-3xl font-bold mb-4 text-gray-900 dark:text-white"
-                          {...props}
-                        >
-                          {children}
-                        </h1>
-                      ),
-                      h2: ({ children, ...props }) => (
-                        <h2
-                          className="text-2xl font-semibold mb-3 text-gray-800 dark:text-gray-200 mt-6"
-                          {...props}
-                        >
-                          {children}
-                        </h2>
-                      ),
-                      h3: ({ children, ...props }) => (
-                        <h3
-                          className="text-xl font-semibold mb-2 text-gray-700 dark:text-gray-300 mt-4"
-                          {...props}
-                        >
-                          {children}
-                        </h3>
-                      ),
-                      p: ({ children, ...props }) => (
-                        <p
-                          className="mb-4 text-slate-700 dark:text-foreground/80 leading-relaxed"
-                          {...props}
-                        >
-                          {children}
-                        </p>
-                      ),
-                      ul: ({ children, ...props }) => (
-                        <ul
-                          className="list-disc pl-6 mb-4 text-slate-700 dark:text-foreground/80"
-                          {...props}
-                        >
-                          {children}
-                        </ul>
-                      ),
-                      ol: ({ children, ...props }) => (
-                        <ol
-                          className="list-decimal pl-6 mb-4 text-slate-700 dark:text-foreground/80"
-                          {...props}
-                        >
-                          {children}
-                        </ol>
-                      ),
-                      li: ({ children, ...props }) => (
-                        <li className="mb-2" {...props}>
-                          {children}
-                        </li>
-                      ),
-                      code: ({ children, ...props }) => (
-                        <code
-                          className="bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 px-2 py-1 rounded text-sm font-mono"
-                          {...props}
-                        >
-                          {children}
-                        </code>
-                      ),
-                      pre: ({ children, ...props }) => {
-                        const codeChild = Array.isArray(children)
-                          ? children[0]
-                          : children;
-                        const className = codeChild?.props?.className || "";
-                        const isMermaidBlock =
-                          className.includes("language-mermaid");
-                        const chartText = String(
-                          codeChild?.props?.children || "",
-                        ).trim();
+        {/* 项目头部 */}
+        <header className="mt-8 mb-10 border-b border-line pb-8">
+          {frontmatter.image && (
+            <div className="mb-8 overflow-hidden rounded-2xl border border-line shadow-card">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={frontmatter.image}
+                alt={project.title}
+                className="w-full object-cover"
+              />
+            </div>
+          )}
+          <h1 className="font-serif text-3xl font-black leading-tight tracking-tight text-ink sm:text-4xl">
+            {project.title}
+          </h1>
+          {project.description && (
+            <p className="mt-4 max-w-2xl text-base leading-relaxed text-ink-2">
+              {project.description}
+            </p>
+          )}
+          <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 font-mono text-xs text-ink-3">
+            {project.date && (
+              <time dateTime={project.date}>{formatDateISO(project.date)}</time>
+            )}
+            <span className="inline-flex items-center gap-1">
+              <Clock className="size-3" />
+              {project.readingTime}
+            </span>
+            <span className="rounded-full border border-line px-2.5 py-0.5">
+              {frontmatter.type === "starred" ? "精选项目" : "个人项目"}
+            </span>
+          </div>
+          {project.tags && project.tags.length > 0 && (
+            <div className="mt-4 flex flex-wrap gap-x-3 gap-y-1 text-xs text-ink-3">
+              {project.tags.map((tag: string) => (
+                <span key={tag}>#{tag}</span>
+              ))}
+            </div>
+          )}
 
-                        if (isMermaidBlock && chartText) {
-                          return <MermaidRenderer chart={chartText} />;
-                        }
-
-                        return (
-                          <div className="bg-gray-900 dark:bg-gray-800 text-gray-100 p-4 rounded-lg mb-4 overflow-x-auto">
-                            <pre {...props}>{children}</pre>
-                          </div>
-                        );
-                      },
-                      blockquote: ({ children, ...props }) => (
-                        <blockquote
-                          className="border-l-4 border-blue-500 pl-4 py-2 my-4 bg-blue-50 dark:bg-blue-900/20 italic text-slate-700 dark:text-foreground/80"
-                          {...props}
-                        >
-                          {children}
-                        </blockquote>
-                      ),
-                    }}
-                  >
-                    {markdownContent}
-                  </ReactMarkdown>
+          {frontmatter.link && (
+            <div className="mt-7 flex flex-wrap gap-3">
+              <a
+                href={frontmatter.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-10 items-center gap-2 rounded-full bg-accent-strong px-5 text-sm font-semibold text-accent-contrast shadow-card transition-all hover:bg-accent-strong-hover hover:shadow-pop"
+              >
+                {githubRepo ? (
+                  <GithubIcon className="size-4" />
                 ) : (
-                  <div className="text-red-500 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                    <p>Error: Content is empty or undefined</p>
-                  </div>
+                  <ArrowUpRight className="size-4" />
                 )}
-              </div>
-
-              {frontmatter.link && (
-                <div className="mt-8 pt-8 border-t">
-                  <div className="flex flex-col sm:flex-row gap-4">
-                    <Button
-                      asChild
-                      variant="default"
-                      className="flex items-center gap-2"
-                    >
-                      <a
-                        href={frontmatter.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <GitBranch className="w-4 h-4" />
-                        源代码
-                      </a>
-                    </Button>
-                  </div>
-                </div>
+                {githubRepo ? "查看仓库" : "访问链接"}
+              </a>
+              {project.date && (
+                <span className="inline-flex h-10 items-center rounded-full px-2 text-[11px] text-ink-3">
+                  更新于 {formatDate(project.date)}
+                </span>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          )}
+        </header>
 
-          {/* GitHub Comments */}
-          <GitHubComments
-            repo={githubRepo}
-            title={`关于项目 "${project.title}" 的讨论`}
-          />
-        </div>
-      </div>
+        {/* 正文 */}
+        <MarkdownRenderer content={project.content} />
+
+        {/* GitHub 评论 */}
+        <GitHubComments
+          repo={githubRepo}
+          title={`关于项目 "${project.title}" 的讨论`}
+        />
+      </article>
     </div>
   );
 }

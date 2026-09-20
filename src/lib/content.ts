@@ -2,9 +2,20 @@ import fs from 'fs'
 import path from 'path'
 import matter from 'gray-matter'
 import readingTime from 'reading-time'
-import { serialize } from 'next-mdx-remote/serialize'
 
 const contentDirectory = path.join(process.cwd(), 'content')
+
+export interface ContentFrontmatter {
+  title?: string
+  description?: string
+  date?: string
+  tags?: string[]
+  category?: string
+  type?: 'personal' | 'starred'
+  link?: string
+  image?: string
+  [key: string]: unknown
+}
 
 export interface ContentItem {
   slug: string
@@ -14,7 +25,7 @@ export interface ContentItem {
   tags?: string[]
   content: string
   readingTime: string
-  frontmatter: any
+  frontmatter: ContentFrontmatter
 }
 
 export interface ProjectItem extends ContentItem {
@@ -86,48 +97,6 @@ export function getContentBySlug(slug: string, type: string): ContentItem {
     date: data.date,
     description: data.description,
     tags: data.tags || [],
-  }
-}
-
-// 读取单个 MD 文件并序列化 MDX 内容（用于动态路由）
-export async function getMDXContentBySlug(slug: string, type: string) {
-  // 解码 URL 编码的 slug，可能需要双重解码
-  let decodedSlug = decodeURIComponent(slug)
-
-  // 如果第一次解码后还有编码字符，尝试第二次解码
-  if (decodedSlug.includes('%')) {
-    decodedSlug = decodeURIComponent(decodedSlug)
-  }
-
-  const fullPath = path.join(contentDirectory, type, `${decodedSlug}.md`)
-
-  // 如果直接文件不存在，尝试查找匹配的文件
-  let actualPath = fullPath
-  if (!fs.existsSync(fullPath)) {
-    const dirPath = path.join(contentDirectory, type)
-    const files = fs.readdirSync(dirPath)
-
-    const matchingFile = files.find(file =>
-      file.replace(/\.md$/, '') === decodedSlug
-    )
-
-    if (!matchingFile) {
-      return null
-    }
-
-    actualPath = path.join(dirPath, matchingFile)
-  }
-
-  const fileContents = fs.readFileSync(actualPath, 'utf8')
-  const { data, content } = matter(fileContents)
-
-  const mdxContent = await serialize(content)
-
-  return {
-    slug,
-    content: mdxContent,
-    data,
-    readingTime: readingTime(content).text,
   }
 }
 

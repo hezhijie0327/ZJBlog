@@ -1,16 +1,9 @@
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
-import { formatDate } from "@/lib/utils";
-import {
-  Code,
-  Star,
-  ArrowRight,
-  GitBranch,
-  ExternalLink,
-  Plus,
-} from "lucide-react";
+import { ArrowUpRight, Star } from "lucide-react";
+import { GithubIcon } from "@/components/icons";
+import SectionHeading from "@/components/SectionHeading";
+import { formatDateISO } from "@/lib/utils";
+import { siteConfig } from "@/config/site";
 
 interface Project {
   slug: string;
@@ -27,6 +20,15 @@ interface ProjectsPageClientProps {
   projects: Project[];
 }
 
+function hostOf(link?: string) {
+  if (!link) return undefined;
+  try {
+    return new URL(link).hostname.replace(/^www\./, "");
+  } catch {
+    return undefined;
+  }
+}
+
 export default function ProjectsPageClient({
   projects,
 }: ProjectsPageClientProps) {
@@ -35,233 +37,128 @@ export default function ProjectsPageClient({
 
   return (
     <div className="min-h-full">
-      <div className="container mx-auto px-4 py-16">
-        {/* Page Header */}
-        <div className="mx-auto mb-16 max-w-4xl text-center">
-          <div className="flex items-center justify-center mb-6">
-            <Code className="mr-3 h-8 w-8 text-sky-500" />
-            <h1 className="bg-gradient-to-r from-sky-500 to-violet-500 bg-clip-text text-4xl font-bold text-transparent sm:text-5xl">
-              开源项目
-            </h1>
-          </div>
-          <p className="text-xl leading-relaxed text-foreground/80">
-            展示个人开发的项目作品和精选的优质开源项目
-          </p>
-        </div>
+      <div className="container mx-auto px-4 py-14 sm:py-20">
+        <SectionHeading
+          index="00"
+          title="项目"
+          en="Projects"
+          hint={`共 ${projects.length} 个`}
+        />
 
-        {/* Personal Projects */}
+        {/* 个人项目 */}
         {personalProjects.length > 0 && (
-          <section className="mb-20">
-            <div className="mb-8 flex items-center">
-              <div className="mr-4 h-8 w-1 rounded-full bg-sky-500" />
-              <h2 className="text-2xl font-bold text-foreground sm:text-3xl">
-                项目
-              </h2>
-              <Badge variant="outline" className="ml-4 text-sm">
-                {personalProjects.length} 个项目
-              </Badge>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {personalProjects.map((project) => (
-                <div key={project.slug}>
-                  <Card className="group flex h-full flex-col border-border/70 bg-card/80 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg">
-                    {project.image && (
-                      <div className="aspect-video overflow-hidden rounded-t-lg">
-                        <img
-                          src={project.image}
-                          alt={project.title}
-                          loading="lazy"
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      </div>
+          <section className="mb-16">
+            <p className="mb-5 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] text-ink-3">
+              <span className="inline-block size-1.5 rounded-full bg-accent-strong" />
+              Selected Work · 个人项目
+            </p>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {personalProjects.map((project, i) => (
+                <Link
+                  key={project.slug}
+                  href={`/projects/${project.slug}/`}
+                  className="group flex flex-col rounded-2xl border border-line bg-surface shadow-card transition-shadow hover:shadow-pop"
+                >
+                  {project.image && (
+                    <div className="aspect-video overflow-hidden rounded-t-2xl border-b border-line">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={project.image}
+                        alt={project.title}
+                        loading="lazy"
+                        className="size-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                      />
+                    </div>
+                  )}
+                  <div className="flex flex-1 flex-col p-5">
+                    <div className="mb-3 flex items-center justify-between">
+                      <span className="font-mono text-sm text-ink-3">
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
+                      <ArrowUpRight className="size-4 text-ink-3 transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-accent-text" />
+                    </div>
+                    <h3 className="font-serif text-lg font-semibold text-ink transition-colors group-hover:text-accent-text">
+                      {project.title}
+                    </h3>
+                    {project.description && (
+                      <p className="mt-2 line-clamp-2 flex-1 text-sm leading-relaxed text-ink-2">
+                        {project.description}
+                      </p>
                     )}
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-lg sm:text-xl">
-                        <Link
-                          href={`/projects/${project.slug}/`}
-                          className="text-foreground transition-colors hover:text-sky-500 group-hover:underline"
-                        >
-                          {project.title}
-                        </Link>
-                      </CardTitle>
-                      {project.description && (
-                        <p className="line-clamp-2 text-sm leading-relaxed text-foreground/75">
-                          {project.description}
-                        </p>
+                    <div className="mt-4 flex items-center justify-between gap-2">
+                      {hostOf(project.link) ? (
+                        <span className="truncate font-mono text-xs text-ink-3">
+                          {hostOf(project.link)}
+                        </span>
+                      ) : (
+                        <span />
                       )}
-                    </CardHeader>
-
-                    <CardContent className="pt-0 flex-1 flex flex-col">
-                      {project.tags && project.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mb-4">
-                          {project.tags.slice(0, 3).map((tag) => (
-                            <Badge
-                              key={tag}
-                              variant="outline"
-                              className="text-xs"
-                            >
-                              {tag}
-                            </Badge>
-                          ))}
-                          {project.tags.length > 3 && (
-                            <Badge variant="outline" className="text-xs">
-                              +{project.tags.length - 3}
-                            </Badge>
-                          )}
-                        </div>
-                      )}
-
-                      <div className="flex items-center justify-between mt-auto">
-                        <div className="flex gap-2">
-                          <Button variant="ghost" size="sm" asChild>
-                            <Link href={`/projects/${project.slug}/`}>
-                              <ExternalLink className="w-4 h-4 mr-1" />
-                              详情
-                            </Link>
-                          </Button>
-                        </div>
-                      </div>
-
                       {project.date && (
-                        <p className="mt-4 border-t border-border/80 pt-3 text-xs text-muted-foreground">
-                          更新于 {formatDate(project.date)}
-                        </p>
+                        <span className="shrink-0 font-mono text-xs text-ink-3">
+                          {formatDateISO(project.date)}
+                        </span>
                       )}
-                    </CardContent>
-                  </Card>
-                </div>
+                    </div>
+                  </div>
+                </Link>
               ))}
             </div>
           </section>
         )}
 
-        {/* Starred Projects */}
+        {/* 精选第三方项目 */}
         {starredProjects.length > 0 && (
-          <section className="mb-20">
-            <div className="mb-8 flex items-center">
-              <div className="mr-4 h-8 w-1 rounded-full bg-amber-500" />
-              <h2 className="text-2xl font-bold text-foreground sm:text-3xl">
-                精选项目
-              </h2>
-              <Badge variant="outline" className="ml-4 text-sm">
-                <Star className="w-3 h-3 mr-1 text-yellow-500" />
-                {starredProjects.length} 个精选
-              </Badge>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <section className="mb-16">
+            <p className="mb-5 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] text-ink-3">
+              <Star className="size-3 text-accent-strong" />
+              Starred · 精选开源项目
+            </p>
+            <div className="divide-y divide-line/70 rounded-2xl border border-line bg-surface">
               {starredProjects.map((project) => (
-                <div key={project.slug}>
-                  <Card className="group flex h-full flex-col border-border/70 bg-gradient-to-br from-amber-500/10 via-card/80 to-orange-500/10 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg">
-                    {project.image && (
-                      <div className="aspect-video overflow-hidden rounded-t-lg">
-                        <img
-                          src={project.image}
-                          alt={project.title}
-                          loading="lazy"
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      </div>
+                <Link
+                  key={project.slug}
+                  href={`/projects/${project.slug}/`}
+                  className="group flex items-center justify-between gap-4 px-5 py-3.5 transition-colors hover:bg-surface-2"
+                >
+                  <div className="flex min-w-0 flex-1 items-baseline gap-3">
+                    <span className="shrink-0 font-medium text-ink transition-colors group-hover:text-accent-text">
+                      {project.title}
+                    </span>
+                    {project.description && (
+                      <span className="hidden truncate text-sm text-ink-3 sm:inline">
+                        {project.description}
+                      </span>
                     )}
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center gap-2">
-                        <CardTitle className="text-lg sm:text-xl">
-                          <Link
-                            href={`/projects/${project.slug}/`}
-                            className="text-foreground transition-colors hover:text-amber-500 group-hover:underline"
-                          >
-                            {project.title}
-                          </Link>
-                        </CardTitle>
-                        <Star className="w-4 h-4 text-yellow-500 fill-current flex-shrink-0" />
-                      </div>
-                      {project.description && (
-                        <p className="line-clamp-2 text-sm leading-relaxed text-foreground/75">
-                          {project.description}
-                        </p>
-                      )}
-                    </CardHeader>
-
-                    <CardContent className="pt-0 flex-1 flex flex-col">
-                      {project.tags && project.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mb-4">
-                          {project.tags.slice(0, 3).map((tag) => (
-                            <Badge
-                              key={tag}
-                              variant="outline"
-                              className="text-xs border-amber-300/50 text-foreground/80"
-                            >
-                              {tag}
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
-
-                      <div className="flex items-center justify-between mt-auto">
-                        <div className="flex gap-2">
-                          <Button variant="ghost" size="sm" asChild>
-                            <Link href={`/projects/${project.slug}/`}>
-                              <ExternalLink className="w-4 h-4 mr-1" />
-                              详情
-                            </Link>
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
+                  </div>
+                  <ArrowUpRight className="size-4 shrink-0 text-ink-3 transition-colors group-hover:text-accent-text" />
+                </Link>
               ))}
             </div>
           </section>
         )}
 
-        {/* Empty State */}
+        {/* 空状态 */}
         {projects.length === 0 && (
-          <div className="py-16 text-center">
-            <Card className="mx-auto max-w-md border-border/70 bg-card/80">
-              <CardContent className="pt-8">
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted/60">
-                  <Code className="h-8 w-8 text-muted-foreground" />
-                </div>
-                <h3 className="mb-2 text-xl font-semibold text-foreground">
-                  暂无项目
-                </h3>
-                <p className="text-muted-foreground">
-                  项目内容正在整理中，敬请期待！
-                </p>
-              </CardContent>
-            </Card>
+          <div className="mx-auto max-w-md rounded-2xl border border-line bg-surface px-6 py-16 text-center shadow-card">
+            <h3 className="font-serif text-lg font-semibold text-ink">
+              暂无项目
+            </h3>
+            <p className="mt-2 text-sm text-ink-3">项目正在整理中，敬请期待。</p>
           </div>
         )}
 
-        {/* Submit New Project */}
-        {projects.length > 0 && (
-          <section className="mx-auto max-w-2xl">
-            <Card className="border-border/70 bg-gradient-to-r from-sky-500/10 to-violet-500/10">
-              <CardContent className="pt-8 text-center">
-                <Plus className="mx-auto mb-4 h-12 w-12 text-sky-500" />
-                <h3 className="mb-4 text-2xl font-semibold text-foreground">
-                  更多项目正在开发中
-                </h3>
-                <p className="mb-6 text-foreground/75">
-                  持续学习和实践，探索更多技术可能性。
-                </p>
-                <Button variant="default" asChild className="group">
-                  <Link
-                    href="https://github.com/hezhijie0327"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <GitBranch className="w-4 h-4 mr-2" />
-                    查看 GitHub
-                    <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
-          </section>
-        )}
+        {/* GitHub 入口 */}
+        <div className="text-center">
+          <a
+            href={siteConfig.social.github}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex h-10 items-center gap-2 rounded-full border border-line bg-surface px-5 text-sm font-medium text-ink transition-colors hover:bg-surface-2"
+          >
+            <GithubIcon className="size-4" />
+            在 GitHub 查看更多
+          </a>
+        </div>
       </div>
     </div>
   );

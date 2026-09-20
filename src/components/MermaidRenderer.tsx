@@ -16,14 +16,16 @@ export default function MermaidRenderer({ chart }: MermaidRendererProps) {
     const renderChart = async () => {
       try {
         const mermaid = (await import("mermaid")).default;
-        const isDark = window.matchMedia(
-          "(prefers-color-scheme: dark)",
-        ).matches;
+        // 优先读取主题类（next-themes），未挂载时回退到系统偏好
+        const isDark =
+          document.documentElement.classList.contains("dark") ||
+          window.matchMedia("(prefers-color-scheme: dark)").matches;
 
         mermaid.initialize({
           startOnLoad: false,
           securityLevel: "strict",
           theme: isDark ? "dark" : "default",
+          fontFamily: "var(--font-sans)",
         });
 
         const id = `mermaid-${Math.random().toString(36).slice(2, 10)}`;
@@ -61,7 +63,7 @@ export default function MermaidRenderer({ chart }: MermaidRendererProps) {
 
   if (!svg) {
     return (
-      <div className="my-4 rounded-lg border border-border bg-card p-4 text-sm text-muted-foreground">
+      <div className="my-4 rounded-xl border border-line bg-surface px-4 py-4 text-sm text-ink-3">
         正在渲染流程图...
       </div>
     );
@@ -69,7 +71,7 @@ export default function MermaidRenderer({ chart }: MermaidRendererProps) {
 
   return (
     <div
-      className="my-6 overflow-x-auto rounded-xl border border-border bg-card/60 p-4"
+      className="my-6 overflow-x-auto rounded-xl border border-line bg-surface p-4 shadow-card"
       dangerouslySetInnerHTML={{ __html: svg }}
     />
   );

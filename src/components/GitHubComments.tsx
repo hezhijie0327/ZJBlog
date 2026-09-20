@@ -1,362 +1,334 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { MessageSquare, MessageCircle, ThumbsUp, ExternalLink, Users, Star, GitBranch, AlertCircle, GitPullRequest } from 'lucide-react'
-import { getGitHubDiscussions, getGitHubIssues, getGitHubRepoInfo, hasDiscussionsEnabled, type GitHubDiscussion, type GitHubIssue, type GitHubRepoInfo } from '@/lib/github'
-import { Button } from './ui/Button'
-import { Card } from './ui/Card'
+import { useState, useEffect } from "react";
+import {
+  MessageSquare,
+  MessageCircle,
+  ThumbsUp,
+  ExternalLink,
+  Users,
+  Star,
+  GitBranch,
+  AlertCircle,
+} from "lucide-react";
+import {
+  getGitHubDiscussions,
+  getGitHubIssues,
+  getGitHubRepoInfo,
+  hasDiscussionsEnabled,
+  type GitHubDiscussion,
+  type GitHubIssue,
+  type GitHubRepoInfo,
+} from "@/lib/github";
 
 interface GitHubCommentsProps {
-  repo?: string
-  issueNumber?: number
-  theme?: 'light' | 'dark'
-  title?: string // 用于创建新 Discussion 的标题
+  repo?: string;
+  title?: string; // 用于创建新 Discussion 的标题
 }
 
-export default function GitHubComments({
-  repo,
-  issueNumber,
-  theme = 'dark',
-  title
-}: GitHubCommentsProps) {
-  const [repoInfo, setRepoInfo] = useState<GitHubRepoInfo | null>(null)
-  const [discussions, setDiscussions] = useState<GitHubDiscussion[]>([])
-  const [issues, setIssues] = useState<GitHubIssue[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [hasDiscussions, setHasDiscussions] = useState<boolean>(false)
-  const [error, setError] = useState<string | null>(null)
+export default function GitHubComments({ repo, title }: GitHubCommentsProps) {
+  const [repoInfo, setRepoInfo] = useState<GitHubRepoInfo | null>(null);
+  const [discussions, setDiscussions] = useState<GitHubDiscussion[]>([]);
+  const [issues, setIssues] = useState<GitHubIssue[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasDiscussions, setHasDiscussions] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!repo) return
+    if (!repo) return;
 
     const fetchData = async () => {
-      setIsLoading(true)
-      setError(null)
+      setIsLoading(true);
+      setError(null);
 
       try {
-        console.log(`🔍 Fetching data for repo: ${repo}`)
+        const [repoData, discussionsEnabled, discussionsData, issuesData] =
+          await Promise.all([
+            getGitHubRepoInfo(repo),
+            hasDiscussionsEnabled(repo),
+            getGitHubDiscussions(repo, 5),
+            getGitHubIssues(repo, 5, "open"),
+          ]);
 
-        // 并行获取仓库信息、Discussions状态和Issues
-        const [repoData, discussionsEnabled, discussionsData, issuesData] = await Promise.all([
-          getGitHubRepoInfo(repo),
-          hasDiscussionsEnabled(repo),
-          getGitHubDiscussions(repo, 5),
-          getGitHubIssues(repo, 5, 'open')
-        ])
-
-        console.log(`📊 Repo data:`, repoData)
-        console.log(`💬 Discussions enabled:`, discussionsEnabled)
-        console.log(`🗨️ Discussions count:`, discussionsData.length)
-        console.log(`🐛 Issues count:`, issuesData.length)
-
-        setRepoInfo(repoData)
-        setHasDiscussions(discussionsEnabled)
-        setDiscussions(discussionsData)
-        setIssues(issuesData)
+        setRepoInfo(repoData);
+        setHasDiscussions(discussionsEnabled);
+        setDiscussions(discussionsData);
+        setIssues(issuesData);
       } catch (err) {
-        console.error(`❌ Error fetching data for ${repo}:`, err)
-        setError(err instanceof Error ? err.message : '获取数据失败')
+        console.error(`Error fetching data for repo: ${repo}:`, err);
+        setError(err instanceof Error ? err.message : "获取数据失败");
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
-    fetchData()
-  }, [repo])
+    fetchData();
+  }, [repo]);
+
+  const sectionTitle = hasDiscussions ? "讨论与评论" : "问题与反馈";
 
   if (!repo) {
     return (
-      <div className="mt-12 border-t pt-8">
-        <div className="flex items-center gap-2 mb-6">
-          <MessageSquare className="w-5 h-5" />
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">评论</h3>
+      <section className="mt-14 border-t border-line pt-8">
+        <SectionTitle>{sectionTitle}</SectionTitle>
+        <div className="rounded-2xl border border-line bg-surface px-6 py-8 text-center shadow-card">
+          <p className="text-sm text-ink-2">此内容未关联 GitHub 仓库</p>
         </div>
-        <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-slate-800/50 dark:to-slate-900/50 rounded-lg p-6 text-center shadow-sm">
-          <p className="text-gray-800 dark:text-gray-200">
-            此项目未关联 GitHub 仓库
-          </p>
-        </div>
-      </div>
-    )
+      </section>
+    );
   }
 
   if (isLoading) {
     return (
-      <div className="mt-12 border-t pt-8">
-        <div className="flex items-center gap-2 mb-6">
-          <MessageSquare className="w-5 h-5" />
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">讨论与评论</h3>
-        </div>
-        <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-slate-800/50 dark:to-slate-900/50 rounded-lg p-6 text-center shadow-sm">
+      <section className="mt-14 border-t border-line pt-8">
+        <SectionTitle>{sectionTitle}</SectionTitle>
+        <div className="rounded-2xl border border-line bg-surface px-6 py-8 shadow-card">
           <div className="animate-pulse">
-            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mx-auto mb-3"></div>
-            <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mx-auto"></div>
+            <div className="mx-auto mb-3 h-4 w-1/4 rounded bg-surface-2" />
+            <div className="mx-auto h-3 w-1/3 rounded bg-surface-2" />
           </div>
         </div>
-      </div>
-    )
+      </section>
+    );
   }
 
   // 即使有错误或无法获取仓库信息，仍然显示底部的参与卡片
   if (error || !repoInfo) {
-    console.log(`⚠️ Component showing basic participation card due to error or missing repo info:`, { error, repoInfo })
     return (
-      <div className="mt-12 border-t pt-8">
-        <div className="flex items-center gap-2 mb-6">
-          <MessageSquare className="w-5 h-5" />
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">讨论与评论</h3>
-        </div>
-
-        <Card className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-slate-800/50 dark:to-slate-900/50 border-0 shadow-sm">
-          <div className="p-6 text-center">
-            <div className="mb-4">
-              <p className="text-gray-800 dark:text-gray-200 mb-2">
-                欢迎参与讨论
-              </p>
-              <p className="text-sm text-gray-700 dark:text-gray-300">
-                对此项目有疑问或建议？访问 GitHub 仓库参与讨论
-              </p>
-            </div>
+      <section className="mt-14 border-t border-line pt-8">
+        <SectionTitle>{sectionTitle}</SectionTitle>
+        <div className="rounded-2xl border border-line bg-surface px-6 py-8 text-center shadow-card">
+          <p className="font-serif text-base font-semibold text-ink">
+            欢迎参与讨论
+          </p>
+          <p className="mt-2 text-sm text-ink-2">
+            对此内容有疑问或建议？访问 GitHub 仓库参与讨论
+          </p>
+          <div className="mt-5 flex items-center justify-center gap-3">
+            <a
+              href={`https://github.com/${repo}/issues`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex h-9 items-center gap-1.5 rounded-full border border-line px-4 text-sm text-ink transition-colors hover:bg-surface-2"
+            >
+              <ExternalLink className="size-3.5" />
+              打开仓库
+            </a>
           </div>
-        </Card>
-      </div>
-    )
+        </div>
+      </section>
+    );
   }
 
-  console.log(`✅ Component rendering for repo: ${repo} with ${discussions.length} discussions and ${issues.length} issues`)
-
   return (
-    <div className="mt-12 border-t pt-8">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2">
-          <MessageSquare className="w-5 h-5" />
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-            {hasDiscussions ? '讨论与评论' : '问题与反馈'}
-          </h3>
-        </div>
-        <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
-          <div className="flex items-center gap-1">
-            <AlertCircle className="w-4 h-4" />
+    <section className="mt-14 border-t border-line pt-8">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <SectionTitle>{sectionTitle}</SectionTitle>
+        <div className="flex items-center gap-4 font-mono text-xs text-ink-3">
+          <span className="inline-flex items-center gap-1">
+            <AlertCircle className="size-3.5" />
             {repoInfo.openIssuesCount}
-          </div>
+          </span>
           {hasDiscussions && (
-            <div className="flex items-center gap-1">
-              <MessageCircle className="w-4 h-4" />
+            <span className="inline-flex items-center gap-1">
+              <MessageCircle className="size-3.5" />
               {discussions.length}
-            </div>
+            </span>
           )}
-          <div className="flex items-center gap-1">
-            <Star className="w-4 h-4" />
+          <span className="inline-flex items-center gap-1">
+            <Star className="size-3.5" />
             {repoInfo.stargazersCount}
-          </div>
-          <div className="flex items-center gap-1">
-            <GitBranch className="w-4 h-4" />
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <GitBranch className="size-3.5" />
             {repoInfo.forksCount}
-          </div>
+          </span>
         </div>
       </div>
 
       {/* 仓库信息 */}
-      <Card className="mb-6 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-slate-800/50 dark:to-slate-900/50 border-0 shadow-sm">
-        <div className="p-4">
-          <div className="flex items-start justify-between mb-3">
-            <div>
-              <h4 className="font-medium text-lg mb-1 text-gray-900 dark:text-gray-100">{repoInfo.name}</h4>
-              <p className="text-gray-700 dark:text-gray-300 text-sm">
-                {repoInfo.description || '暂无描述'}
-              </p>
-            </div>
+      <div className="mb-6 rounded-2xl border border-line bg-surface p-5 shadow-card">
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
             <a
               href={repoInfo.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+              className="font-serif text-base font-semibold text-ink transition-colors hover:text-accent-text"
             >
-              <ExternalLink className="w-4 h-4" />
+              {repoInfo.name}
             </a>
+            <p className="mt-1 line-clamp-2 text-sm text-ink-2">
+              {repoInfo.description || "暂无描述"}
+            </p>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded">
-              GitHub
-            </span>
-            {hasDiscussions ? (
-              <span className="px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs rounded">
-                已启用 Discussions
-              </span>
-            ) : (
-              <span className="px-2 py-1 bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 text-xs rounded">
-                仅支持 Issues
+          <div className="flex shrink-0 items-center gap-2">
+            {hasDiscussions && (
+              <span className="rounded-full border border-line px-2.5 py-0.5 font-mono text-[10px] text-ink-2">
+                Discussions
               </span>
             )}
-          </div>
-        </div>
-      </Card>
-
-      {/* Issues 列表 - 仅在有 Issues 时显示 */}
-      {issues.length > 0 && (
-        <div className="mb-6">
-          <h4 className="font-medium mb-4 flex items-center gap-2 text-gray-900 dark:text-gray-100">
-            <AlertCircle className="w-4 h-4" />
-            开放问题 ({issues.length})
-          </h4>
-          <div className="space-y-3">
-            {issues.map((issue) => (
-              <Card key={issue.id} className="hover:shadow-md transition-shadow bg-gradient-to-r from-red-50 to-orange-50 dark:from-slate-800/50 dark:to-slate-900/50 border-0 shadow-sm">
-                <div className="p-4">
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex-1">
-                      <a
-                        href={issue.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="font-medium text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 hover:underline"
-                      >
-                        #{issue.number} {issue.title}
-                      </a>
-                      <div className="flex items-center gap-3 mt-2 text-sm text-gray-600 dark:text-gray-400">
-                        <div className="flex items-center gap-1">
-                          <img
-                            src={issue.author.avatarUrl}
-                            alt={issue.author.login}
-                            className="w-4 h-4 rounded-full"
-                          />
-                          {issue.author.login}
-                        </div>
-                        <span>{new Date(issue.createdAt).toLocaleDateString('zh-CN')}</span>
-                        {issue.comments.totalCount > 0 && (
-                          <div className="flex items-center gap-1">
-                            <MessageCircle className="w-3 h-3" />
-                            {issue.comments.totalCount}
-                          </div>
-                        )}
-                        <span className={`px-2 py-1 text-xs rounded ${
-                          issue.state === 'open'
-                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                            : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
-                        }`}>
-                          {issue.state === 'open' ? '开放' : '已关闭'}
-                        </span>
-                      </div>
-                      {issue.labels.length > 0 && (
-                        <div className="flex items-center gap-2 mt-2 flex-wrap">
-                          {issue.labels.map((label) => (
-                            <span
-                              key={label.name}
-                              className="px-2 py-1 text-xs rounded-full text-white"
-                              style={{ backgroundColor: `#${label.color}` }}
-                            >
-                              {label.name}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Discussions 列表 - 仅在有 Discussions 时显示 */}
-      {discussions.length > 0 && (
-        <div className="mb-6">
-          <h4 className="font-medium mb-4 flex items-center gap-2 text-gray-900 dark:text-gray-100">
-            <MessageCircle className="w-4 h-4" />
-            相关讨论 ({discussions.length})
-          </h4>
-          <div className="space-y-3">
-            {discussions.map((discussion) => (
-              <Card key={discussion.id} className="hover:shadow-md transition-shadow bg-gradient-to-r from-gray-50 to-slate-50 dark:from-slate-800/50 dark:to-slate-900/50 border-0 shadow-sm">
-                <div className="p-4">
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex-1">
-                      <a
-                        href={discussion.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 hover:underline"
-                      >
-                        {discussion.title}
-                      </a>
-                      <div className="flex items-center gap-3 mt-2 text-sm text-gray-600 dark:text-gray-400">
-                        <div className="flex items-center gap-1">
-                          <img
-                            src={discussion.author.avatarUrl}
-                            alt={discussion.author.login}
-                            className="w-4 h-4 rounded-full"
-                          />
-                          {discussion.author.login}
-                        </div>
-                        <span>{new Date(discussion.createdAt).toLocaleDateString('zh-CN')}</span>
-                        {discussion.comments.totalCount > 0 && (
-                          <div className="flex items-center gap-1">
-                            <MessageCircle className="w-3 h-3" />
-                            {discussion.comments.totalCount}
-                          </div>
-                        )}
-                        {discussion.upvoteCount > 0 && (
-                          <div className="flex items-center gap-1">
-                            <ThumbsUp className="w-3 h-3" />
-                            {discussion.upvoteCount}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <span className="px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-xs rounded">
-                      {discussion.category.emoji} {discussion.category.name}
-                    </span>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* 参与讨论 - 始终显示 */}
-      <Card className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-slate-800/50 dark:to-slate-900/50 border-0 shadow-sm">
-        <div className="p-6 text-center">
-          <div className="mb-4">
-            <p className="text-gray-800 dark:text-gray-200 mb-2">
-              {hasDiscussions ? '欢迎参与讨论' : '欢迎反馈问题'}
-            </p>
-            <p className="text-sm text-gray-700 dark:text-gray-300">
-              {hasDiscussions
-                ? '对此项目有疑问或建议？提交 Issue 或创建新的 Discussion'
-                : '对此项目有疑问或建议？通过 Issues 提出问题和建议'
-              }
-            </p>
-          </div>
-
-          <div className="flex items-center justify-center gap-3">
             <a
-              href={`https://github.com/${repo}/issues/new?title=${encodeURIComponent(title || '问题反馈')}`}
+              href={repoInfo.url}
               target="_blank"
               rel="noopener noreferrer"
+              aria-label="在 GitHub 打开仓库"
+              className="grid size-8 place-items-center rounded-full text-ink-3 transition-colors hover:bg-surface-2 hover:text-ink"
             >
-              <Button>
-                <AlertCircle className="w-4 h-4 mr-2" />
-                提交 Issue
-              </Button>
+              <ExternalLink className="size-4" />
             </a>
-
-            {hasDiscussions && (
-              <a
-                href={`https://github.com/${repo}/discussions/new?category=general&title=${encodeURIComponent(title || '新的讨论')}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Button variant="outline">
-                  <Users className="w-4 h-4 mr-2" />
-                  创建讨论
-                </Button>
-              </a>
-            )}
           </div>
         </div>
-      </Card>
-    </div>
-  )
+      </div>
+
+      {/* Issues 列表 */}
+      {issues.length > 0 && (
+        <div className="mb-6">
+          <h4 className="mb-3 flex items-center gap-2 font-mono text-xs text-ink-3">
+            <AlertCircle className="size-3.5" />
+            OPEN ISSUES · {issues.length}
+          </h4>
+          <div className="space-y-2">
+            {issues.map((issue) => (
+              <a
+                key={issue.id}
+                href={issue.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block rounded-xl border border-line bg-surface px-4 py-3 transition-colors hover:bg-surface-2"
+              >
+                <p className="text-sm font-medium text-ink transition-colors hover:text-accent-text">
+                  #{issue.number} {issue.title}
+                </p>
+                <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] text-ink-3">
+                  <span className="inline-flex items-center gap-1">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={issue.author.avatarUrl}
+                      alt={issue.author.login}
+                      className="size-3.5 rounded-full"
+                      loading="lazy"
+                    />
+                    {issue.author.login}
+                  </span>
+                  <span>{new Date(issue.createdAt).toLocaleDateString("zh-CN")}</span>
+                  {issue.comments.totalCount > 0 && (
+                    <span className="inline-flex items-center gap-1">
+                      <MessageCircle className="size-3" />
+                      {issue.comments.totalCount}
+                    </span>
+                  )}
+                  <span
+                    className={
+                      issue.state === "open" ? "text-ok" : "text-ink-3"
+                    }
+                  >
+                    {issue.state === "open" ? "开放" : "已关闭"}
+                  </span>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Discussions 列表 */}
+      {discussions.length > 0 && (
+        <div className="mb-6">
+          <h4 className="mb-3 flex items-center gap-2 font-mono text-xs text-ink-3">
+            <MessageCircle className="size-3.5" />
+            DISCUSSIONS · {discussions.length}
+          </h4>
+          <div className="space-y-2">
+            {discussions.map((discussion) => (
+              <a
+                key={discussion.id}
+                href={discussion.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block rounded-xl border border-line bg-surface px-4 py-3 transition-colors hover:bg-surface-2"
+              >
+                <p className="text-sm font-medium text-ink transition-colors hover:text-accent-text">
+                  {discussion.title}
+                </p>
+                <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] text-ink-3">
+                  <span className="inline-flex items-center gap-1">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={discussion.author.avatarUrl}
+                      alt={discussion.author.login}
+                      className="size-3.5 rounded-full"
+                      loading="lazy"
+                    />
+                    {discussion.author.login}
+                  </span>
+                  <span>
+                    {new Date(discussion.createdAt).toLocaleDateString("zh-CN")}
+                  </span>
+                  {discussion.comments.totalCount > 0 && (
+                    <span className="inline-flex items-center gap-1">
+                      <MessageCircle className="size-3" />
+                      {discussion.comments.totalCount}
+                    </span>
+                  )}
+                  {discussion.upvoteCount > 0 && (
+                    <span className="inline-flex items-center gap-1">
+                      <ThumbsUp className="size-3" />
+                      {discussion.upvoteCount}
+                    </span>
+                  )}
+                  <span>
+                    {discussion.category.emoji} {discussion.category.name}
+                  </span>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 参与讨论 */}
+      <div className="rounded-2xl border border-line bg-surface px-6 py-8 text-center shadow-card">
+        <p className="font-serif text-base font-semibold text-ink">
+          {hasDiscussions ? "欢迎参与讨论" : "欢迎反馈问题"}
+        </p>
+        <p className="mt-2 text-sm text-ink-2">
+          {hasDiscussions
+            ? "对此内容有疑问或建议？提交 Issue 或创建新的 Discussion"
+            : "对此内容有疑问或建议？通过 Issues 提出问题和建议"}
+        </p>
+        <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+          <a
+            href={`https://github.com/${repo}/issues/new?title=${encodeURIComponent(title || "问题反馈")}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex h-9 items-center gap-2 rounded-full bg-accent-strong px-5 text-sm font-semibold text-accent-contrast shadow-card transition-all hover:bg-accent-strong-hover hover:shadow-pop"
+          >
+            <AlertCircle className="size-4" />
+            提交 Issue
+          </a>
+          {hasDiscussions && (
+            <a
+              href={`https://github.com/${repo}/discussions/new?category=general&title=${encodeURIComponent(title || "新的讨论")}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex h-9 items-center gap-2 rounded-full border border-line px-5 text-sm font-medium text-ink transition-colors hover:bg-surface-2"
+            >
+              <Users className="size-4" />
+              创建讨论
+            </a>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return (
+    <h3 className="flex items-center gap-2 font-serif text-lg font-semibold text-ink">
+      <MessageSquare className="size-4 text-ink-3" />
+      {children}
+    </h3>
+  );
 }
