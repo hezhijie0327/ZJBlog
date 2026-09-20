@@ -1,17 +1,11 @@
-"use client";
+// 命令面板：Ctrl/⌘+K 全站搜索，首次打开才拉取 /search-index.json。
 
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import { useRouter } from "next/navigation";
 import { ArrowUpRight, FileText, FolderGit2, Search } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { CHIP, META } from "@/lib/styles";
-import { t } from "@/lib/i18n";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { cn } from "@/lib/cn.ts";
+import { useT } from "@/lib/i18n.ts";
+import { useRouter } from "@/lib/router.tsx";
+import { CHIP, META, MONO_CHIP } from "@/lib/styles.ts";
 
 interface SearchItem {
   title: string;
@@ -20,11 +14,6 @@ interface SearchItem {
   tags: string[];
   href: string;
 }
-
-const TYPE_LABEL: Record<SearchItem["type"], string> = {
-  blog: t("search.typeBlog"),
-  project: t("search.typeProject"),
-};
 
 function matches(item: SearchItem, q: string): boolean {
   const needle = q.toLowerCase();
@@ -35,15 +24,18 @@ function matches(item: SearchItem, q: string): boolean {
   );
 }
 
-export default function CommandPalette() {
-  const router = useRouter();
+export function CommandPalette() {
+  const t = useT();
+  const { navigate } = useRouter();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [index, setIndex] = useState<SearchItem[] | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // ⌘K / Ctrl+K 与自定义事件触发
+  const typeLabel = useMemo(() => ({ blog: t("search.typeBlog"), project: t("search.typeProject") }) as const, [t]);
+
+  // Ctrl/⌘+K 与自定义事件触发
   useEffect(() => {
     const onKeydown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
@@ -54,7 +46,9 @@ export default function CommandPalette() {
         setOpen(false);
       }
     };
-    const onOpen = () => setOpen(true);
+    const onOpen = () => {
+      setOpen(true);
+    };
     window.addEventListener("keydown", onKeydown);
     window.addEventListener("open-command-palette", onOpen);
     return () => {
@@ -65,15 +59,21 @@ export default function CommandPalette() {
 
   // 首次打开时懒加载索引
   useEffect(() => {
-    if (!open || index) return;
+    if (!open || index) {
+      return;
+    }
     let cancelled = false;
     fetch("/search-index.json")
       .then((res) => res.json() as Promise<SearchItem[]>)
       .then((items) => {
-        if (!cancelled) setIndex(items);
+        if (!cancelled) {
+          setIndex(items);
+        }
       })
       .catch(() => {
-        if (!cancelled) setIndex([]);
+        if (!cancelled) {
+          setIndex([]);
+        }
       });
     return () => {
       cancelled = true;
@@ -87,9 +87,13 @@ export default function CommandPalette() {
   }, []);
 
   const results = useMemo(() => {
-    if (!index) return [];
+    if (!index) {
+      return [];
+    }
     const q = query.trim();
-    if (!q) return index.slice(0, 8);
+    if (!q) {
+      return index.slice(0, 8);
+    }
     return index.filter((item) => matches(item, q)).slice(0, 12);
   }, [index, query]);
 
@@ -97,11 +101,11 @@ export default function CommandPalette() {
   const active = Math.min(activeIndex, Math.max(results.length - 1, 0));
 
   const go = useCallback(
-    (href: string) => {
+    (item: SearchItem) => {
       close();
-      router.push(href);
+      navigate(item.href);
     },
-    [close, router],
+    [close, navigate],
   );
 
   const onInputKeydown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -114,7 +118,9 @@ export default function CommandPalette() {
     } else if (e.key === "Enter") {
       e.preventDefault();
       const item = results[active];
-      if (item) go(item.href);
+      if (item) {
+        go(item);
+      }
     }
   };
 
@@ -125,44 +131,46 @@ export default function CommandPalette() {
     }
   }, [open]);
 
-  if (!open) return null;
+  if (!open) {
+    return null;
+  }
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-start justify-center bg-ink/30 px-4 pt-[12vh] backdrop-blur-[2px]"
+      aria-label={t("search.title")}
+      aria-modal="true"
+      className="fixed inset-0 z-100 flex items-start justify-center bg-ink/30 px-4 pt-[12vh] backdrop-blur-[2px] animate-fade-in"
       onClick={close}
       role="dialog"
-      aria-modal="true"
-      aria-label={t("search.title")}
     >
       <div
         className="w-full max-w-xl overflow-hidden rounded-2xl border border-line bg-surface shadow-pop"
-        onClick={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.stopPropagation();
+        }}
       >
         {/* 输入框 */}
         <div className="flex items-center gap-3 border-b border-line px-4">
-          <Search className="size-4 shrink-0 text-ink-3" />
+          <Search aria-hidden="true" className="size-4 shrink-0 text-ink-3" />
           <input
-            ref={inputRef}
-            value={query}
+            aria-label={t("search.inputLabel")}
+            className="h-12 min-w-0 flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-ink-3"
             onChange={(e) => {
               setQuery(e.target.value);
               setActiveIndex(0);
             }}
             onKeyDown={onInputKeydown}
             placeholder={t("search.placeholder")}
-            className="h-12 min-w-0 flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-ink-3"
-            aria-label={t("search.inputLabel")}
+            ref={inputRef}
+            value={query}
           />
-          <kbd className={cn(CHIP, "font-mono text-[10px]")}>ESC</kbd>
+          <kbd className={MONO_CHIP}>ESC</kbd>
         </div>
 
         {/* 结果列表 */}
         <div className="max-h-80 overflow-y-auto p-2">
           {index === null ? (
-            <p className={cn(META, "px-3 py-6 text-center")}>
-              {t("search.loading")}
-            </p>
+            <p className={cn(META, "px-3 py-6 text-center")}>{t("search.loading")}</p>
           ) : results.length === 0 ? (
             <p className="px-3 py-6 text-center text-sm text-ink-3">
               {query.trim() ? t("search.noResults") : t("search.emptyIndex")}
@@ -170,33 +178,33 @@ export default function CommandPalette() {
           ) : (
             results.map((item, i) => (
               <button
+                className={cn(
+                  "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors",
+                  i === active ? "bg-surface-2" : "bg-transparent",
+                )}
                 key={item.href}
-                type="button"
+                onClick={() => {
+                  go(item);
+                }}
+                onMouseEnter={() => {
+                  setActiveIndex(i);
+                }}
                 ref={(el) => {
                   // 键盘导航时保证激活项滚动到可见区域
                   if (i === active && el) {
                     el.scrollIntoView({ block: "nearest" });
                   }
                 }}
-                onMouseEnter={() => setActiveIndex(i)}
-                onClick={() => go(item.href)}
-                className={cn(
-                  "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors",
-                  i === active ? "bg-surface-2" : "bg-transparent",
-                )}
+                type="button"
               >
                 {item.type === "blog" ? (
-                  <FileText className="size-4 shrink-0 text-ink-3" />
+                  <FileText aria-hidden="true" className="size-4 shrink-0 text-ink-3" />
                 ) : (
-                  <FolderGit2 className="size-4 shrink-0 text-ink-3" />
+                  <FolderGit2 aria-hidden="true" className="size-4 shrink-0 text-ink-3" />
                 )}
-                <span className="min-w-0 flex-1 truncate text-sm font-medium text-ink">
-                  {item.title}
-                </span>
-                <span className={cn(CHIP, "shrink-0 font-mono text-[10px]")}>
-                  {TYPE_LABEL[item.type]}
-                </span>
-                <ArrowUpRight className="size-3.5 shrink-0 text-ink-3" />
+                <span className="min-w-0 flex-1 truncate text-sm font-medium text-ink">{item.title}</span>
+                <span className={cn(CHIP, "shrink-0 font-mono text-[10px]")}>{typeLabel[item.type]}</span>
+                <ArrowUpRight aria-hidden="true" className="size-3.5 shrink-0 text-ink-3" />
               </button>
             ))
           )}

@@ -1,75 +1,84 @@
-"use client";
+// 顶部导航：sticky 毛玻璃、桌面链接 + 移动端抽屉、搜索/主题/RSS/GitHub 操作区。
 
+import { Menu, Rss, Search, X } from "lucide-react";
 import { useState } from "react";
-import Link from "next/link";
-import Image from "next/image";
-import { usePathname } from "next/navigation";
-import { cn } from "@/lib/utils";
-import { ICON_BTN } from "@/lib/styles";
-import { t } from "@/lib/i18n";
-import ThemeToggle from "@/components/ThemeToggle";
-import { siteConfig } from "@/config/site";
-import { Menu, Search, X, Rss } from "lucide-react";
-import { GithubIcon } from "@/components/icons";
+import { GithubIcon } from "@/components/icons.tsx";
+import { Link } from "@/components/Shell.tsx";
+import { ThemeToggle } from "@/components/ThemeToggle.tsx";
+import { siteConfig } from "@/config/site.ts";
+import { cn } from "@/lib/cn.ts";
+import { useT } from "@/lib/i18n.ts";
+import { useRouter } from "@/lib/router.tsx";
+import { ICON_BTN } from "@/lib/styles.ts";
 
-const navigation = [
-  { name: t("nav.home"), href: "/" },
-  { name: t("nav.projects"), href: "/projects" },
-  { name: t("nav.blogs"), href: "/blogs" },
-  { name: t("nav.archives"), href: "/archives" },
-  { name: t("nav.support"), href: "/donation" },
-];
-
-export default function Navigation() {
+export function Navigation() {
+  const t = useT();
+  const { data } = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const pathname = usePathname();
 
-  const isPathActive = (href: string) => {
-    if (href === "/") {
-      return pathname === "/";
+  const navigation = [
+    { name: t("nav.home"), href: "/" },
+    { name: t("nav.projects"), href: "/projects/" },
+    { name: t("nav.blogs"), href: "/blogs/" },
+    { name: t("nav.archives"), href: "/archives/" },
+    { name: t("nav.support"), href: "/donation/" },
+  ];
+
+  // 激活态从 payload 的页面类型推导（而非 window.location）：
+  // SSR 与客户端首帧渲染完全一致，hydration 才能无缝复用预渲染 DOM
+  const activeHref = (() => {
+    switch (data?.globals.page) {
+      case "home":
+        return "/";
+      case "blogs":
+      case "blog-post":
+        return "/blogs/";
+      case "projects":
+      case "project":
+        return "/projects/";
+      case "archives":
+        return "/archives/";
+      case "donation":
+        return "/donation/";
+      default:
+        return null;
     }
-    return pathname === href || pathname.startsWith(`${href}/`);
-  };
+  })();
 
   const openSearch = () => {
     window.dispatchEvent(new CustomEvent("open-command-palette"));
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-line/80 bg-background/80 backdrop-blur-md">
+    <header className="sticky top-0 z-50 border-b border-line/80 bg-bg/80 backdrop-blur-md">
       <div className="container mx-auto px-4">
         <div className="flex h-14 items-center justify-between gap-3">
           {/* Logo */}
-          <Link href="/" className="group flex items-center gap-2.5">
-            <Image
-              src="/avatar.jpg"
+          <Link className="group flex items-center gap-2.5" href="/">
+            <img
               alt={siteConfig.author}
-              width={32}
-              height={32}
-              priority
               className="size-8 rounded-full object-cover ring-1 ring-line"
+              height={32}
+              loading="eager"
+              src="/avatar.jpg"
+              width={32}
             />
-            <span className="font-serif text-base font-semibold tracking-tight">
-              {siteConfig.name}
-            </span>
+            <span className="font-serif text-base font-semibold tracking-tight">{siteConfig.name}</span>
           </Link>
 
-          {/* Desktop Navigation */}
+          {/* 桌面导航 */}
           <nav className="hidden items-center gap-1 md:flex">
             {navigation.map((item) => {
-              const isActive = isPathActive(item.href);
+              const isActive = item.href === activeHref;
               return (
                 <Link
-                  key={item.name}
-                  href={item.href}
-                  prefetch={false}
                   aria-current={isActive ? "page" : undefined}
                   className={cn(
                     "relative rounded-full px-3 py-1.5 text-sm transition-colors",
-                    isActive
-                      ? "font-medium text-ink"
-                      : "text-ink-2 hover:text-ink",
+                    isActive ? "font-medium text-ink" : "text-ink-2 hover:text-ink",
                   )}
+                  href={item.href}
+                  key={item.href}
                 >
                   {item.name}
                   {isActive && (
@@ -80,66 +89,72 @@ export default function Navigation() {
             })}
           </nav>
 
-          {/* Right side actions */}
+          {/* 右侧操作区 */}
           <div className="flex items-center gap-0.5">
             <button
-              type="button"
-              onClick={openSearch}
               aria-label={t("nav.search")}
-              title={t("nav.searchTitle")}
               className={ICON_BTN}
+              onClick={openSearch}
+              title={t("nav.searchTitle")}
+              type="button"
             >
-              <Search className="size-4" />
+              <Search aria-hidden="true" className="size-4" />
             </button>
             <ThemeToggle />
             <a
-              href="/rss.xml"
               aria-label={t("nav.rss")}
-              title={t("nav.rss")}
               className={cn(ICON_BTN, "hidden sm:grid")}
+              href="/rss.xml"
+              title={t("nav.rss")}
             >
-              <Rss className="size-4" />
+              <Rss aria-hidden="true" className="size-4" />
             </a>
             <a
-              href={siteConfig.social.github}
-              target="_blank"
-              rel="noopener noreferrer"
               aria-label={t("nav.github")}
-              title={t("nav.github")}
               className={ICON_BTN}
+              href={siteConfig.social.github}
+              rel="noopener noreferrer"
+              target="_blank"
+              title={t("nav.github")}
             >
               <GithubIcon className="size-4" />
             </a>
             <button
-              type="button"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              aria-label={isMenuOpen ? t("nav.closeMenu") : t("nav.openMenu")}
               aria-expanded={isMenuOpen}
+              aria-label={isMenuOpen ? t("nav.closeMenu") : t("nav.openMenu")}
               className={cn(ICON_BTN, "md:hidden")}
+              onClick={() => {
+                setIsMenuOpen(!isMenuOpen);
+              }}
+              type="button"
             >
-              {isMenuOpen ? <X className="size-4" /> : <Menu className="size-4" />}
+              {isMenuOpen ? (
+                <X aria-hidden="true" className="size-4" />
+              ) : (
+                <Menu aria-hidden="true" className="size-4" />
+              )}
             </button>
           </div>
         </div>
 
-        {/* Mobile Navigation */}
+        {/* 移动端导航 */}
         {isMenuOpen && (
           <nav className="border-t border-line/80 py-3 md:hidden">
             <div className="flex flex-col">
               {navigation.map((item) => {
-                const isActive = isPathActive(item.href);
+                const isActive = item.href === activeHref;
                 return (
                   <Link
-                    key={item.name}
-                    href={item.href}
                     aria-current={isActive ? "page" : undefined}
-                    onClick={() => setIsMenuOpen(false)}
                     className={cn(
                       "rounded-lg px-3 py-2 text-sm transition-colors",
-                      isActive
-                        ? "bg-surface-2 font-medium text-ink"
-                        : "text-ink-2 hover:bg-surface-2 hover:text-ink",
+                      isActive ? "bg-surface-2 font-medium text-ink" : "text-ink-2 hover:bg-surface-2 hover:text-ink",
                     )}
+                    href={item.href}
+                    key={item.href}
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                    }}
                   >
                     {item.name}
                   </Link>

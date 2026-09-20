@@ -36,14 +36,14 @@ export const siteConfig = {
     en: "Stay Hungry, Stay Foolish.",
     zh: "求知若渴，虚心若愚。",
   },
-}
+};
 
 // 个人经历时间线（首页「02 / 个人经历」区域）
 // TODO: 以下均为占位数据，请替换为真实经历
 export interface TimelineEntry {
-  period: string
-  title: string
-  description?: string
+  period: string;
+  title: string;
+  description?: string;
 }
 
 export const timeline: TimelineEntry[] = [
@@ -60,10 +60,9 @@ export const timeline: TimelineEntry[] = [
   {
     period: "20XX – 至今",
     title: "独立开发者",
-    description:
-      "维护 ZJSearch、Cloudflare Workers 等开源项目，探索网络与前端技术",
+    description: "维护 ZJSearch、Cloudflare Workers 等开源项目，探索网络与前端技术",
   },
-]
+];
 
 // 首页「精选项目」展示数量，其余个人项目折叠进「更多项目」
-export const featuredProjectCount = 4
+export const featuredProjectCount = 4;

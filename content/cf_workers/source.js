@@ -25,12 +25,9 @@ async function handleRequest(request) {
 
   const url = rawPathSegments.join("/").replace(/\/hotlink-ok\//gim, "/");
 
-  const response_raw = await fetch(
-    `https://raw.githubusercontent.com/hezhijie0327/${url}`,
-    {
-      headers: { Authorization: `token ${GITHUB_API_TOKEN}` },
-    },
-  );
+  const response_raw = await fetch(`https://raw.githubusercontent.com/hezhijie0327/${url}`, {
+    headers: { Authorization: `token ${GITHUB_API_TOKEN}` },
+  });
 
   if (response_raw.status !== 200) {
     return new Response("404 Not Found", {

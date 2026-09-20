@@ -1,0 +1,49 @@
+/* 文档级行为（有意不入 @layer，保持在级联末端）：
+   全局 reduced-motion 闸、调色板交叉淡化与它的 stand-down 窗口。 */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* 调色板交叉淡化：色彩 token 已注册为 <color> @property，.dark 翻转时
+   变量在 <html> 上插值，整页用且仅用这一条过渡跟随（逐元素过渡方案在
+   重页面上会有逐帧全文档重算的抖动）。不支持 @property 的浏览器瞬时
+   切换；reduced-motion 闸（0.01ms !important）会把淡化收掉。 */
+html {
+  transition:
+    --bg 0.3s ease,
+    --surface 0.3s ease,
+    --surface-2 0.3s ease,
+    --line 0.3s ease,
+    --ink 0.3s ease,
+    --ink-2 0.3s ease,
+    --ink-3 0.3s ease,
+    --accent 0.3s ease,
+    --accent-hover 0.3s ease,
+    --accent-strong 0.3s ease,
+    --accent-strong-hover 0.3s ease,
+    --accent-soft 0.3s ease,
+    --accent-contrast 0.3s ease,
+    --highlight-bg 0.3s ease,
+    --danger 0.3s ease,
+    --warning 0.3s ease,
+    --ok 0.3s ease,
+    --code-bg 0.3s ease,
+    --code-fg 0.3s ease;
+}
+
+/* stand-down 窗口（lib/theme.ts 在真实翻类前后加 ~350ms 的类）：
+   带私有 transition-colors 的元素（chips、按钮）会追着插值中的 token 在
+   私有计时器上跑，明显滞后于整页 —— 窗口期内它们的过渡全部让位。 */
+html.zjs-palette-anim *:not(html),
+html.zjs-palette-anim :not(html)::before,
+html.zjs-palette-anim :not(html)::after {
+  transition: none !important;
+}

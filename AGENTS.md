@@ -1,93 +1,89 @@
 # AGENTS.md - Development Guide for Agentic Coding
 
-AI agent 开发指南。修改代码前先读完本文件。
+AI agent 开发指南。修改代码前先读完本文件。设计语言与品牌规范见 **[DESIGN.md](./DESIGN.md)**。
 
 ## Essential Commands
 
 ```bash
-# 开发服务器（Windows 兼容，无环境变量前缀）
-npm run dev
+# 开发服务器（Vite，http://localhost:5175；dev 中间件与生产同构地 SSR 整页）
+pnpm dev
 
-# 生产构建（静态导出到 out/）
-npm run build
+# 生产构建（vite build → vite build --ssr → scripts/prerender.mjs 预渲染 22 路由 + 静态资源 → dist/）
+pnpm build
 
-# ESLint
-npm run lint
+# Biome 检查（lint + 格式；pnpm lint:fix 自动修复）
+pnpm lint
 
 # 类型检查
-npx tsc --noEmit
+pnpm tsc
 
 # Lighthouse 门禁：对 sitemap 中每个页面审计，全类别必须 100 分
-npm run audit          # 需先 npm run build；本机需有 Chromium
+pnpm run audit         # 需先 pnpm build；本机需有 Chromium（CHROME_PATH 可指定）
 
-# 完整本地检查（lint + build）
-npm run ci
+# 完整本地检查（lint + tsc + build）
+pnpm run ci
 ```
 
-无测试框架；质量门禁 = tsc + eslint + Lighthouse，全部在本地开发时运行（无 CI，GitHub Actions 工作流已移除）。
+无测试框架；质量门禁 = tsc + biome + Lighthouse，全部本地运行（无 CI）。包管理器 **pnpm**（唯一 lockfile）。
 
 ## Architecture
 
-Next.js 16 App Router，`output: "export"` 全静态导出，部署到 Cloudflare Workers Static Assets（`wrangler.jsonc`，部署目录 `./out`）。内容系统：`content/<type>/*.md` + gray-matter（见 src/lib/content.ts）。
+**Vite 8 + React 19 纯 SPA，与 ZJSearch（`~/searxng/client/zjsearch`）同构**：每条路由构建期预渲染完整 HTML（`dist/<route>/index.html`，内嵌 `<script id="page-data">` JSON payload）；站内导航由 fetch-and-swap 路由接管（拦截链接 → fetch 目标页 → 提取 payload → pushState）。部署到 Cloudflare Workers Static Assets（`wrangler.jsonc` → `./dist`，`not_found_handling: "404-page"`）。
 
 ```
 src/
-├── app/               # 路由：/ /blogs /blogs/[slug] /projects /projects/[slug]
-│                      #       /archives /donation
-│                      # 静态资源路由：/rss.xml /search-index.json /sitemap.xml /robots.txt
-├── components/        # 页面组件（无 shadcn/ui 依赖）
-├── config/site.ts     # 站点元数据、社交链接、Hero 文案、时间线（个人内容）
-└── lib/
-    ├── content.ts     # 内容加载（fs + gray-matter + reading-time）
-    ├── github.ts      # GitHub API（评论区客户端懒取数，5 分钟内存缓存；禁止注入 token）
-    ├── i18n.ts        # UI 文案字典 + t()（类型安全）
-    ├── styles.ts      # 设计语言类片段单一来源（ICON_BTN/CARD/BTN_*/CHIP/META/SECTION）
-    └── utils.ts       # cn / formatDate / formatDateISO / hostOf
+├── main.tsx / app.tsx   # 启动引导；Provider 树；payload 守卫分发（isXxxData）
+├── pages/               # *Page.tsx + lazyPages.ts（次级页面按需加载；首页/404 急加载）
+├── features/
+│   ├── comments/        # GitHubComments.tsx + api.ts（客户端懒取数）
+│   └── markdown/        # Prose（注入构建期编译的 HTML）+ MermaidRenderer（进视口懒加载）
+├── components/          # Shell(Link/ProgressBar/骨架) Navigation Footer CommandPalette
+│                        # ThemeToggle SectionHeading icons
+├── lib/
+│   ├── router.tsx       # fetch-and-swap SPA 路由（pushState/popstate/回退整页）
+│   ├── pageData.ts      # payload 提取（内嵌/DOMParser）
+│   ├── types.ts         # payload 判别联合 + 类型守卫（客户端契约）
+│   ├── theme.ts         # 明暗（localStorage + html.dark + pre-paint 内联脚本防闪烁）
+│   ├── i18n.ts + i18n/  # EN 基准词库 + zh-CN；useT/translateFor
+│   ├── styles.ts        # 设计片段单一来源（DESIGN.md §6）
+│   └── cn / format / link
+├── styles/              # global.css 入口 → tokens → base → prose → behaviors
+└── config/site.ts       # 站点元数据、社交链接、Hero、时间线（个人内容）
+tools/
+├── content.ts           # 构建期内容管线：content/*.md → frontmatter + 编译 HTML（Node 专用）
+├── payloads.ts          # 路由 → payload（含 title/description/OG）
+├── generators.ts        # rss/sitemap/robots/search-index/llms/llms-full 生成器
+└── ssr.tsx              # SSR 整页组装（dev 中间件与预渲染共用）
+scripts/
+├── prerender.mjs        # 预渲染全部路由 + 落盘静态资源到 dist/
+└── audit.mjs            # Lighthouse 门禁（本地静态服务器镜像生产 CDN 行为）
 ```
-
-## Design Language（对齐 ZJSearch）
-
-- **Token**：全部颜色走 `src/app/globals.css` 的 CSS 变量（暖纸底/墨字/金黄强调），工具类名为 `bg-surface`、`text-ink-2`、`border-line`、`bg-accent-strong`、`text-accent-text`、`shadow-card`、`shadow-pop`。禁止裸写 hex 或 Tailwind 调色板（`text-gray-*` 等）。
-- **类片段**：重复的组合类一律用 `src/lib/styles.ts` 导出的常量（`BTN_PRIMARY`、`ICON_BTN`、`CARD_HOVER`…），覆盖时用 `cn(FRAGMENT, "覆盖类")`。不要在组件里裸写长串类名。
-- **字体**：零 webfont（对齐 ZJSearch），全部系统字体栈（globals.css `--font-*`）。`font-serif`（宋体族：Noto Serif SC/宋体回退）用于标题与文章正文；`font-sans`（系统无衬线）用于界面；`font-mono` 只用于编号/日期/英文小标签。引入 webfont 前先跑 `npm run audit` 评估 perf 影响。
-- **对比度规则**：`accent-text`（金棕）是文字链接色；`accent-strong`（金黄）只做填充底色，上面的文字必须是 `accent-contrast`。
-- **明暗模式**：next-themes，class 策略；只允许通过 token 生效，禁止 `dark:` 下散落硬编码色值（图标显隐用 `dark:hidden`/`dark:block` 除外）。
-- **圆角**：按钮/图标钮 `rounded-full`，卡片 `rounded-2xl`，小件 `rounded-lg/xl`。
-- **动效**：仅 `animate-fade-up` + `[animation-delay:*ms]`（首屏），列表悬停 `transition-colors`；尊重 prefers-reduced-motion（全局已处理）。
-
-## i18n Interface
-
-- 界面词汇一律通过 `import { t } from "@/lib/i18n"` 取词，key 是类型安全的（`MessageKey`）。新增文案先加进字典再使用。
-- **边界**：个人内容（姓名/格言/时间线/Hero）放 `src/config/site.ts`，不放字典；文章正文在 `content/`。
-- 未来加英文：新建 `src/lib/locales/en.ts`（类型 `Dict`，缺 key 编译报错）→ 注册 dictionaries → 切换 setLocale。
 
 ## Content
 
-- Frontmatter：blogs 用 `title/description/date/category/tags`；projects 另有 `type: personal|starred`、`link`（GitHub 仓库，自动解析出 owner/repo 供评论区）、`image`。
-- 所有页面静态生成（`generateStaticParams`）；中文 slug 需 `decodeURIComponent`（content.ts 已处理）。
+- `content/blogs/*.md` frontmatter：`title/description/date/category/tags`；`content/projects/*.md` 另有 `type: personal|starred`、`link`（GitHub 仓库自动解析 owner/repo 供评论区）、`image`（已预留未消费）。
+- Markdown 在**构建期**编译为 HTML（remark-gfm；mermaid 代码块替换为占位容器，客户端进视口才渲染；GFM 复选框构建期补 aria-hidden）。
+- 每条路由的 payload 由 `tools/payloads.ts` 生成；新增页面类型 = types.ts 加 payload + 守卫 → payloads.ts 加分支 → pages/ 加页面 → app.tsx 分发。
+- 中文 slug：URL 用 `encodeURIComponent`，磁盘/查找用解码后的原始 slug（content.ts 已处理）。
 
 ## Conventions
 
-- 导入顺序：react → next → 第三方（字母序）→ `@/components` → `@/lib` → type 导入。
-- TypeScript strict；禁止 `any`（GitHub API 响应用 `Raw*` 宽松接口 + 显式收窄）。
-- 图标：lucide-react；品牌图标（GitHub）用 `components/icons.tsx` 的内联 SVG（lucide v1 无品牌图标）。
-- 图片：优先 `next/image`（已 unoptimized）；外链封面在卡片网格中用 `<img loading="lazy">`。
-- 可访问性：图标按钮必须有 `aria-label`；当前导航项加 `aria-current="page"`；全局 `:focus-visible` 焦点环已在 globals.css 定义。
+- **仅命名导出**（零 default export）；组件 PascalCase.tsx；lib 辅助模块小写 topic 命名；hook 就近领域文件。
+- 导入：`@/` 别名 + 显式扩展名（`@/lib/i18n.ts`）；`verbatimModuleSyntax`，type-only 导入必须 `import type`。
+- TypeScript strict（含 `noUncheckedIndexedAccess`），禁 `any`（外部响应用 `Raw*` 接口收窄）。
+- 颜色一律 token（DESIGN.md §2）；重复类名一律 `lib/styles.ts` 片段；零 webfont；`dark:` 只用于图标显隐。
+- 重依赖必须惰性：进视口才加载（先例：Mermaid、GitHub 评论数据）。
+- 图标：lucide-react；品牌图标（GitHub）用 `components/icons.tsx` 内联 SVG。
+- 可访问性：图标按钮必须 `aria-label`；当前导航项 `aria-current="page"`；装饰元素 `aria-hidden`。
 
 ## Quality Gates
 
-1. `npx tsc --noEmit` 零错误
-2. `npm run lint` 零错误（react-hooks/set-state-in-effect 已启用：不要在 effect 里同步 setState，用渲染期收敛或事件回调）
-3. `npm run build` 成功（所有页面可 SSG）
-4. `npm run audit` 每个页面全类别 100 分（性能/可访问性/最佳实践/SEO/Agentic Browsing）；改了样式或加依赖后必须跑
-
-## Known Decisions（勿轻易回退）
-
-- **零 webfont**：系统字体栈（globals.css `--font-*`）；webfont 曾致 CSS 276KB + perf 91。
-- **Mermaid 懒加载**：进视口才动态加载（库 ~2.7MB），预加载曾致 perf 掉到 82。
-- **评论区客户端懒取数**：进视口才请求 api.github.com（实时数据；403/429/404/410 静默降级）；构建期取数与任何形式的 token 注入均不可回退。
-- **审计服务器（scripts/audit.mjs）非通用工具**：trace 端点镜像、RSC 路径映射、gzip 均为「镜像生产 CDN 行为」的审计设施，勿用于开发服务器。
+1. `pnpm tsc` 零错误
+2. `pnpm lint`（biome）零错误
+3. `pnpm build` 成功（22+ 路由全部预渲染）
+4. `pnpm run audit` 每页全类别 100 分（性能/可访问性/最佳实践/SEO/Agentic Browsing）；改样式、加依赖、动路由后必须跑
+5. 注意 `pnpm audit`（无 run）是 pnpm 内置安全审计，不是本项目的门禁
 
 ## Deployment
 
-`npm run build` → `wrangler deploy`（wrangler.jsonc 指向 ./out）。robots.txt/sitemap.xml/rss.xml 由 app 路由在构建时生成；根目录不要放静态文件（不生效）。
+`pnpm build` → `wrangler deploy`（wrangler.jsonc 指向 ./dist；未知路径服用 404.html）。robots.txt / sitemap.xml / rss.xml / search-index.json / llms.txt 由预渲染阶段生成到 dist/；根目录不要放静态文件（走 `public/`）。

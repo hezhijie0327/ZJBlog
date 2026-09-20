@@ -1,28 +1,27 @@
 /**
- * 治杰 Online Lighthouse 门禁 — `npm run audit`（仅开发时本地使用，无 CI）
+ * 治杰 Online Lighthouse 门禁 — `pnpm audit`（仅开发时本地使用，无 CI）
  *
- * 构建产物 out/ 由内置零依赖静态服务器托管（trailingSlash 语义与
+ * 构建产物 dist/ 由内置零依赖静态服务器托管（trailingSlash 语义与
  * Cloudflare Workers Static Assets 一致：/blogs/foo/ → /blogs/foo/index.html），
- * 审计页面列表直接从 out/sitemap.xml 解析 —— sitemap 有多少页面就审多少，
- * 每个页面要求 Performance / Accessibility / Best Practices / SEO /
- * Agentic Browsing 全部 100 分。
+ * 审计页面列表直接从 dist/sitemap.xml 解析 —— 有多少页面就审多少，
+ * 每条路由都是预渲染完整 HTML，要求 Performance / Accessibility /
+ * Best Practices / SEO / Agentic Browsing 全部 100 分。
  *
  * LHR 原始报告归档在 .lighthouse-archive/<run>/（含 scores.json），
- * 需要本机 Chromium：chrome-launcher 会自动探测，或用 CHROME_PATH 指定。
+ * 需要本机 Chromium：chrome-launcher 自动探测，或用 CHROME_PATH 指定。
  * LH_FORM_FACTOR=mobile 可切换到更严格的移动端 throttling 档位。
  */
 
-import { existsSync, readFileSync, statSync as fsStatSync } from "node:fs";
-import { gzipSync } from "node:zlib";
-import { createServer } from "node:http";
-import { extname, join, resolve } from "node:path";
-import { dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import { existsSync, statSync as fsStatSync, readFileSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
+import { createServer } from "node:http";
+import { dirname, extname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { gzipSync } from "node:zlib";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, "..");
-const OUT_DIR = join(ROOT, "out");
+const OUT_DIR = join(ROOT, "dist");
 const PORT = 8907;
 const BASE = `http://127.0.0.1:${PORT}`;
 const ARCHIVE_ROOT = process.env.LH_ARCHIVE_DIR ?? join(ROOT, ".lighthouse-archive");
@@ -68,35 +67,20 @@ function serveStatic(dir, port) {
       return;
     }
     const pathname = decodeURIComponent(url.pathname);
-    // Next 16 静态导出的 RSC 预取：客户端请求点分扁平名
-    // （/blogs/hello-world/__next.blogs.$d$slug.__PAGE__.txt），磁盘是斜杠目录
-    // （out/blogs/hello-world/__next.blogs/$d$slug/__PAGE__.txt）
-    // —— 在同目录下做点段到目录段的映射
-    const candidates = [join(dir, pathname)];
-    const lastSlash = pathname.lastIndexOf("/");
-    const dirPart = pathname.slice(0, lastSlash + 1);
-    const seg = pathname.slice(lastSlash + 1);
-    const rsc = seg.match(/^(__next\.[^.]+)\.(.+\.txt)$/);
-    if (rsc) {
-      const nested = `${rsc[1]}/${rsc[2].replaceAll(".", "/")}`;
-      candidates.push(join(dir, dirPart, nested));
-    }
-    // 防目录穿越 + 依次尝试：精确文件 → RSC 映射 → trailingSlash 目录
-    candidates.push(join(dir, dirPart, "index.html"));
-    const safe = candidates
-      .map((p) => resolve(p))
-      .filter((p) => p.startsWith(resolve(dir)));
+    // 防目录穿越：精确文件 → trailingSlash 目录
+    const candidates = [join(dir, pathname), join(dir, pathname, "index.html")];
+    const safe = candidates.map((p) => resolve(p)).filter((p) => p.startsWith(resolve(dir)));
     const filePath = safe.find((p) => existsSync(p) && !fsStatSync(p).isDirectory());
     if (!filePath) {
-      // 与 Cloudflare Workers 行为一致的 404 页
+      // 与 Cloudflare Workers（not_found_handling = 404-page）行为一致的 404 页
       const notFound = join(dir, "404.html");
       res.writeHead(404, { "Content-Type": MIME[".html"] });
       res.end(existsSync(notFound) ? readFileSync(notFound) : "Not Found");
       return;
     }
     const body = readFileSync(filePath);
-    // 与生产边缘一致的长缓存（/_next/static 内容寻址，immutable）
-    const cacheControl = pathname.startsWith("/_next/static/")
+    // 与生产边缘一致的长缓存（哈希文件名的构建资产，immutable）
+    const cacheControl = pathname.startsWith("/assets/")
       ? "public, max-age=31536000, immutable"
       : "public, max-age=300";
     const type = MIME[extname(filePath)] ?? "application/octet-stream";
@@ -130,7 +114,7 @@ function pagesFromSitemap() {
         return null;
       }
     })
-    .filter((p) => p && p.endsWith("/"));
+    .filter((p) => p?.endsWith("/"));
   if (paths.length === 0) throw new Error("sitemap.xml 中没有解析到任何页面");
   return paths;
 }
@@ -155,7 +139,8 @@ process.on("unhandledRejection", (reason) => {
 });
 
 // chrome-launcher 找不到浏览器时，回退到常见的 Edge 安装位置
-// （Windows 机器普遍没有 Chrome；Edge 同为 Chromium，Lighthouse 可直接驱动）
+// （普遍装有 Edge；Edge 同为 Chromium，Lighthouse 可直接驱动。
+//  也可用 CHROME_PATH 指向独立的 Chrome for Testing，避免与日常浏览器互相干扰）
 function resolveBrowserPath() {
   if (process.env.CHROME_PATH) return;
   const candidates =
@@ -176,16 +161,14 @@ function resolveBrowserPath() {
 
 async function main() {
   if (!existsSync(join(OUT_DIR, "index.html"))) {
-    throw new Error("out/ 不存在或未构建 —— 先运行 npm run build");
+    throw new Error("dist/ 不存在或未构建 —— 先运行 pnpm build");
   }
   resolveBrowserPath();
 
   // LH_ONLY="/blogs/,/donation" 可只审计路径前缀匹配的页面（快速迭代用）
   const only = process.env.LH_ONLY;
   const allPaths = pagesFromSitemap();
-  const paths = only
-    ? allPaths.filter((p) => only.split(",").some((prefix) => p.startsWith(prefix.trim())))
-    : allPaths;
+  const paths = only ? allPaths.filter((p) => only.split(",").some((prefix) => p.startsWith(prefix.trim()))) : allPaths;
   if (paths.length === 0) throw new Error(`LH_ONLY 过滤后没有页面: ${only}`);
 
   const server = await serveStatic(OUT_DIR, PORT);
@@ -202,9 +185,7 @@ async function main() {
     const { launch } = await import("chrome-launcher");
     chrome = await launch({ chromeFlags: ["--headless=new"] });
     const lighthouse = (await import("lighthouse")).default;
-    const config = MOBILE
-      ? undefined
-      : (await import("lighthouse/core/config/desktop-config.js")).default;
+    const config = MOBILE ? undefined : (await import("lighthouse/core/config/desktop-config.js")).default;
 
     /** 单页审计；headless Chrome 偶发 trace 中止（全 0 分）时重试一次 */
     async function runPage(url) {
@@ -293,7 +274,7 @@ async function main() {
       try {
         await chrome.kill();
       } catch {
-        // chrome-launcher 在 Windows 上的清理异常不影响审计结果
+        // chrome-launcher 的清理异常不影响审计结果
       }
     }
     server.close();
