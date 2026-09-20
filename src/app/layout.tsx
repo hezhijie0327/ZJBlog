@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Geist_Mono, Inter, Noto_Serif_SC } from "next/font/google";
 import type { ReactNode } from "react";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
@@ -7,22 +6,6 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import CommandPalette from "@/components/CommandPalette";
 import { siteConfig } from "@/config/site";
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-});
-
-const notoSerifSC = Noto_Serif_SC({
-  variable: "--font-noto-serif-sc",
-  weight: ["400", "600", "900"],
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
@@ -35,8 +18,11 @@ export const metadata: Metadata = {
   authors: [{ name: siteConfig.author }],
   creator: siteConfig.author,
   icons: {
-    icon: "/apple-touch-icon.png",
-    shortcut: "/apple-touch-icon.png",
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon.png", type: "image/png", sizes: "48x48" },
+    ],
+    shortcut: "/favicon.png",
     apple: "/apple-touch-icon.png",
   },
   openGraph: {
@@ -70,7 +56,7 @@ export default function RootLayout({
   return (
     <html lang="zh" suppressHydrationWarning>
       <body
-        className={`${inter.variable} ${notoSerifSC.variable} ${geistMono.variable} min-h-screen bg-background font-sans text-foreground antialiased flex flex-col`}
+        className="min-h-screen bg-background font-sans text-foreground antialiased flex flex-col"
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <Navigation />

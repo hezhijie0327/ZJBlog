@@ -1,6 +1,8 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { META } from "@/lib/styles";
+import { t } from "@/lib/i18n";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { siteConfig } from "@/config/site";
@@ -18,8 +20,15 @@ interface CFInfo {
 }
 
 const INITIAL_CF_INFO: CFInfo = {
-  ip: "获取中...",
+  ip: t("footer.loading"),
   kex: "loading",
+  warp: "unknown",
+  loc: "unknown",
+};
+
+const UNAVAILABLE: CFInfo = {
+  ip: t("footer.unavailable"),
+  kex: "unavailable",
   warp: "unknown",
   loc: "unknown",
 };
@@ -87,40 +96,23 @@ export default function Footer({ className = "" }: FooterProps) {
             }
           });
 
-          const next: CFInfo = {
-            ip: parsedData.ip || "无法获取",
+          updateInfo({
+            ip: parsedData.ip || t("footer.unavailable"),
             kex: parsedData.kex || "unavailable",
             warp: parsedData.warp || "unknown",
             loc: parsedData.loc || "unknown",
-          };
-
-          updateInfo(next);
-        } else {
-          updateInfo({
-            ip: "无法获取",
-            kex: "unavailable",
-            warp: "unknown",
-            loc: "unknown",
           });
+        } else {
+          updateInfo(UNAVAILABLE);
         }
       } catch (error) {
         if ((error as Error).name === "AbortError") {
-          updateInfo({
-            ip: "无法获取",
-            kex: "unavailable",
-            warp: "unknown",
-            loc: "unknown",
-          });
+          updateInfo(UNAVAILABLE);
           return;
         }
 
         console.error("Failed to fetch info from Cloudflare trace:", error);
-        updateInfo({
-          ip: "无法获取",
-          kex: "unavailable",
-          warp: "unknown",
-          loc: "unknown",
-        });
+        updateInfo(UNAVAILABLE);
       }
     };
 
@@ -134,13 +126,13 @@ export default function Footer({ className = "" }: FooterProps) {
 
   const getPostQuantumInfo = () => {
     if (cfInfo.kex === "X25519MLKEM768") {
-      return { text: "后量子加密保护", cls: "text-ok" };
+      return { text: t("footer.pqProtected"), cls: "text-ok" };
     } else if (cfInfo.kex === "loading") {
-      return { text: "检测中...", cls: "text-ink-3" };
+      return { text: t("footer.detecting"), cls: "text-ink-3" };
     } else if (cfInfo.kex === "unavailable") {
       return { text: "", cls: "" };
     } else {
-      return { text: "标准加密", cls: "text-ink-3" };
+      return { text: t("footer.standard"), cls: "text-ink-3" };
     }
   };
 
@@ -156,7 +148,7 @@ export default function Footer({ className = "" }: FooterProps) {
           <p className="font-serif text-sm text-ink-2">
             {siteConfig.footerMotto.zh}
             <span className="mx-2 text-line">·</span>
-            <span className="font-mono text-xs tracking-wide">
+            <span className={cn(META, "tracking-wide")}>
               {siteConfig.footerMotto.en}
             </span>
           </p>
@@ -167,7 +159,7 @@ export default function Footer({ className = "" }: FooterProps) {
           </p>
 
           {/* 网络和安全信息（Cloudflare 部署时的彩蛋） */}
-          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 font-mono text-[11px] text-ink-3">
+          <div className={cn(META, "flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[11px]")}>
             <span>
               IP {cfInfo.ip}
               {cfInfo.loc !== "unknown" && cfInfo.loc !== ""
@@ -191,7 +183,7 @@ export default function Footer({ className = "" }: FooterProps) {
             className="inline-flex items-center gap-1.5 text-xs text-ink-3 transition-colors hover:text-ink"
           >
             <ArrowUp className="size-3" />
-            返回顶部
+            {t("footer.backToTop")}
           </Link>
         </div>
       </div>

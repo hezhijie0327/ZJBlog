@@ -191,7 +191,10 @@ export async function getGitHubDiscussions(
     )
 
     if (!response.ok) {
-      console.error(`GitHub Discussions API error for ${repo}:`, response.status, response.statusText)
+      // 404/410 = 仓库不存在或未启用 Discussions，属正常情况，不刷日志
+      if (response.status !== 404 && response.status !== 410) {
+        console.error(`GitHub Discussions API error for ${repo}:`, response.status, response.statusText)
+      }
       return []
     }
 

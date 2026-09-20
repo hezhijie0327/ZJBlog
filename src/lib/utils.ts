@@ -22,3 +22,13 @@ export function formatDateISO(date: string): string {
   const day = String(d.getDate()).padStart(2, '0')
   return `${y}/${m}/${day}`
 }
+
+// 从链接提取展示用域名（github.com），解析失败返回 undefined
+export function hostOf(link?: string): string | undefined {
+  if (!link) return undefined
+  try {
+    return new URL(link).hostname.replace(/^www\./, '')
+  } catch {
+    return undefined
+  }
+}

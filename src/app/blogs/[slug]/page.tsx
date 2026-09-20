@@ -5,6 +5,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 import GitHubComments from "@/components/GitHubComments";
+import { t } from "@/lib/i18n";
+import { siteConfig } from "@/config/site";
 import { formatDate, formatDateISO } from "@/lib/utils";
 import { ArrowLeft, Clock } from "lucide-react";
 
@@ -29,13 +31,13 @@ export async function generateMetadata({
 
   if (!post) {
     return {
-      title: "文章未找到",
+      title: t("blog.notFound"),
     };
   }
 
   return {
     title: post.title,
-    description: post.description || "个人技术博客",
+    description: post.description || t("blog.fallbackDesc"),
     keywords: post.tags,
     openGraph: {
       title: post.title,
@@ -64,7 +66,7 @@ export default async function BlogPost({ params }: BlogPostParams) {
           className="inline-flex items-center gap-1.5 font-mono text-xs text-ink-3 transition-colors hover:text-ink"
         >
           <ArrowLeft className="size-3.5" />
-          BLOG / 全部文章
+          {t("blog.back")}
         </Link>
 
         {/* 文章头部 */}
@@ -95,7 +97,7 @@ export default async function BlogPost({ params }: BlogPostParams) {
           )}
           {post.date && (
             <p className="mt-4 text-[11px] text-ink-3">
-              发布于 {formatDate(post.date)}
+              {t("blog.publishedOn", { date: formatDate(post.date) })}
             </p>
           )}
         </header>
@@ -105,7 +107,7 @@ export default async function BlogPost({ params }: BlogPostParams) {
 
         {/* GitHub 评论 */}
         <GitHubComments
-          repo="hezhijie0327/blog"
+          repo={siteConfig.commentsRepo}
           title={`关于文章 "${post.title}" 的讨论`}
         />
       </article>

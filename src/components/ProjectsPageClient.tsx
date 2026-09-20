@@ -1,8 +1,11 @@
 import Link from "next/link";
-import { ArrowUpRight, Star } from "lucide-react";
-import { GithubIcon } from "@/components/icons";
+import { ArrowUpRight, Image as ImageIcon, Star } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { BTN_OUTLINE, CARD_HOVER, LIST_CONTAINER, SECTION } from "@/lib/styles";
+import { t } from "@/lib/i18n";
+import { formatDateISO, hostOf } from "@/lib/utils";
 import SectionHeading from "@/components/SectionHeading";
-import { formatDateISO } from "@/lib/utils";
+import { GithubIcon } from "@/components/icons";
 import { siteConfig } from "@/config/site";
 
 interface Project {
@@ -20,15 +23,6 @@ interface ProjectsPageClientProps {
   projects: Project[];
 }
 
-function hostOf(link?: string) {
-  if (!link) return undefined;
-  try {
-    return new URL(link).hostname.replace(/^www\./, "");
-  } catch {
-    return undefined;
-  }
-}
-
 export default function ProjectsPageClient({
   projects,
 }: ProjectsPageClientProps) {
@@ -37,12 +31,12 @@ export default function ProjectsPageClient({
 
   return (
     <div className="min-h-full">
-      <div className="container mx-auto px-4 py-14 sm:py-20">
+      <div className={SECTION}>
         <SectionHeading
           index="00"
-          title="项目"
-          en="Projects"
-          hint={`共 ${projects.length} 个`}
+          title={t("page.projects.title")}
+          en={t("page.projects.en")}
+          hint={t("count.projects", { n: projects.length })}
         />
 
         {/* 个人项目 */}
@@ -50,26 +44,19 @@ export default function ProjectsPageClient({
           <section className="mb-16">
             <p className="mb-5 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] text-ink-3">
               <span className="inline-block size-1.5 rounded-full bg-accent-strong" />
-              Selected Work · 个人项目
+              {t("projects.selectedLabel")}
             </p>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {personalProjects.map((project, i) => (
                 <Link
                   key={project.slug}
                   href={`/projects/${project.slug}/`}
-                  className="group flex flex-col rounded-2xl border border-line bg-surface shadow-card transition-shadow hover:shadow-pop"
+                  className={cn(CARD_HOVER, "group flex flex-col")}
                 >
-                  {project.image && (
-                    <div className="aspect-video overflow-hidden rounded-t-2xl border-b border-line">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={project.image}
-                        alt={project.title}
-                        loading="lazy"
-                        className="size-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-                      />
-                    </div>
-                  )}
+                  {/* 封面图占位：真图待后续整理（frontmatter.image 已预留） */}
+                  <div className="grid aspect-video place-items-center rounded-t-2xl border-b border-line bg-surface-2">
+                    <ImageIcon className="size-8 text-ink-3/50" aria-hidden="true" />
+                  </div>
                   <div className="flex flex-1 flex-col p-5">
                     <div className="mb-3 flex items-center justify-between">
                       <span className="font-mono text-sm text-ink-3">
@@ -111,9 +98,9 @@ export default function ProjectsPageClient({
           <section className="mb-16">
             <p className="mb-5 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] text-ink-3">
               <Star className="size-3 text-accent-strong" />
-              Starred · 精选开源项目
+              {t("projects.starredLabel")}
             </p>
-            <div className="divide-y divide-line/70 rounded-2xl border border-line bg-surface">
+            <div className={LIST_CONTAINER}>
               {starredProjects.map((project) => (
                 <Link
                   key={project.slug}
@@ -139,11 +126,13 @@ export default function ProjectsPageClient({
 
         {/* 空状态 */}
         {projects.length === 0 && (
-          <div className="mx-auto max-w-md rounded-2xl border border-line bg-surface px-6 py-16 text-center shadow-card">
+          <div className={cn(CARD_HOVER, "mx-auto max-w-md px-6 py-16 text-center")}>
             <h3 className="font-serif text-lg font-semibold text-ink">
-              暂无项目
+              {t("projects.empty.title")}
             </h3>
-            <p className="mt-2 text-sm text-ink-3">项目正在整理中，敬请期待。</p>
+            <p className="mt-2 text-sm text-ink-3">
+              {t("projects.empty.desc")}
+            </p>
           </div>
         )}
 
@@ -153,10 +142,10 @@ export default function ProjectsPageClient({
             href={siteConfig.social.github}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex h-10 items-center gap-2 rounded-full border border-line bg-surface px-5 text-sm font-medium text-ink transition-colors hover:bg-surface-2"
+            className={BTN_OUTLINE}
           >
             <GithubIcon className="size-4" />
-            在 GitHub 查看更多
+            {t("projects.githubMore")}
           </a>
         </div>
       </div>

@@ -19,6 +19,9 @@ export const siteConfig = {
     email: "mailto:admin@zhijie.online",
   },
 
+  // 博客评论所在的 GitHub 仓库（owner/repo）
+  commentsRepo: "hezhijie0327/blog",
+
   // Hero 区域文案
   hero: {
     greeting: "Hi，我是",

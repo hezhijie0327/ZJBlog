@@ -5,6 +5,7 @@ import { siteConfig } from "@/config/site";
 export const dynamic = "force-static";
 
 export default function sitemap(): MetadataRoute.Sitemap {
+  // 与 trailingSlash: true 保持一致：所有 URL 带尾斜杠
   const staticPages: MetadataRoute.Sitemap = [
     "",
     "/projects",
@@ -12,7 +13,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/archives",
     "/donation",
   ].map((path) => ({
-    url: `${siteConfig.url}${path}`,
+    url: `${siteConfig.url}${path}/`,
     lastModified: new Date(),
     changeFrequency: "weekly",
     priority: path === "" ? 1 : 0.7,

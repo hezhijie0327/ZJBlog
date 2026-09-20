@@ -1,311 +1,86 @@
 # AGENTS.md - Development Guide for Agentic Coding
 
-This file contains essential information for AI agents working on this Next.js blog project.
+AI agent 开发指南。修改代码前先读完本文件。
 
 ## Essential Commands
 
-### Development Commands
 ```bash
-# Start development server with increased memory (4GB)
+# 开发服务器（Windows 兼容，无环境变量前缀）
 npm run dev
 
-# Build for production
+# 生产构建（静态导出到 out/）
 npm run build
 
-# Start production server
-npm run start
-
-# Export static build (for GitHub Pages)
-npm run build:export
-```
-
-### Code Quality Commands
-```bash
-# Run ESLint
+# ESLint
 npm run lint
 
-# Type checking (via TypeScript compiler)
+# 类型检查
 npx tsc --noEmit
 
-# Security audit
-npm audit
+# Lighthouse 门禁：对 sitemap 中每个页面审计，全类别必须 100 分
+npm run audit          # 需先 npm run build；本机需有 Chromium
 
-# Update dependencies
-npm update
+# 完整 CI 流程（lint + build）
+npm run ci
 ```
 
-### Testing Commands
-This project does not currently have test configurations. To add testing:
-```bash
-# Install Jest and React Testing Library
-npm install --save-dev jest @testing-library/react @testing-library/jest-dom
+无测试框架；质量门禁 = tsc + eslint + Lighthouse（`.github/workflows/ci.yml`）。
 
-# Run tests (after setup)
-npm test
-# Run specific test file
-npm test -- Navigation.test.tsx
-```
+## Architecture
 
-## Project Configuration
+Next.js 16 App Router，`output: "export"` 全静态导出，部署到 Cloudflare Workers Static Assets（`wrangler.jsonc`，部署目录 `./out`）。内容系统：`content/<type>/*.md` + gray-matter（见 src/lib/content.ts）。
 
-### TypeScript Configuration
-- Target: ES2017
-- Strict mode enabled
-- Path aliases: `@/*` maps to `./src/*`
-- JSX: React JSX Transform
-
-### Next.js Configuration
-- Static export: `output: "export"`
-- Trailing slash enabled
-- Images unoptimized (for static export)
-- No base path or asset prefix
-
-### ESLint Configuration
-- Uses Next.js core web vitals preset
-- TypeScript support enabled
-- Extends Next.js recommended rules
-
-## Code Style Guidelines
-
-### File Organization
 ```
 src/
-├── app/           # Next.js App Router pages and layouts
-├── components/    # React components
-│   └── ui/       # shadcn/ui base components
-└── lib/          # Utility functions and core logic
+├── app/               # 路由：/ /blogs /blogs/[slug] /projects /projects/[slug]
+│                      #       /archives /donation
+│                      # 静态资源路由：/rss.xml /search-index.json /sitemap.xml /robots.txt
+├── components/        # 页面组件（无 shadcn/ui 依赖）
+├── config/site.ts     # 站点元数据、社交链接、Hero 文案、时间线（个人内容）
+└── lib/
+    ├── content.ts     # 内容加载（fs + gray-matter + reading-time）
+    ├── github.ts      # GitHub API（Issues/Discussions，5 分钟内存缓存）
+    ├── i18n.ts        # UI 文案字典 + t()（类型安全）
+    ├── styles.ts      # 设计语言类片段单一来源（ICON_BTN/CARD/BTN_*/CHIP/META/SECTION）
+    └── utils.ts       # cn / formatDate / formatDateISO / hostOf
 ```
 
-### Import Order
-1. React imports (`import React from 'react'`)
-2. Next.js imports (`import Link from 'next/link'`)
-3. Third-party libraries (alphabetical)
-4. Internal components (`@/components/*`)
-5. Utility functions (`@/lib/*`)
-6. Type imports (`import type { ... }`)
+## Design Language（对齐 ZJSearch）
 
-Example:
-```typescript
-'use client'
+- **Token**：全部颜色走 `src/app/globals.css` 的 CSS 变量（暖纸底/墨字/金黄强调），工具类名为 `bg-surface`、`text-ink-2`、`border-line`、`bg-accent-strong`、`text-accent-text`、`shadow-card`、`shadow-pop`。禁止裸写 hex 或 Tailwind 调色板（`text-gray-*` 等）。
+- **类片段**：重复的组合类一律用 `src/lib/styles.ts` 导出的常量（`BTN_PRIMARY`、`ICON_BTN`、`CARD_HOVER`…），覆盖时用 `cn(FRAGMENT, "覆盖类")`。不要在组件里裸写长串类名。
+- **字体**：零 webfont（对齐 ZJSearch），全部系统字体栈（globals.css `--font-*`）。`font-serif`（宋体族：Noto Serif SC/宋体回退）用于标题与文章正文；`font-sans`（系统无衬线）用于界面；`font-mono` 只用于编号/日期/英文小标签。引入 webfont 前先跑 `npm run audit` 评估 perf 影响。
+- **对比度规则**：`accent-text`（金棕）是文字链接色；`accent-strong`（金黄）只做填充底色，上面的文字必须是 `accent-contrast`。
+- **明暗模式**：next-themes，class 策略；只允许通过 token 生效，禁止 `dark:` 下散落硬编码色值（图标显隐用 `dark:hidden`/`dark:block` 除外）。
+- **圆角**：按钮/图标钮 `rounded-full`，卡片 `rounded-2xl`，小件 `rounded-lg/xl`。
+- **动效**：仅 `animate-fade-up` + `[animation-delay:*ms]`（首屏），列表悬停 `transition-colors`；尊重 prefers-reduced-motion（全局已处理）。
 
-import { useState } from 'react'
-import Link from 'next/link'
-import { motion } from 'framer-motion'
-import { Button } from '@/components/ui/Button'
-import { cn } from '@/lib/utils'
-import type { ContentItem } from '@/lib/content'
-```
+## i18n Interface
 
-### Component Structure
-1. `'use client'` directive (if needed)
-2. Imports (see above order)
-3. Type definitions/interfaces
-4. Component implementation
-5. Export statement
+- 界面词汇一律通过 `import { t } from "@/lib/i18n"` 取词，key 是类型安全的（`MessageKey`）。新增文案先加进字典再使用。
+- **边界**：个人内容（姓名/格言/时间线/Hero）放 `src/config/site.ts`，不放字典；文章正文在 `content/`。
+- 未来加英文：新建 `src/lib/locales/en.ts`（类型 `Dict`，缺 key 编译报错）→ 注册 dictionaries → 切换 setLocale。
 
-Example:
-```typescript
-'use client'
+## Content
 
-import { useState } from 'react'
-import { Button } from '@/components/ui/Button'
+- Frontmatter：blogs 用 `title/description/date/category/tags`；projects 另有 `type: personal|starred`、`link`（GitHub 仓库，自动解析出 owner/repo 供评论区）、`image`。
+- 所有页面静态生成（`generateStaticParams`）；中文 slug 需 `decodeURIComponent`（content.ts 已处理）。
 
-interface NavigationProps {
-  items?: Array<{ name: string; href: string }>
-}
+## Conventions
 
-export default function Navigation({ items = [] }: NavigationProps) {
-  const [isOpen, setIsOpen] = useState(false)
-  
-  return (
-    <nav>
-      {/* JSX content */}
-    </nav>
-  )
-}
-```
+- 导入顺序：react → next → 第三方（字母序）→ `@/components` → `@/lib` → type 导入。
+- TypeScript strict；禁止 `any`（GitHub API 响应用 `Raw*` 宽松接口 + 显式收窄）。
+- 图标：lucide-react；品牌图标（GitHub）用 `components/icons.tsx` 的内联 SVG（lucide v1 无品牌图标）。
+- 图片：优先 `next/image`（已 unoptimized）；外链封面在卡片网格中用 `<img loading="lazy">`。
+- 可访问性：图标按钮必须有 `aria-label`；当前导航项加 `aria-current="page"`；全局 `:focus-visible` 焦点环已在 globals.css 定义。
 
-### Naming Conventions
-- **Components**: PascalCase (`Navigation.tsx`, `Button.tsx`)
-- **Files**: PascalCase for components, camelCase for utilities (`utils.ts`)
-- **Variables/Functions**: camelCase (`getProjectBySlug`, `isMenuOpen`)
-- **Constants**: UPPER_SNAKE_CASE (`DEFAULT_TIMEOUT`)
-- **Interfaces/Types**: PascalCase with descriptive suffix (`ContentItem`, `ProjectData`)
+## Quality Gates
 
-### TypeScript Guidelines
-- Always use strict mode
-- Prefer interfaces over types for object shapes
-- Use `type` for unions, intersections, primitives
-- Export types used by other modules
-- Use generic types where appropriate
+1. `npx tsc --noEmit` 零错误
+2. `npm run lint` 零错误（react-hooks/set-state-in-effect 已启用：不要在 effect 里同步 setState，用渲染期收敛或事件回调）
+3. `npm run build` 成功（所有页面可 SSG）
+4. `npm run audit` 每个页面全类别 100 分（性能/可访问性/最佳实践/SEO/Agentic Browsing）；改了样式或加依赖后必须跑
 
-```typescript
-// ✅ Good
-export interface ContentItem {
-  slug: string
-  title: string
-  date?: string
-}
+## Deployment
 
-// ✅ Good for unions
-export type Theme = 'light' | 'dark' | 'system'
-
-// ✅ Good for functions
-export function getDataById<T>(id: string): Promise<T | null>
-```
-
-### React Component Patterns
-- Use functional components with hooks
-- Prefer `React.forwardRef` for components that need ref forwarding
-- Use `asChild` prop pattern from Radix UI when needed
-- Implement proper TypeScript props interfaces
-
-```typescript
-// ✅ Good component pattern
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'default' | 'destructive' | 'outline'
-  size?: 'sm' | 'md' | 'lg'
-}
-
-const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = 'default', size = 'md', ...props }, ref) => {
-    return (
-      <button
-        className={cn(buttonVariants({ variant, size }), className)}
-        ref={ref}
-        {...props}
-      />
-    )
-  }
-)
-Button.displayName = 'Button'
-```
-
-### Styling Guidelines
-- Use Tailwind CSS for all styling
-- Leverage `cn()` utility for class merging
-- Use CSS variables for theme values
-- Implement dark mode support
-- Follow responsive design patterns
-
-```typescript
-// ✅ Good styling
-const className = cn(
-  'flex items-center space-x-2',
-  'px-4 py-2 rounded-md',
-  'bg-primary text-primary-foreground',
-  'hover:bg-primary/90 transition-colors',
-  isActive && 'bg-accent text-accent-foreground'
-)
-```
-
-### Error Handling
-- Always handle promise rejections with try/catch
-- Provide meaningful error messages
-- Use type guards for runtime type checking
-- Implement error boundaries for components
-
-```typescript
-// ✅ Good error handling
-export async function getContentBySlug(slug: string): Promise<ContentItem | null> {
-  try {
-    const fullPath = path.join(contentDirectory, `${slug}.md`)
-    const fileContents = fs.readFileSync(fullPath, 'utf8')
-    const { data, content } = matter(fileContents)
-    
-    return {
-      slug,
-      title: data.title || slug,
-      content,
-      // ... other fields
-    }
-  } catch (error) {
-    console.error(`Failed to load content: ${slug}`, error)
-    return null
-  }
-}
-```
-
-### Content Management
-- Markdown files in `content/` directory
-- Use gray-matter for frontmatter parsing
-- Support MDX for enhanced content
-- Handle URL encoding for Chinese filenames
-- Calculate reading time automatically
-
-Frontmatter structure:
-```yaml
-title: "页面标题"
-description: "页面描述"
-date: "2024-12-21"
-tags: ["标签1", "标签2"]
-# Project specific:
-link: "https://github.com/user/repo"
-image: "https://example.com/cover.jpg"
-type: "personal" | "starred"
-# Blog specific:
-category: "技术分享"
-author: "作者名"
-```
-
-### Performance Optimizations
-- Use React.memo for expensive components
-- Implement proper image optimization
-- Leverage Next.js static generation
-- Use dynamic imports for large components
-- Optimize bundle size with code splitting
-
-### Accessibility
-- Use semantic HTML elements
-- Implement proper ARIA labels
-- Ensure keyboard navigation
-- Provide focus management
-- Support screen readers
-
-### Git Workflow
-- Use conventional commit messages
-- Create feature branches for new functionality
-- Ensure all pages can be statically generated
-- Run lint and type checking before commits
-
-## Important Notes
-
-1. **Static Site Generation**: This project uses `output: "export"` and all pages must be statically generable
-2. **Chinese Content**: The site supports Chinese filenames and URL encoding
-3. **Memory Usage**: Development server runs with 4GB memory limit
-4. **Component Library**: Uses shadcn/ui components based on Radix UI
-5. **No Testing Setup**: Tests need to be configured if required
-
-## Common Patterns
-
-### Page Component Structure
-```typescript
-import { getAllContent, getContentBySlug } from '@/lib/content'
-import { MDXRenderer } from '@/components/MDXRenderer'
-
-interface PageProps {
-  params: { slug: string }
-}
-
-export async function generateStaticParams() {
-  const items = getAllContent('blogs')
-  return items.map((item) => ({ slug: item.slug }))
-}
-
-export default function Page({ params }: PageProps) {
-  const content = getContentBySlug(params.slug, 'blogs')
-  
-  return (
-    <div className="container mx-auto py-8">
-      <h1>{content.title}</h1>
-      <MDXRenderer content={content.content} />
-    </div>
-  )
-}
-```
-
-### Utility Functions
-- Place in `src/lib/utils.ts`
-- Export with clear JSDoc comments
-- Use proper TypeScript typing
-- Handle edge cases gracefully
+`npm run build` → `wrangler deploy`（wrangler.jsonc 指向 ./out）。robots.txt/sitemap.xml/rss.xml 由 app 路由在构建时生成；根目录不要放静态文件（不生效）。

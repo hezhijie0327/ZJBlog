@@ -10,6 +10,8 @@ import {
 import { useRouter } from "next/navigation";
 import { ArrowUpRight, FileText, FolderGit2, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { CHIP, META } from "@/lib/styles";
+import { t } from "@/lib/i18n";
 
 interface SearchItem {
   title: string;
@@ -20,8 +22,8 @@ interface SearchItem {
 }
 
 const TYPE_LABEL: Record<SearchItem["type"], string> = {
-  blog: "博客",
-  project: "项目",
+  blog: t("search.typeBlog"),
+  project: t("search.typeProject"),
 };
 
 function matches(item: SearchItem, q: string): boolean {
@@ -131,7 +133,7 @@ export default function CommandPalette() {
       onClick={close}
       role="dialog"
       aria-modal="true"
-      aria-label="站内搜索"
+      aria-label={t("search.title")}
     >
       <div
         className="w-full max-w-xl overflow-hidden rounded-2xl border border-line bg-surface shadow-pop"
@@ -148,30 +150,34 @@ export default function CommandPalette() {
               setActiveIndex(0);
             }}
             onKeyDown={onInputKeydown}
-            placeholder="搜索文章与项目…"
+            placeholder={t("search.placeholder")}
             className="h-12 min-w-0 flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-ink-3"
-            aria-label="搜索关键词"
+            aria-label={t("search.inputLabel")}
           />
-          <kbd className="shrink-0 rounded border border-line bg-surface-2 px-1.5 py-0.5 font-mono text-[10px] text-ink-3">
-            ESC
-          </kbd>
+          <kbd className={cn(CHIP, "font-mono text-[10px]")}>ESC</kbd>
         </div>
 
         {/* 结果列表 */}
         <div className="max-h-80 overflow-y-auto p-2">
           {index === null ? (
-            <p className="px-3 py-6 text-center font-mono text-xs text-ink-3">
-              加载索引中…
+            <p className={cn(META, "px-3 py-6 text-center")}>
+              {t("search.loading")}
             </p>
           ) : results.length === 0 ? (
             <p className="px-3 py-6 text-center text-sm text-ink-3">
-              {query.trim() ? "没有匹配的结果" : "暂无可搜索的内容"}
+              {query.trim() ? t("search.noResults") : t("search.emptyIndex")}
             </p>
           ) : (
             results.map((item, i) => (
               <button
                 key={item.href}
                 type="button"
+                ref={(el) => {
+                  // 键盘导航时保证激活项滚动到可见区域
+                  if (i === active && el) {
+                    el.scrollIntoView({ block: "nearest" });
+                  }
+                }}
                 onMouseEnter={() => setActiveIndex(i)}
                 onClick={() => go(item.href)}
                 className={cn(
@@ -187,7 +193,7 @@ export default function CommandPalette() {
                 <span className="min-w-0 flex-1 truncate text-sm font-medium text-ink">
                   {item.title}
                 </span>
-                <span className="shrink-0 rounded-full border border-line px-2 py-0.5 font-mono text-[10px] text-ink-3">
+                <span className={cn(CHIP, "shrink-0 font-mono text-[10px]")}>
                   {TYPE_LABEL[item.type]}
                 </span>
                 <ArrowUpRight className="size-3.5 shrink-0 text-ink-3" />
@@ -197,10 +203,10 @@ export default function CommandPalette() {
         </div>
 
         {/* 底部提示 */}
-        <div className="flex items-center gap-3 border-t border-line px-4 py-2.5 font-mono text-[10px] text-ink-3">
-          <span>↑↓ 选择</span>
-          <span>↵ 打开</span>
-          <span>ESC 关闭</span>
+        <div className={cn(META, "flex items-center gap-3 border-t border-line px-4 py-2.5 text-[10px]")}>
+          <span>{t("search.hintSelect")}</span>
+          <span>{t("search.hintOpen")}</span>
+          <span>{t("search.hintClose")}</span>
         </div>
       </div>
     </div>

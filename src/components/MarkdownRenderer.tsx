@@ -1,6 +1,8 @@
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import MermaidRenderer from "@/components/MermaidRenderer";
 import { cn } from "@/lib/utils";
+import { t } from "@/lib/i18n";
 
 interface MarkdownRendererProps {
   content: string;
@@ -17,7 +19,7 @@ export default function MarkdownRenderer({
   if (!content) {
     return (
       <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
-        内容为空或加载失败。
+        {t("markdown.empty")}
       </div>
     );
   }
@@ -26,6 +28,8 @@ export default function MarkdownRenderer({
     <div
       className={cn(
         "prose prose-lg max-w-none dark:prose-invert",
+        // 长文跳过首屏外的布局与渲染，首屏（标题等）更早绘制
+        "[content-visibility:auto] [contain-intrinsic-size:auto_2000px]",
         "prose-headings:font-serif prose-headings:font-semibold prose-headings:tracking-tight",
         "prose-p:leading-relaxed",
         "prose-blockquote:rounded-r-lg prose-blockquote:border-l-2 prose-blockquote:border-accent-strong prose-blockquote:bg-surface-2/60 prose-blockquote:py-1 prose-blockquote:not-italic",
@@ -37,7 +41,16 @@ export default function MarkdownRenderer({
       )}
     >
       <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
         components={{
+          // GFM 任务清单的复选框是纯装饰（跟随 li 文本），无 label 文本
+          // 可绑定 —— 从无障碍树中隐藏，避免 label 审计失败
+          input: ({ type, ...props }) =>
+            type === "checkbox" ? (
+              <input type="checkbox" {...props} aria-hidden="true" tabIndex={-1} />
+            ) : (
+              <input type={type} {...props} />
+            ),
           pre: ({ children, ...props }) => {
             const codeChild = Array.isArray(children) ? children[0] : children;
             const className =

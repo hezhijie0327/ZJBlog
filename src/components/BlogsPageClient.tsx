@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import SectionHeading from "@/components/SectionHeading";
+import { cn } from "@/lib/utils";
+import { CARD, SECTION } from "@/lib/styles";
+import { t } from "@/lib/i18n";
 import { formatDateISO } from "@/lib/utils";
+import SectionHeading from "@/components/SectionHeading";
 
 interface Blog {
   slug: string;
@@ -20,12 +23,12 @@ interface BlogsPageClientProps {
 export default function BlogsPageClient({ blogs }: BlogsPageClientProps) {
   return (
     <div className="min-h-full">
-      <div className="container mx-auto px-4 py-14 sm:py-20">
+      <div className={SECTION}>
         <SectionHeading
           index="00"
-          title="全部文章"
-          en="Blog"
-          hint={`共 ${blogs.length} 篇`}
+          title={t("page.blogs.title")}
+          en={t("page.blogs.en")}
+          hint={t("count.posts", { n: blogs.length })}
         />
 
         <div className="mx-auto max-w-3xl">
@@ -78,12 +81,12 @@ export default function BlogsPageClient({ blogs }: BlogsPageClientProps) {
               ))}
             </div>
           ) : (
-            <div className="rounded-2xl border border-line bg-surface px-6 py-16 text-center shadow-card">
+            <div className={cn(CARD, "px-6 py-16 text-center")}>
               <h3 className="font-serif text-lg font-semibold text-ink">
-                暂无文章
+                {t("blog.empty.title")}
               </h3>
               <p className="mt-2 text-sm text-ink-3">
-                内容正在整理中，敬请期待。
+                {t("blog.empty.desc")}
               </p>
             </div>
           )}

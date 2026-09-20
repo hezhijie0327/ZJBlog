@@ -8,8 +8,9 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 import GitHubComments from "@/components/GitHubComments";
+import { t } from "@/lib/i18n";
 import { formatDate, formatDateISO } from "@/lib/utils";
-import { ArrowLeft, ArrowUpRight, Clock } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, Clock, Image as ImageIcon } from "lucide-react";
 import { GithubIcon } from "@/components/icons";
 
 interface ProjectParams {
@@ -33,13 +34,13 @@ export async function generateMetadata({
 
   if (!project) {
     return {
-      title: "项目未找到",
+      title: t("project.notFound"),
     };
   }
 
   return {
     title: project.title,
-    description: project.description || "个人项目展示",
+    description: project.description || t("project.fallbackDesc"),
     keywords: project.tags,
     openGraph: {
       title: project.title,
@@ -76,21 +77,15 @@ export default async function Project({ params }: ProjectParams) {
           className="inline-flex items-center gap-1.5 font-mono text-xs text-ink-3 transition-colors hover:text-ink"
         >
           <ArrowLeft className="size-3.5" />
-          PROJECTS / 全部项目
+          {t("project.back")}
         </Link>
 
         {/* 项目头部 */}
         <header className="mt-8 mb-10 border-b border-line pb-8">
-          {frontmatter.image && (
-            <div className="mb-8 overflow-hidden rounded-2xl border border-line shadow-card">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={frontmatter.image}
-                alt={project.title}
-                className="w-full object-cover"
-              />
-            </div>
-          )}
+          {/* 封面占位：真图待后续整理（frontmatter.image 已预留） */}
+          <div className="mb-8 grid aspect-[21/9] place-items-center rounded-2xl border border-line bg-surface-2 shadow-card">
+            <ImageIcon className="size-12 text-ink-3/40" aria-hidden="true" />
+          </div>
           <h1 className="font-serif text-3xl font-black leading-tight tracking-tight text-ink sm:text-4xl">
             {project.title}
           </h1>
@@ -108,7 +103,9 @@ export default async function Project({ params }: ProjectParams) {
               {project.readingTime}
             </span>
             <span className="rounded-full border border-line px-2.5 py-0.5">
-              {frontmatter.type === "starred" ? "精选项目" : "个人项目"}
+              {frontmatter.type === "starred"
+                ? t("project.starred")
+                : t("project.personal")}
             </span>
           </div>
           {project.tags && project.tags.length > 0 && (
@@ -132,11 +129,11 @@ export default async function Project({ params }: ProjectParams) {
                 ) : (
                   <ArrowUpRight className="size-4" />
                 )}
-                {githubRepo ? "查看仓库" : "访问链接"}
+                {githubRepo ? t("project.viewRepo") : t("project.visitLink")}
               </a>
               {project.date && (
                 <span className="inline-flex h-10 items-center rounded-full px-2 text-[11px] text-ink-3">
-                  更新于 {formatDate(project.date)}
+                  {t("project.updatedOn", { date: formatDate(project.date) })}
                 </span>
               )}
             </div>

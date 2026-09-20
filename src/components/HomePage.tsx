@@ -1,10 +1,13 @@
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, ArrowUpRight, Mail } from "lucide-react";
-import { GithubIcon } from "@/components/icons";
+import { cn } from "@/lib/utils";
+import { BTN_OUTLINE, BTN_PRIMARY, CARD, CARD_HOVER, LIST_CONTAINER, SECTION } from "@/lib/styles";
+import { t } from "@/lib/i18n";
+import { formatDateISO, hostOf } from "@/lib/utils";
 import SectionHeading from "@/components/SectionHeading";
+import { GithubIcon } from "@/components/icons";
 import { siteConfig, timeline, featuredProjectCount } from "@/config/site";
-import { formatDateISO } from "@/lib/utils";
 
 interface Project {
   slug: string;
@@ -29,15 +32,6 @@ interface Blog {
 interface HomePageProps {
   projects: Project[];
   blogs: Blog[];
-}
-
-function hostOf(link?: string) {
-  if (!link) return undefined;
-  try {
-    return new URL(link).hostname.replace(/^www\./, "");
-  } catch {
-    return undefined;
-  }
 }
 
 export default function HomePage({ projects, blogs }: HomePageProps) {
@@ -68,37 +62,31 @@ export default function HomePage({ projects, blogs }: HomePageProps) {
             {siteConfig.hero.mottoZh}
           </p>
           <div className="animate-fade-up mt-10 flex flex-wrap items-center gap-3 [animation-delay:240ms]">
-            <Link
-              href="/projects"
-              className="inline-flex h-11 items-center gap-2 rounded-full bg-accent-strong px-6 text-sm font-semibold text-accent-contrast shadow-card transition-all hover:bg-accent-strong-hover hover:shadow-pop"
-            >
-              查看项目
+            <Link href="/projects" className={BTN_PRIMARY}>
+              {t("home.cta.projects")}
               <ArrowRight className="size-4" />
             </Link>
-            <Link
-              href="/blogs"
-              className="inline-flex h-11 items-center gap-2 rounded-full border border-line bg-surface px-6 text-sm font-medium text-ink transition-colors hover:bg-surface-2"
-            >
-              阅读博客
+            <Link href="/blogs" className={BTN_OUTLINE}>
+              {t("home.cta.blogs")}
             </Link>
           </div>
         </div>
       </section>
 
       {/* 01 精选项目 */}
-      <section className="container mx-auto px-4 py-16 sm:py-20">
+      <section className={SECTION}>
         <SectionHeading
           index="01"
-          title="精选项目"
-          en="Selected Work"
-          hint={`共 ${personalProjects.length} 个`}
+          title={t("home.featured.title")}
+          en={t("home.featured.en")}
+          hint={t("count.projects", { n: personalProjects.length })}
         />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {featured.map((project, i) => (
             <Link
               key={project.slug}
               href={`/projects/${project.slug}/`}
-              className="group relative flex flex-col rounded-2xl border border-line bg-surface p-6 shadow-card transition-shadow hover:shadow-pop"
+              className={cn(CARD_HOVER, "group relative flex flex-col p-6")}
             >
               <div className="mb-4 flex items-center justify-between">
                 <span className="font-mono text-sm text-ink-3">
@@ -126,9 +114,9 @@ export default function HomePage({ projects, blogs }: HomePageProps) {
         {moreProjects.length > 0 && (
           <div className="mt-8">
             <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-ink-3">
-              More Projects · 更多项目
+              {t("home.moreProjects")}
             </p>
-            <div className="divide-y divide-line/70 rounded-2xl border border-line bg-surface">
+            <div className={LIST_CONTAINER}>
               {moreProjects.map((project) => (
                 <Link
                   key={project.slug}
@@ -157,23 +145,23 @@ export default function HomePage({ projects, blogs }: HomePageProps) {
             href="/projects"
             className="inline-flex items-center gap-1.5 text-sm text-accent-text transition-colors hover:underline"
           >
-            查看全部项目
+            {t("home.viewAllProjects")}
             <ArrowRight className="size-3.5" />
           </Link>
         </div>
       </section>
 
       {/* 02 个人经历 */}
-      <section className="container mx-auto px-4 py-16 sm:py-20">
+      <section className={SECTION}>
         <SectionHeading
           index="02"
-          title="个人经历"
-          en="The Journey"
+          title={t("home.journey.title")}
+          en={t("home.journey.en")}
         />
         <ol className="relative ml-2 space-y-10 border-l border-line pl-8 sm:ml-6">
           {timeline.map((entry) => (
             <li key={entry.period} className="relative">
-              <span className="absolute -left-[35px] top-1.5 grid size-2.5 place-items-center rounded-full border-2 border-accent-strong bg-background sm:-left-[35px]" />
+              <span className="absolute -left-[35px] top-1.5 grid size-2.5 place-items-center rounded-full border-2 border-accent-strong bg-background" />
               <p className="font-mono text-xs tracking-wide text-ink-3">
                 {entry.period}
               </p>
@@ -191,14 +179,14 @@ export default function HomePage({ projects, blogs }: HomePageProps) {
       </section>
 
       {/* 03 最新博客 */}
-      <section className="container mx-auto px-4 py-16 sm:py-20">
+      <section className={SECTION}>
         <SectionHeading
           index="03"
-          title="最新思考"
-          en="Recent Posts"
-          hint={`共 ${blogs.length} 篇`}
+          title={t("home.recent.title")}
+          en={t("home.recent.en")}
+          hint={t("count.posts", { n: blogs.length })}
         />
-        <div className="divide-y divide-line/70 rounded-2xl border border-line bg-surface">
+        <div className={LIST_CONTAINER}>
           {latestBlogs.length > 0 ? (
             latestBlogs.map((blog) => (
               <Link
@@ -227,7 +215,7 @@ export default function HomePage({ projects, blogs }: HomePageProps) {
             ))
           ) : (
             <p className="px-6 py-8 text-center text-sm text-ink-3">
-              还没有文章，敬请期待。
+              {t("home.emptyPosts")}
             </p>
           )}
         </div>
@@ -236,16 +224,20 @@ export default function HomePage({ projects, blogs }: HomePageProps) {
             href="/blogs"
             className="inline-flex items-center gap-1.5 text-sm text-accent-text transition-colors hover:underline"
           >
-            查看全部文章
+            {t("home.viewAllPosts")}
             <ArrowRight className="size-3.5" />
           </Link>
         </div>
       </section>
 
       {/* 04 联系 */}
-      <section className="container mx-auto px-4 py-16 sm:py-24">
-        <SectionHeading index="04" title="保持联系" en="Say Hello" />
-        <div className="flex flex-col items-start gap-8 rounded-2xl border border-line bg-surface p-8 shadow-card sm:p-12">
+      <section className={cn(SECTION, "pb-20 sm:pb-24")}>
+        <SectionHeading
+          index="04"
+          title={t("home.contact.title")}
+          en={t("home.contact.en")}
+        />
+        <div className={cn(CARD, "flex flex-col items-start gap-8 p-8 sm:p-12")}>
           <div className="flex items-center gap-4">
             <Image
               src="/avatar.jpg"
@@ -262,22 +254,18 @@ export default function HomePage({ projects, blogs }: HomePageProps) {
             </div>
           </div>
           <p className="max-w-lg text-sm leading-relaxed text-ink-2">
-            对文章或项目有想法？欢迎邮件交流，或在 GitHub 上提出 Issue
-            与讨论。
+            {t("home.contactBlurb")}
           </p>
           <div className="flex flex-wrap items-center gap-3">
-            <a
-              href={siteConfig.social.email}
-              className="inline-flex h-10 items-center gap-2 rounded-full bg-accent-strong px-5 text-sm font-semibold text-accent-contrast shadow-card transition-all hover:bg-accent-strong-hover hover:shadow-pop"
-            >
+            <a href={siteConfig.social.email} className={BTN_PRIMARY}>
               <Mail className="size-4" />
-              发送邮件
+              {t("home.sendEmail")}
             </a>
             <a
               href={siteConfig.social.github}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex h-10 items-center gap-2 rounded-full border border-line px-5 text-sm font-medium text-ink transition-colors hover:bg-surface-2"
+              className={BTN_OUTLINE}
             >
               <GithubIcon className="size-4" />
               GitHub

@@ -51,45 +51,29 @@ export function getAllContentSlugs(type: string): string[] {
     .map((slug) => slug.replace(/\.md$/, ''))
 }
 
-// 读取单个 MD 文件
-export function getContentBySlug(slug: string, type: string): ContentItem {
-  // 解码 URL 编码的 slug
-  const decodedSlug = decodeURIComponent(slug)
-  const fullPath = path.join(contentDirectory, type, `${decodedSlug}.md`)
-
-  // 如果直接文件不存在，尝试查找匹配的文件
-  if (!fs.existsSync(fullPath)) {
-    const dirPath = path.join(contentDirectory, type)
-    const files = fs.readdirSync(dirPath)
-    const matchingFile = files.find(file =>
-      file.replace(/\.md$/, '') === decodedSlug
-    )
-
-    if (!matchingFile) {
-      throw new Error(`File not found for slug: ${slug}`)
-    }
-
-    const actualPath = path.join(dirPath, matchingFile)
-    const fileContents = fs.readFileSync(actualPath, 'utf8')
-    const { data, content } = matter(fileContents)
-
-    return {
-      slug,
-      content,
-      readingTime: readingTime(content).text,
-      frontmatter: data,
-      title: data.title || decodedSlug,
-      date: data.date,
-      description: data.description,
-      tags: data.tags || [],
-    }
+// 读取并解析单个 MD 文件；未找到返回 null
+function readContentFile(
+  type: string,
+  decodedSlug: string
+): ContentItem | null {
+  const dirPath = path.join(contentDirectory, type)
+  if (!fs.existsSync(dirPath)) {
+    return null
   }
 
-  const fileContents = fs.readFileSync(fullPath, 'utf8')
+  const matchingFile = fs
+    .readdirSync(dirPath)
+    .find((file) => file.replace(/\.md$/, '') === decodedSlug)
+
+  if (!matchingFile) {
+    return null
+  }
+
+  const fileContents = fs.readFileSync(path.join(dirPath, matchingFile), 'utf8')
   const { data, content } = matter(fileContents)
 
   return {
-    slug,
+    slug: decodedSlug,
     content,
     readingTime: readingTime(content).text,
     frontmatter: data,
@@ -98,6 +82,19 @@ export function getContentBySlug(slug: string, type: string): ContentItem {
     description: data.description,
     tags: data.tags || [],
   }
+}
+
+// 读取单个 MD 文件
+export function getContentBySlug(slug: string, type: string): ContentItem {
+  // 解码 URL 编码的 slug
+  const decodedSlug = decodeURIComponent(slug)
+  const item = readContentFile(type, decodedSlug)
+
+  if (!item) {
+    throw new Error(`File not found for slug: ${slug}`)
+  }
+
+  return item
 }
 
 // 获取所有内容列表

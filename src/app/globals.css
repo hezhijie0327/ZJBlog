@@ -147,13 +147,14 @@
   --shadow-pop: 0 4px 6px hsl(var(--ink) / 0.07),
     0 12px 32px hsl(var(--ink) / 0.16);
 
-  --font-sans: var(--font-inter), var(--font-noto-serif-sc), system-ui,
-    -apple-system, "Segoe UI", "PingFang SC", "Hiragino Sans GB",
-    "Microsoft YaHei", sans-serif;
-  --font-serif: var(--font-noto-serif-sc), var(--font-inter), "Songti SC",
-    "SimSun", serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", SFMono-Regular,
-    Menlo, Consolas, monospace;
+  /* 零 webfont 策略（对齐 ZJSearch）：全部使用系统字体栈，无字体下载、无阻塞 */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB",
+    "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+  --font-serif: "Noto Serif SC", "Source Han Serif SC", "Songti SC", "STSong",
+    SimSun, Georgia, serif;
+  --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas,
+    "Liberation Mono", monospace;
 }
 
 * {
@@ -176,6 +177,13 @@ body {
 ::selection {
   background: hsl(var(--highlight));
   color: hsl(var(--ink));
+}
+
+/* 键盘焦点环（对齐 ZJSearch 的全局 focus-visible 约定） */
+:focus-visible {
+  outline: 2px solid hsl(var(--accent-text));
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 
 pre::selection,
@@ -263,6 +271,16 @@ pre *::selection {
 
 .prose :where(code):not(:where([class~="not-prose"] *)) {
   font-family: var(--font-mono);
+}
+
+/* GFM 任务清单：复选框为装饰（已 aria-hidden），去掉列表符号 */
+.prose :where(.task-list-item):not(:where([class~="not-prose"] *)) {
+  list-style: none;
+  padding-left: 0;
+}
+
+.prose :where(.contains-task-list):not(:where([class~="not-prose"] *)) {
+  padding-left: 0.5rem;
 }
 
 /* 减少动态偏好 */
