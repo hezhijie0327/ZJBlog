@@ -20,11 +20,11 @@ npx tsc --noEmit
 # Lighthouse 门禁：对 sitemap 中每个页面审计，全类别必须 100 分
 npm run audit          # 需先 npm run build；本机需有 Chromium
 
-# 完整 CI 流程（lint + build）
+# 完整本地检查（lint + build）
 npm run ci
 ```
 
-无测试框架；质量门禁 = tsc + eslint + Lighthouse（`.github/workflows/ci.yml`）。
+无测试框架；质量门禁 = tsc + eslint + Lighthouse，全部在本地开发时运行（无 CI，GitHub Actions 工作流已移除）。
 
 ## Architecture
 
@@ -39,7 +39,7 @@ src/
 ├── config/site.ts     # 站点元数据、社交链接、Hero 文案、时间线（个人内容）
 └── lib/
     ├── content.ts     # 内容加载（fs + gray-matter + reading-time）
-    ├── github.ts      # GitHub API（Issues/Discussions，5 分钟内存缓存）
+    ├── github.ts      # GitHub API（评论区客户端懒取数，5 分钟内存缓存；禁止注入 token）
     ├── i18n.ts        # UI 文案字典 + t()（类型安全）
     ├── styles.ts      # 设计语言类片段单一来源（ICON_BTN/CARD/BTN_*/CHIP/META/SECTION）
     └── utils.ts       # cn / formatDate / formatDateISO / hostOf
@@ -80,6 +80,13 @@ src/
 2. `npm run lint` 零错误（react-hooks/set-state-in-effect 已启用：不要在 effect 里同步 setState，用渲染期收敛或事件回调）
 3. `npm run build` 成功（所有页面可 SSG）
 4. `npm run audit` 每个页面全类别 100 分（性能/可访问性/最佳实践/SEO/Agentic Browsing）；改了样式或加依赖后必须跑
+
+## Known Decisions（勿轻易回退）
+
+- **零 webfont**：系统字体栈（globals.css `--font-*`）；webfont 曾致 CSS 276KB + perf 91。
+- **Mermaid 懒加载**：进视口才动态加载（库 ~2.7MB），预加载曾致 perf 掉到 82。
+- **评论区客户端懒取数**：进视口才请求 api.github.com（实时数据；403/429/404/410 静默降级）；构建期取数与任何形式的 token 注入均不可回退。
+- **审计服务器（scripts/audit.mjs）非通用工具**：trace 端点镜像、RSC 路径映射、gzip 均为「镜像生产 CDN 行为」的审计设施，勿用于开发服务器。
 
 ## Deployment
 

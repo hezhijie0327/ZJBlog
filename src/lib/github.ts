@@ -1,5 +1,7 @@
-// GitHub API 服务
-// 用于获取仓库的 Discussions 信息
+// GitHub API 服务：评论区客户端取数
+// 懒挂载后由浏览器直接请求 api.github.com（匿名限额 60 次/时/IP）；
+// 403/429 限额与 404/410（仓库不存在 / 未开启 Discussions）均静默降级，
+// 不向访客控制台刷错误。禁止在此注入任何 token —— 代码会随客户端 bundle 发布。
 
 export interface GitHubDiscussion {
   id: string
@@ -54,10 +56,10 @@ export interface GitHubRepoInfo {
   stargazersCount: number
   forksCount: number
   openIssuesCount: number
-  discussionsCount?: number
+  hasDiscussions?: boolean
 }
 
-// 缓存相关
+// 缓存相关（同一次会话内去重，兼容 StrictMode 双调用）
 const CACHE_DURATION = 5 * 60 * 1000 // 5分钟缓存
 const cache = new Map<string, { data: unknown; timestamp: number }>()
 
@@ -68,7 +70,7 @@ const emojiMap: Record<string, string> = {
   'general': '💬',               // 💬 General
   'ideas': '💡',                 // 💡 Ideas
   'q&a': '🙏',                   // 🙏 Q&A
-  'show and tell': '🙌',         // 🙌 Show and tell
+  'show and tell': '🙌',         // 🙏 Show and tell
 
   // 兼容其他可能的格式
   'announcement': '📣',
@@ -120,6 +122,11 @@ interface RawIssueItem {
   labels: { name: string; color: string }[]
 }
 
+// 请求头；403/429（限额）与 404/410 为预期内状态，静默返回空值不打日志
+function isExpectedStatus(status: number): boolean {
+  return status === 403 || status === 429 || status === 404 || status === 410
+}
+
 // 获取仓库信息
 export async function getGitHubRepoInfo(repo: string): Promise<GitHubRepoInfo | null> {
   const cacheKey = `repo-${repo}`
@@ -133,15 +140,14 @@ export async function getGitHubRepoInfo(repo: string): Promise<GitHubRepoInfo | 
     const response = await fetch(`https://api.github.com/repos/${repo}`, {
       headers: {
         'Accept': 'application/vnd.github.v3+json',
-      },
-      next: { revalidate: CACHE_DURATION / 1000 } // 缓存时间（秒）
+      }
     })
 
     if (!response.ok) {
       if (response.status === 404) {
         console.warn(`GitHub repository not found: ${repo}`)
-      } else {
-        console.error(`GitHub API error for ${repo}:`, response.status, response.statusText)
+      } else if (!isExpectedStatus(response.status)) {
+        console.warn(`GitHub API error for ${repo}:`, response.status)
       }
       return null
     }
@@ -155,18 +161,19 @@ export async function getGitHubRepoInfo(repo: string): Promise<GitHubRepoInfo | 
       url: data.html_url,
       stargazersCount: data.stargazers_count,
       forksCount: data.forks_count,
-      openIssuesCount: data.open_issues_count
+      openIssuesCount: data.open_issues_count,
+      hasDiscussions: data.has_discussions === true
     }
 
     cache.set(cacheKey, { data: repoInfo, timestamp: Date.now() })
     return repoInfo
   } catch (error) {
-    console.error(`Error fetching GitHub repo info for ${repo}:`, error)
+    console.warn(`Error fetching GitHub repo info for ${repo}:`, error)
     return null
   }
 }
 
-// 获取仓库的 Discussions（需要 GitHub Discussions 功能已启用）
+// 获取仓库的 Discussions（仓库未开启时返回空数组）
 export async function getGitHubDiscussions(
   repo: string,
   limit: number = 10
@@ -185,15 +192,13 @@ export async function getGitHubDiscussions(
       {
         headers: {
           'Accept': 'application/vnd.github.v3+json',
-        },
-        next: { revalidate: CACHE_DURATION / 1000 }
+        }
       }
     )
 
     if (!response.ok) {
-      // 404/410 = 仓库不存在或未启用 Discussions，属正常情况，不刷日志
-      if (response.status !== 404 && response.status !== 410) {
-        console.error(`GitHub Discussions API error for ${repo}:`, response.status, response.statusText)
+      if (!isExpectedStatus(response.status)) {
+        console.warn(`GitHub Discussions API error for ${repo}:`, response.status)
       }
       return []
     }
@@ -234,27 +239,8 @@ export async function getGitHubDiscussions(
     cache.set(cacheKey, { data: discussions, timestamp: Date.now() })
     return discussions
   } catch (error) {
-    console.error(`Error fetching GitHub Discussions for ${repo}:`, error)
+    console.warn(`Error fetching GitHub Discussions for ${repo}:`, error)
     return []
-  }
-}
-
-// 检查仓库是否启用了 Discussions
-export async function hasDiscussionsEnabled(repo: string): Promise<boolean> {
-  try {
-    const response = await fetch(`https://api.github.com/repos/${repo}`, {
-      headers: {
-        'Accept': 'application/vnd.github.v3+json',
-      }
-    })
-
-    if (!response.ok) return false
-
-    const data = (await response.json()) as RawRepoResponse
-    return data.has_discussions === true
-  } catch (error) {
-    console.error(`Error checking Discussions for ${repo}:`, error)
-    return false
   }
 }
 
@@ -277,13 +263,14 @@ export async function getGitHubIssues(
       {
         headers: {
           'Accept': 'application/vnd.github.v3+json',
-        },
-        next: { revalidate: CACHE_DURATION / 1000 }
+        }
       }
     )
 
     if (!response.ok) {
-      console.error(`GitHub Issues API error for ${repo}:`, response.status, response.statusText)
+      if (!isExpectedStatus(response.status)) {
+        console.warn(`GitHub Issues API error for ${repo}:`, response.status)
+      }
       return []
     }
 
@@ -318,12 +305,7 @@ export async function getGitHubIssues(
     cache.set(cacheKey, { data: issues, timestamp: Date.now() })
     return issues
   } catch (error) {
-    console.error(`Error fetching GitHub Issues for ${repo}:`, error)
+    console.warn(`Error fetching GitHub Issues for ${repo}:`, error)
     return []
   }
-}
-
-// 清除缓存
-export function clearGitHubCache(): void {
-  cache.clear()
 }

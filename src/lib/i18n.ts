@@ -119,6 +119,9 @@ const zhCN = {
   // 评论（GitHub）
   "comments.discussions": "讨论与评论",
   "comments.issues": "问题与反馈",
+  "comments.loading": "正在加载评论…",
+  "comments.unavailable": "评论数据暂不可用",
+  "comments.unavailableBlurb": "GitHub 接口暂时无法访问（可能已限流），稍后刷新即可恢复",
   "comments.noRepo": "此内容未关联 GitHub 仓库",
   "comments.welcome": "欢迎参与讨论",
   "comments.welcomeIssues": "欢迎反馈问题",
