@@ -4,7 +4,6 @@ description: "为多种软件包构建Docker镜像的自动化工具，支持多
 date: "2020-11-16"
 type: "personal"
 tags: ["Docker", "Dockerfile", "GitHub Actions", "Multi-arch", "CI/CD", "Containerization"]
-image: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&h=400&fit=crop"
 link: "https://github.com/hezhijie0327/DockerimageBuilder"
 ---
 

@@ -26,11 +26,9 @@ export const siteConfig = {
 
   // Hero 区域文案
   hero: {
-    greeting: "Hi，我是",
+    greeting: "Hi, 我是",
     role: "开发者 · 中国",
     tagline: "一些创造，一些生活，一直保持好奇。",
-    mottoEn: "Stay Hungry, Stay Foolish.",
-    mottoZh: "求知若渴，虚心若愚。",
   },
 };
 

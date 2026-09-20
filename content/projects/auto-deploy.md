@@ -4,7 +4,6 @@ description: "支持多平台的自动化部署脚本，简化应用部署流程
 date: "2021-03-25"
 type: "personal"
 tags: ["Shell", "DevOps", "Proxmox VE", "Ubuntu", "Automation", "CI/CD"]
-image: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&h=400&fit=crop"
 link: "https://github.com/hezhijie0327/AutoDeploy"
 ---
 

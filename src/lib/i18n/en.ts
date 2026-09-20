@@ -50,7 +50,6 @@ export const EN = {
 
   // 博客
   "blog.back": "BLOG / All Posts",
-  "blog.publishedOn": "Published {date}",
   "blog.empty.title": "No posts yet",
   "blog.empty.desc": "Content is being prepared — stay tuned.",
   "blog.notFound": "Post not found",
@@ -66,14 +65,15 @@ export const EN = {
   "project.starred": "Starred Project",
   "project.viewRepo": "View Repository",
   "project.visitLink": "Visit Link",
-  "project.updatedOn": "Updated {date}",
-  "projects.selectedLabel": "SELECTED WORK · Personal",
-  "projects.starredLabel": "Starred · Open Source Picks",
+  "projects.selectedLabel": "PERSONAL WORK · Personal",
   "projects.empty.title": "No projects yet",
   "projects.empty.desc": "Projects are being prepared — stay tuned.",
   "projects.githubMore": "See more on GitHub",
   "project.notFound": "Project not found",
   "project.fallbackDesc": "Personal project showcase",
+
+  // 元信息
+  "meta.readingTime": "{n} min read",
 
   // 搜索
   "search.title": "Search",
@@ -84,9 +84,9 @@ export const EN = {
   "search.emptyIndex": "Nothing to search yet",
   "search.typeBlog": "Blog",
   "search.typeProject": "Project",
-  "search.hintSelect": "↑↓ select",
-  "search.hintOpen": "↵ open",
-  "search.hintClose": "ESC close",
+  "search.hintSelect": "select",
+  "search.hintOpen": "open",
+  "search.hintClose": "close",
 
   // 支持页
   "support.wechat": "WeChat Pay",
@@ -101,6 +101,7 @@ export const EN = {
 
   // 评论（GitHub）
   "comments.discussions": "Discussions",
+  "comments.discussionTitle": 'Discussion: "{title}"',
   "comments.issues": "Issues & Feedback",
   "comments.loading": "Loading comments…",
   "comments.unavailable": "Comments unavailable right now",

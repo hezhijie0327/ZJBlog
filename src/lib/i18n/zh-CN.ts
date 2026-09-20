@@ -50,7 +50,6 @@ export const ZH_CN: Record<StringKey, string> = {
 
   // 博客
   "blog.back": "BLOG / 全部文章",
-  "blog.publishedOn": "发布于 {date}",
   "blog.empty.title": "暂无文章",
   "blog.empty.desc": "内容正在整理中，敬请期待。",
   "blog.notFound": "文章未找到",
@@ -66,14 +65,15 @@ export const ZH_CN: Record<StringKey, string> = {
   "project.starred": "精选项目",
   "project.viewRepo": "查看仓库",
   "project.visitLink": "访问链接",
-  "project.updatedOn": "更新于 {date}",
-  "projects.selectedLabel": "SELECTED WORK · 个人项目",
-  "projects.starredLabel": "Starred · 精选开源项目",
+  "projects.selectedLabel": "PERSONAL WORK · 个人项目",
   "projects.empty.title": "暂无项目",
   "projects.empty.desc": "项目正在整理中，敬请期待。",
   "projects.githubMore": "在 GitHub 查看更多",
   "project.notFound": "项目未找到",
   "project.fallbackDesc": "个人项目展示",
+
+  // 元信息
+  "meta.readingTime": "约 {n} 分钟",
 
   // 搜索
   "search.title": "站内搜索",
@@ -84,9 +84,9 @@ export const ZH_CN: Record<StringKey, string> = {
   "search.emptyIndex": "暂无可搜索的内容",
   "search.typeBlog": "博客",
   "search.typeProject": "项目",
-  "search.hintSelect": "↑↓ 选择",
-  "search.hintOpen": "↵ 打开",
-  "search.hintClose": "ESC 关闭",
+  "search.hintSelect": "选择",
+  "search.hintOpen": "打开",
+  "search.hintClose": "关闭",
 
   // 支持页
   "support.wechat": "微信支付",
@@ -101,6 +101,7 @@ export const ZH_CN: Record<StringKey, string> = {
 
   // 评论（GitHub）
   "comments.discussions": "讨论与评论",
+  "comments.discussionTitle": "关于「{title}」的讨论",
   "comments.issues": "问题与反馈",
   "comments.loading": "正在加载评论…",
   "comments.unavailable": "评论数据暂不可用",

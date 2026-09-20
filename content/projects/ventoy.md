@@ -4,7 +4,6 @@ description: "Ventoy启动盘的完整配置方案，包含多系统支持和优
 date: "2022-11-17"
 type: "personal"
 tags: ["Ventoy", "USB Boot", "Multiboot", "Configuration", "System Administration"]
-image: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&h=400&fit=crop"
 link: "https://github.com/hezhijie0327/Ventoy"
 ---
 

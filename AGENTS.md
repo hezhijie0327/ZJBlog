@@ -61,7 +61,7 @@ scripts/
 
 ## Content
 
-- `content/blogs/*.md` frontmatter：`title/description/date/category/tags`；`content/projects/*.md` 另有 `type: personal|starred`、`link`（GitHub 仓库自动解析 owner/repo 供评论区）、`image`（已预留未消费）。
+- `content/blogs/*.md` frontmatter：`title/description/date/category/tags`；`content/projects/*.md` 另有 `type: personal|starred`、`link`（GitHub 仓库自动解析 owner/repo 供评论区）、`image`（封面图，缺省时列表/详情不渲染封面位）。
 - Markdown 在**构建期**编译为 HTML（remark-gfm；mermaid 代码块替换为占位容器，客户端进视口才渲染；GFM 复选框构建期补 aria-hidden）。
 - 每条路由的 payload 由 `tools/payloads.ts` 生成；新增页面类型 = types.ts 加 payload + 守卫 → payloads.ts 加分支 → pages/ 加页面 → app.tsx 分发。
 - 中文 slug：URL 用 `encodeURIComponent`，磁盘/查找用解码后的原始 slug（content.ts 已处理）。

@@ -1,7 +1,7 @@
 // 全部文章列表页。
 
 import { ArrowUpRight } from "lucide-react";
-import { SectionHeading } from "@/components/SectionHeading.tsx";
+import { PageHeading } from "@/components/PageHeading.tsx";
 import { Link } from "@/components/Shell.tsx";
 import { cn } from "@/lib/cn.ts";
 import { formatDateISO } from "@/lib/format.ts";
@@ -14,14 +14,13 @@ export function BlogsPage({ data }: { data: BlogsData }) {
 
   return (
     <div className={SECTION}>
-      <SectionHeading
-        en={t("page.blogs.en")}
-        hint={t("count.posts", { n: data.blogs.length })}
-        index="00"
-        title={t("page.blogs.title")}
-      />
-
       <div className="mx-auto max-w-3xl">
+        <PageHeading
+          en={t("page.blogs.en")}
+          hint={t("count.posts", { n: data.blogs.length })}
+          title={t("page.blogs.title")}
+        />
+
         {data.blogs.length > 0 ? (
           <div className="divide-y divide-line/70">
             {data.blogs.map((blog) => (
@@ -39,7 +38,7 @@ export function BlogsPage({ data }: { data: BlogsData }) {
 
                   <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 font-mono text-xs text-ink-3">
                     {blog.date && <time dateTime={blog.date}>{formatDateISO(blog.date)}</time>}
-                    <span>{blog.readingTime}</span>
+                    <span>{t("meta.readingTime", { n: blog.readingMinutes })}</span>
                     {blog.category && (
                       <span className="rounded-full border border-line px-2 py-0.5">{blog.category}</span>
                     )}
@@ -53,11 +52,13 @@ export function BlogsPage({ data }: { data: BlogsData }) {
 
                   {blog.tags.length > 0 && (
                     <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1">
-                      {blog.tags.map((tag) => (
-                        <span className="text-xs text-ink-3 transition-colors group-hover:text-ink-2" key={tag}>
-                          #{tag}
-                        </span>
-                      ))}
+                      {blog.tags
+                        .filter((tag) => tag !== blog.category)
+                        .map((tag) => (
+                          <span className="text-xs text-ink-3 transition-colors group-hover:text-ink-2" key={tag}>
+                            #{tag}
+                          </span>
+                        ))}
                     </div>
                   )}
                 </Link>
@@ -66,7 +67,7 @@ export function BlogsPage({ data }: { data: BlogsData }) {
           </div>
         ) : (
           <div className={cn(CARD, "px-6 py-16 text-center")}>
-            <h3 className="font-serif text-lg font-semibold text-ink">{t("blog.empty.title")}</h3>
+            <h2 className="font-serif text-lg font-semibold text-ink">{t("blog.empty.title")}</h2>
             <p className="mt-2 text-sm text-ink-3">{t("blog.empty.desc")}</p>
           </div>
         )}

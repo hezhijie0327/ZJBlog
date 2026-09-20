@@ -4,7 +4,6 @@ description: "整合多源IP数据生成中国IP数据库，支持多种格式�
 date: "2020-08-08"
 type: "personal"
 tags: ["Shell", "IP Database", "GitHub Actions", "China IP", "Network", "Automation"]
-image: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&h=400&fit=crop"
 link: "https://github.com/hezhijie0327/CNIPDb"
 ---
 

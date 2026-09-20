@@ -41,14 +41,14 @@ export function SupportPage() {
             className="flex flex-col items-center rounded-2xl border border-line bg-surface p-6 shadow-card"
             key={item.name}
           >
-            <div className="mb-5 size-40 rounded-xl border border-line bg-white p-3">
+            <div className="mb-5 size-48 rounded-xl border border-line bg-white p-3">
               <img
                 alt={item.image.alt}
                 className="size-full rounded-lg object-contain"
-                height={160}
+                height={192}
                 loading="lazy"
                 src={item.image.src}
-                width={160}
+                width={192}
               />
             </div>
             <h2 className="font-serif text-lg font-semibold text-ink">{item.name}</h2>

@@ -4,7 +4,6 @@ description: "为LobeChat开发的SearXNG搜索插件，提供强大的网络搜
 date: "2024-10-01"
 type: "personal"
 tags: ["TypeScript", "LobeChat", "SearXNG", "AI", "Function Calling", "ChatGPT", "OpenAI"]
-image: "https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=800&h=400&fit=crop"
 link: "https://github.com/hezhijie0327/chat-plugin-searxng-search"
 ---
 

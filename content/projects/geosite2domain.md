@@ -4,7 +4,6 @@ description: "将Geosite格式转换为明文域名规则的实用工具，支�
 date: "2025-07-29"
 type: "personal"
 tags: ["Shell", "Geosite", "Domain Rules", "Network", "Proxy", "Router"]
-image: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&h=400&fit=crop"
 link: "https://github.com/hezhijie0327/Geosite2Domain"
 ---
 

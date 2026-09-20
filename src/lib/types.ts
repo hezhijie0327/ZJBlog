@@ -26,7 +26,8 @@ export interface BlogListItem {
   description?: string;
   category?: string;
   tags: string[];
-  readingTime: string;
+  /** 阅读时长（分钟）；展示文案走 i18n（meta.readingTime） */
+  readingMinutes: number;
 }
 
 export interface ProjectListItem {
@@ -38,6 +39,8 @@ export interface ProjectListItem {
   tags: string[];
   link?: string;
   githubRepo?: string;
+  /** 封面图（frontmatter.image）；缺省时页面不渲染封面位 */
+  image?: string;
 }
 
 export interface HomeData {

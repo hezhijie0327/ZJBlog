@@ -4,7 +4,6 @@ description: "将Tracker列表转换为aria2格式的配置文件，提升下载
 date: "2020-07-22"
 type: "personal"
 tags: ["Shell", "aria2", "GitHub Actions", "Configuration", "Download Manager"]
-image: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&h=400&fit=crop"
 link: "https://github.com/hezhijie0327/aria2.conf"
 ---
 

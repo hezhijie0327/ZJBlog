@@ -30,14 +30,17 @@ function escapeAttr(text: string): string {
   return text.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;");
 }
 
-/** Markdown → HTML。两处后处理：
+/** Markdown → HTML。三处后处理：
  *  1. mermaid 代码块 → 占位容器（data-chart 存原文），客户端进视口后才
  *     动态加载 mermaid 渲染（库 ~2.7MB，预加载曾致 perf 掉到 82）；
  *  2. GFM 任务清单复选框补 aria-hidden（纯装饰，无标签的表单控件不应
- *     进入可访问树）。 */
+ *     进入可访问树）；
+ *  3. 剥掉行首 h1——页面头部已渲染标题，正文再带一个会构成双 h1 +
+ *     标题重复（对 SEO 与标题层级都是噪音）。 */
 function compileMarkdown(markdown: string): string {
   const html = processor.processSync(markdown).toString().trim();
   return html
+    .replace(/^<h1[^>]*>[\s\S]*?<\/h1>\s*/, "")
     .replace(/<pre><code class="language-mermaid">([\s\S]*?)<\/code><\/pre>/g, (_match, chart: string) => {
       return `<div class="mermaid-placeholder" data-chart="${escapeAttr(decodeEntities(chart))}"></div>`;
     })
@@ -51,7 +54,8 @@ export interface BlogEntry {
   description?: string;
   category?: string;
   tags: string[];
-  readingTime: string;
+  /** 阅读时长（分钟，向上取整；展示文案由 i18n 负责） */
+  readingMinutes: number;
   contentHtml: string;
   /** 原始 Markdown 正文（llms-full.txt 用，不进页面 payload） */
   content: string;
@@ -66,6 +70,8 @@ export interface ProjectEntry {
   tags: string[];
   link?: string;
   githubRepo?: string;
+  /** 封面图（frontmatter.image，站点根路径如 /images/xxx.png） */
+  image?: string;
   contentHtml: string;
   /** 原始 Markdown 正文（llms-full.txt 用，不进页面 payload） */
   content: string;
@@ -81,7 +87,8 @@ type RawEntry = {
   tags?: string[];
   link?: string;
   githubRepo?: string;
-  readingTime?: string;
+  image?: string;
+  readingMinutes?: number;
   contentHtml?: string;
   content?: string;
 };
@@ -111,6 +118,7 @@ function readEntries(type: "blogs" | "projects"): RawEntry[] {
       category?: string;
       type?: "personal" | "starred";
       link?: string;
+      image?: string;
     };
     entries.push({
       slug,
@@ -122,7 +130,8 @@ function readEntries(type: "blogs" | "projects"): RawEntry[] {
       type: frontmatter.type === "starred" ? "starred" : "personal",
       link: frontmatter.link,
       githubRepo: parseGitHubRepo(frontmatter.link),
-      readingTime: readingTime(content).text,
+      image: frontmatter.image,
+      readingMinutes: Math.ceil(readingTime(content).minutes),
       contentHtml: compileMarkdown(content),
       content,
     });
@@ -160,7 +169,7 @@ export function loadContent(): ContentIndex {
       description: entry.description,
       category: entry.category,
       tags: entry.tags ?? [],
-      readingTime: entry.readingTime ?? "",
+      readingMinutes: entry.readingMinutes ?? 1,
       contentHtml: entry.contentHtml ?? "",
       content: entry.content ?? "",
     });
@@ -173,6 +182,7 @@ export function loadContent(): ContentIndex {
       tags: entry.tags ?? [],
       link: entry.link,
       githubRepo: entry.githubRepo,
+      image: entry.image,
       contentHtml: entry.contentHtml ?? "",
       content: entry.content ?? "",
     });

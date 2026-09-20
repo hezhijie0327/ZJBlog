@@ -12,7 +12,7 @@ export function NotFoundPage() {
       <span aria-hidden="true" className="grid size-14 place-items-center rounded-full bg-accent-soft text-accent">
         <Compass className="size-7" />
       </span>
-      <h1 className="mt-4 text-2xl font-semibold tracking-tight text-ink">404</h1>
+      <h1 className="mt-4 font-serif text-3xl font-black tracking-tight text-ink">404</h1>
       <p className="mt-1.5 text-sm text-ink-2">{t("notFound.blurb")}</p>
       <Link
         className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-accent-strong px-4 py-2 text-[13px] font-medium text-accent-contrast transition-colors hover:bg-accent-strong-hover"

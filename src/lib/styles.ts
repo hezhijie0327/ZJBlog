@@ -19,6 +19,10 @@ export const CARD_HOVER = `${CARD} transition-shadow hover:shadow-pop`;
 /** 紧凑列表容器（分隔行式） */
 export const LIST_CONTAINER = "divide-y divide-line/70 rounded-2xl border border-line bg-surface";
 
+/** 紧凑列表行（LIST_CONTAINER 内；首页项目行与文章行共用同一节奏） */
+export const LIST_ROW =
+  "group flex items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-surface-2 sm:gap-6 sm:px-6";
+
 /** 主操作按钮（金黄底胶囊） */
 export const BTN_PRIMARY =
   "inline-flex h-10 items-center gap-2 rounded-full bg-accent-strong px-5 text-sm font-semibold text-accent-contrast shadow-card transition-all hover:bg-accent-strong-hover hover:shadow-pop";

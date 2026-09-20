@@ -1,16 +1,4 @@
-/** 链接工具：SPA Link 拦截判断与外链展示。 */
-
-/** 从链接提取展示用域名（github.com），解析失败返回 undefined */
-export function hostOf(link?: string): string | undefined {
-  if (!link) {
-    return undefined;
-  }
-  try {
-    return new URL(link).hostname.replace(/^www\./, "");
-  } catch {
-    return undefined;
-  }
-}
+/** 链接工具：SPA Link 拦截判断与外链行为。 */
 
 /** 修饰键点击（新标签 / 下载等）不拦截，交给浏览器默认行为。 */
 export function isModifiedClick(event: {

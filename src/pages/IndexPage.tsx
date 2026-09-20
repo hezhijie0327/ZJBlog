@@ -7,8 +7,7 @@ import { featuredProjectCount, siteConfig } from "@/config/site.ts";
 import { cn } from "@/lib/cn.ts";
 import { formatDateISO } from "@/lib/format.ts";
 import { useT } from "@/lib/i18n.ts";
-import { hostOf } from "@/lib/link.ts";
-import { BTN_OUTLINE, BTN_PRIMARY, CARD_HOVER, LIST_CONTAINER, SECTION } from "@/lib/styles.ts";
+import { BTN_OUTLINE, BTN_PRIMARY, CARD_HOVER, LIST_CONTAINER, LIST_ROW, SECTION } from "@/lib/styles.ts";
 import type { HomeData } from "@/lib/types.ts";
 
 export function IndexPage({ data }: { data: HomeData }) {
@@ -34,12 +33,7 @@ export function IndexPage({ data }: { data: HomeData }) {
           <p className="animate-fade-up mt-4 text-base text-ink-2 [animation-delay:120ms] sm:text-lg">
             {siteConfig.hero.role} — {siteConfig.hero.tagline}
           </p>
-          <p className="animate-fade-up mt-8 border-l-2 border-accent-strong pl-4 font-serif text-sm italic leading-relaxed text-ink-2 [animation-delay:180ms] sm:text-base">
-            {siteConfig.hero.mottoEn}
-            <br />
-            {siteConfig.hero.mottoZh}
-          </p>
-          <div className="animate-fade-up mt-10 flex flex-wrap items-center gap-3 [animation-delay:240ms]">
+          <div className="animate-fade-up mt-10 flex flex-wrap items-center gap-3 [animation-delay:180ms]">
             <Link className={BTN_PRIMARY} href="/projects/">
               {t("home.cta.projects")}
               <ArrowRight aria-hidden="true" className="size-4" />
@@ -79,7 +73,7 @@ export function IndexPage({ data }: { data: HomeData }) {
               {project.description && (
                 <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-ink-2">{project.description}</p>
               )}
-              {hostOf(project.link) && <p className="mt-4 font-mono text-xs text-ink-3">{hostOf(project.link)}</p>}
+              {project.date && <p className="mt-4 font-mono text-xs text-ink-3">{formatDateISO(project.date)}</p>}
             </Link>
           ))}
         </div>
@@ -89,12 +83,8 @@ export function IndexPage({ data }: { data: HomeData }) {
             <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-ink-3">{t("home.moreProjects")}</p>
             <div className={LIST_CONTAINER}>
               {moreProjects.map((project) => (
-                <Link
-                  className="group flex items-center justify-between gap-4 px-5 py-3.5 transition-colors hover:bg-surface-2"
-                  href={`/projects/${project.slug}/`}
-                  key={project.slug}
-                >
-                  <div className="flex min-w-0 items-baseline gap-3">
+                <Link className={LIST_ROW} href={`/projects/${project.slug}/`} key={project.slug}>
+                  <div className="flex min-w-0 flex-1 items-baseline gap-3">
                     <span className="font-medium text-ink transition-colors group-hover:text-accent">
                       {project.title}
                     </span>
@@ -134,11 +124,7 @@ export function IndexPage({ data }: { data: HomeData }) {
         <div className={LIST_CONTAINER}>
           {latestBlogs.length > 0 ? (
             latestBlogs.map((blog) => (
-              <Link
-                className="group flex items-center gap-4 px-5 py-4 transition-colors hover:bg-surface-2 sm:gap-6 sm:px-6 sm:py-5"
-                href={`/blogs/${blog.slug}/`}
-                key={blog.slug}
-              >
+              <Link className={LIST_ROW} href={`/blogs/${blog.slug}/`} key={blog.slug}>
                 {blog.date && (
                   <time className="shrink-0 font-mono text-xs text-ink-3 sm:text-sm" dateTime={blog.date}>
                     {formatDateISO(blog.date)}

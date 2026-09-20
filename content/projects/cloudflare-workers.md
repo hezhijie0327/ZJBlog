@@ -4,7 +4,6 @@ description: "基于Cloudflare Workers构建的边缘计算工具集，提供多
 date: "2020-07-03"
 type: "personal"
 tags: ["JavaScript", "Cloudflare Workers", "Edge Computing", "Proxy", "IP", "Utilities"]
-image: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&h=400&fit=crop"
 link: "https://github.com/hezhijie0327/CloudflareWorkers"
 ---
 

@@ -28,7 +28,7 @@ function toBlogListItem(entry: {
   description?: string;
   category?: string;
   tags: string[];
-  readingTime: string;
+  readingMinutes: number;
 }): BlogListItem {
   return {
     slug: entry.slug,
@@ -37,7 +37,7 @@ function toBlogListItem(entry: {
     description: entry.description,
     category: entry.category,
     tags: entry.tags,
-    readingTime: entry.readingTime,
+    readingMinutes: entry.readingMinutes,
   };
 }
 
@@ -50,6 +50,7 @@ function toProjectListItem(entry: {
   tags: string[];
   link?: string;
   githubRepo?: string;
+  image?: string;
 }): ProjectListItem {
   return {
     slug: entry.slug,
@@ -60,6 +61,7 @@ function toProjectListItem(entry: {
     tags: entry.tags,
     link: entry.link,
     githubRepo: entry.githubRepo,
+    image: entry.image,
   };
 }
 

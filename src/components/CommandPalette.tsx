@@ -210,11 +210,21 @@ export function CommandPalette() {
           )}
         </div>
 
-        {/* 底部提示 */}
-        <div className={cn(META, "flex items-center gap-3 border-t border-line px-4 py-2.5 text-[10px]")}>
-          <span>{t("search.hintSelect")}</span>
-          <span>{t("search.hintOpen")}</span>
-          <span>{t("search.hintClose")}</span>
+        {/* 底部提示：按键用 kbd 胶囊（sans 栈渲染箭头字形更稳） */}
+        <div className={cn(META, "flex items-center gap-4 border-t border-line px-4 py-2.5 text-[10px]")}>
+          <span className="flex items-center gap-1.5">
+            <kbd className={cn(MONO_CHIP, "font-sans")}>↑</kbd>
+            <kbd className={cn(MONO_CHIP, "font-sans")}>↓</kbd>
+            {t("search.hintSelect")}
+          </span>
+          <span className="flex items-center gap-1.5">
+            <kbd className={cn(MONO_CHIP, "font-sans")}>↵</kbd>
+            {t("search.hintOpen")}
+          </span>
+          <span className="flex items-center gap-1.5">
+            <kbd className={cn(MONO_CHIP, "font-sans")}>ESC</kbd>
+            {t("search.hintClose")}
+          </span>
         </div>
       </div>
     </div>

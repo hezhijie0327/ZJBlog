@@ -147,7 +147,7 @@ export function Navigation() {
           </div>
         </div>
 
-        {/* 移动端导航 */}
+        {/* 移动端导航：页面链接 + 支持 / RSS（顶栏图标之外的第二入口） */}
         {isMenuOpen && (
           <nav className="border-t border-line/80 py-3 md:hidden">
             <div className="flex flex-col">
@@ -170,6 +170,31 @@ export function Navigation() {
                   </Link>
                 );
               })}
+            </div>
+            <div className="mt-3 border-t border-line/70 pt-3">
+              <Link
+                className={cn(
+                  "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors",
+                  isSupport ? "bg-surface-2 font-medium text-ink" : "text-ink-2 hover:bg-surface-2 hover:text-ink",
+                )}
+                href="/support/"
+                onClick={() => {
+                  setIsMenuOpen(false);
+                }}
+              >
+                <Heart aria-hidden="true" className="size-3.5" />
+                {t("nav.support")}
+              </Link>
+              <a
+                className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink"
+                href="/rss.xml"
+                onClick={() => {
+                  setIsMenuOpen(false);
+                }}
+              >
+                <Rss aria-hidden="true" className="size-3.5" />
+                {t("nav.rss")}
+              </a>
             </div>
           </nav>
         )}

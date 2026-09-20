@@ -4,7 +4,6 @@ description: "整合多源Tracker列表并检测域名可用性，支持多种�
 date: "2020-07-21"
 type: "personal"
 tags: ["Shell", "Tracker", "GitHub Actions", "BitTorrent", "aria2", "qBittorrent", "Transmission"]
-image: "https://images.unsplash.com/photo-1526379095098-d400fd0bf935?w=800&h=400&fit=crop"
 link: "https://github.com/hezhijie0327/Trackerslist"
 ---
 

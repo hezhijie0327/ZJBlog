@@ -5,7 +5,7 @@ import { Link } from "@/components/Shell.tsx";
 import { siteConfig } from "@/config/site.ts";
 import { GitHubComments } from "@/features/comments/GitHubComments.tsx";
 import { Prose } from "@/features/markdown/Prose.tsx";
-import { formatDate, formatDateISO } from "@/lib/format.ts";
+import { formatDateISO } from "@/lib/format.ts";
 import { useT } from "@/lib/i18n.ts";
 import type { BlogPostData } from "@/lib/types.ts";
 
@@ -25,7 +25,7 @@ export function BlogPostPage({ data }: { data: BlogPostData }) {
           {t("blog.back")}
         </Link>
 
-        {/* 文章头部 */}
+        {/* 文章头部：日期 · 阅读时长 · 分类一行，tags 与分类去重 */}
         <header className="mb-10 mt-8 border-b border-line pb-8">
           <h1 className="font-serif text-3xl font-black leading-tight tracking-tight text-ink sm:text-4xl">
             {post.title}
@@ -34,19 +34,18 @@ export function BlogPostPage({ data }: { data: BlogPostData }) {
             {post.date && <time dateTime={post.date}>{formatDateISO(post.date)}</time>}
             <span className="inline-flex items-center gap-1">
               <Clock aria-hidden="true" className="size-3" />
-              {post.readingTime}
+              {t("meta.readingTime", { n: post.readingMinutes })}
             </span>
             {post.category && <span className="rounded-full border border-line px-2.5 py-0.5">{post.category}</span>}
           </div>
-          {post.tags.length > 0 && (
+          {post.tags.filter((tag) => tag !== post.category).length > 0 && (
             <div className="mt-4 flex flex-wrap gap-x-3 gap-y-1 text-xs text-ink-3">
-              {post.tags.map((tag) => (
-                <span key={tag}>#{tag}</span>
-              ))}
+              {post.tags
+                .filter((tag) => tag !== post.category)
+                .map((tag) => (
+                  <span key={tag}>#{tag}</span>
+                ))}
             </div>
-          )}
-          {post.date && (
-            <p className="mt-4 text-[11px] text-ink-3">{t("blog.publishedOn", { date: formatDate(post.date) })}</p>
           )}
         </header>
 
@@ -54,7 +53,7 @@ export function BlogPostPage({ data }: { data: BlogPostData }) {
         <Prose html={post.contentHtml} />
 
         {/* GitHub 评论 */}
-        <GitHubComments repo={siteConfig.commentsRepo} title={`关于文章 "${post.title}" 的讨论`} />
+        <GitHubComments repo={siteConfig.commentsRepo} title={t("comments.discussionTitle", { title: post.title })} />
       </article>
     </div>
   );

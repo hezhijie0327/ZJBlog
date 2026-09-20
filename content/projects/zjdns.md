@@ -4,7 +4,6 @@ description: "基于Go和Valkey开发的高性能递归DNS服务器，VibeCoding
 date: "2022-05-03"
 type: "personal"
 tags: ["Go", "DNS", "Valkey", "VibeCoding", "High Performance", "Recursive DNS"]
-image: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&h=400&fit=crop"
 link: "https://github.com/hezhijie0327/ZJDNS"
 ---
 

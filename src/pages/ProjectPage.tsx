@@ -1,11 +1,12 @@
-// 项目详情页：封面占位 + 仓库/链接 CTA + 正文 + 该仓库评论区。
+// 项目详情页：仓库/链接 CTA + 正文 + 该仓库评论区。
+// 封面仅在 frontmatter.image 提供时渲染，无图直接以标题开页。
 
-import { ArrowLeft, ArrowUpRight, Clock, Image as ImageIcon } from "lucide-react";
+import { ArrowLeft, ArrowUpRight } from "lucide-react";
 import { GithubIcon } from "@/components/icons.tsx";
 import { Link } from "@/components/Shell.tsx";
 import { GitHubComments } from "@/features/comments/GitHubComments.tsx";
 import { Prose } from "@/features/markdown/Prose.tsx";
-import { formatDate, formatDateISO } from "@/lib/format.ts";
+import { formatDateISO } from "@/lib/format.ts";
 import { useT } from "@/lib/i18n.ts";
 import type { ProjectData } from "@/lib/types.ts";
 
@@ -27,10 +28,16 @@ export function ProjectPage({ data }: { data: ProjectData }) {
 
         {/* 项目头部 */}
         <header className="mb-10 mt-8 border-b border-line pb-8">
-          {/* 封面占位：真图待后续整理（frontmatter.image 已预留） */}
-          <div className="mb-8 grid aspect-[21/9] place-items-center rounded-2xl border border-line bg-surface-2 shadow-card">
-            <ImageIcon aria-hidden="true" className="size-12 text-ink-3/40" />
-          </div>
+          {project.image && (
+            <img
+              alt={project.title}
+              className="mb-8 aspect-[21/9] w-full rounded-2xl border border-line object-cover shadow-card"
+              height={549}
+              loading="eager"
+              src={project.image}
+              width={1280}
+            />
+          )}
           <h1 className="font-serif text-3xl font-black leading-tight tracking-tight text-ink sm:text-4xl">
             {project.title}
           </h1>
@@ -39,10 +46,6 @@ export function ProjectPage({ data }: { data: ProjectData }) {
           )}
           <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 font-mono text-xs text-ink-3">
             {project.date && <time dateTime={project.date}>{formatDateISO(project.date)}</time>}
-            <span className="inline-flex items-center gap-1">
-              <Clock aria-hidden="true" className="size-3" />
-              {t("project.personal")}
-            </span>
             <span className="rounded-full border border-line px-2.5 py-0.5">
               {project.type === "starred" ? t("project.starred") : t("project.personal")}
             </span>
@@ -56,7 +59,7 @@ export function ProjectPage({ data }: { data: ProjectData }) {
           )}
 
           {project.link && (
-            <div className="mt-7 flex flex-wrap gap-3">
+            <div className="mt-7">
               <a
                 className="inline-flex h-10 items-center gap-2 rounded-full bg-accent-strong px-5 text-sm font-semibold text-accent-contrast shadow-card transition-all hover:bg-accent-strong-hover hover:shadow-pop"
                 href={project.link}
@@ -64,17 +67,12 @@ export function ProjectPage({ data }: { data: ProjectData }) {
                 target="_blank"
               >
                 {project.githubRepo ? (
-                  <GithubIcon className="size-4" />
+                  <GithubIcon aria-hidden="true" className="size-4" />
                 ) : (
                   <ArrowUpRight aria-hidden="true" className="size-4" />
                 )}
                 {project.githubRepo ? t("project.viewRepo") : t("project.visitLink")}
               </a>
-              {project.date && (
-                <span className="inline-flex h-10 items-center rounded-full px-2 text-[11px] text-ink-3">
-                  {t("project.updatedOn", { date: formatDate(project.date) })}
-                </span>
-              )}
             </div>
           )}
         </header>
@@ -83,7 +81,7 @@ export function ProjectPage({ data }: { data: ProjectData }) {
         <Prose html={project.contentHtml} />
 
         {/* GitHub 评论 */}
-        <GitHubComments repo={project.githubRepo} title={`关于项目 "${project.title}" 的讨论`} />
+        <GitHubComments repo={project.githubRepo} title={t("comments.discussionTitle", { title: project.title })} />
       </article>
     </div>
   );

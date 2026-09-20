@@ -4,7 +4,6 @@ description: "基于Cloudflare API的动态DNS解决方案，支持自动IP更�
 date: "2020-07-03"
 type: "personal"
 tags: ["Shell", "Cloudflare", "DDNS", "API", "GitHub Actions", "Network"]
-image: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&h=400&fit=crop"
 link: "https://github.com/hezhijie0327/CloudflareDDNS"
 ---
 

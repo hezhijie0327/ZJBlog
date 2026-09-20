@@ -4,7 +4,6 @@ description: "为SearXNG搜索引擎提供内容农场hostname规则，提升搜
 date: "2025-07-20"
 type: "personal"
 tags: ["Python", "SearXNG", "Content Farm", "Search Engine", "Filter", "uBlock Origin"]
-image: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&h=400&fit=crop"
 link: "https://github.com/hezhijie0327/ContentFarm4SearXNG"
 ---
 
