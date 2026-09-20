@@ -1,8 +1,10 @@
 // UI 文案字典（i18n）：英文（en.ts）是基准，其他 locale 逐键回退 EN。
 // 结构对齐 ZJSearch —— 新增语言只需两步：
 //   1. 新建 ./i18n/<tag>.ts，导出 Record<StringKey, string>（Partial 亦可）
-//   2. 在下方 CATALOGS 注册，并让 themeLocaleTag() 能解析到该 tag
-// 站点当前单语言（zh-CN），locale 由页面 payload 的 globals.locale 携带。
+//   2. 在下方 CATALOGS 注册
+// UI 语言可切换：默认 zh-CN（与预渲染一致），偏好存 localStorage，由
+// app.tsx 挂载后校正并在导航栏切换。内容（frontmatter/正文）不随 UI 语言
+// 翻译，保持作者原文。
 
 import { createContext, useContext, useMemo } from "react";
 import { EN, type StringKey } from "@/lib/i18n/en.ts";
@@ -10,6 +12,31 @@ import { ZH_CN } from "@/lib/i18n/zh-CN.ts";
 
 export type { StringKey };
 export type Translate = (key: StringKey, params?: Record<string, string | number>) => string;
+
+/** UI 语言。 */
+export type UiLocale = "zh-CN" | "en";
+
+const LOCALE_STORAGE_KEY = "zj-locale";
+
+/** 读取用户语言偏好；无存储或非法值回退 zh-CN（与预渲染一致）。 */
+export function readLocalePreference(): UiLocale {
+  if (typeof window === "undefined") {
+    return "zh-CN";
+  }
+  try {
+    return window.localStorage.getItem(LOCALE_STORAGE_KEY) === "en" ? "en" : "zh-CN";
+  } catch {
+    return "zh-CN";
+  }
+}
+
+export function storeLocalePreference(locale: UiLocale): void {
+  try {
+    window.localStorage.setItem(LOCALE_STORAGE_KEY, locale);
+  } catch {
+    // 隐私模式等存储不可用时静默降级：本次会话内仍然生效
+  }
+}
 
 /** 词库按 locale tag 注册；文件名即 tag。 */
 const CATALOGS: Record<string, Partial<Record<StringKey, string>>> = {
@@ -28,15 +55,26 @@ function themeLocaleTag(locale: string): CatalogTag {
   return "en";
 }
 
-export const I18nContext = createContext<string>("en");
+export interface I18nContextValue {
+  locale: UiLocale;
+  /** 切换 UI 语言（zh-CN ↔ en）并持久化。 */
+  switchLocale: () => void;
+}
+
+export const I18nContext = createContext<I18nContextValue>({ locale: "zh-CN", switchLocale: () => {} });
 
 /** 当前 UI locale tag。 */
-export function useLocale(): string {
-  return useContext(I18nContext);
+export function useLocale(): UiLocale {
+  return useContext(I18nContext).locale;
+}
+
+/** UI 语言切换。 */
+export function useLocaleSwitch(): () => void {
+  return useContext(I18nContext).switchLocale;
 }
 
 export function useT(): Translate {
-  const locale = useContext(I18nContext);
+  const locale = useContext(I18nContext).locale;
   // 记忆化保证 t 的引用稳定 —— 调用方把它放进 effect deps 不会反复触发
   return useMemo(() => translateFor(locale), [locale]);
 }

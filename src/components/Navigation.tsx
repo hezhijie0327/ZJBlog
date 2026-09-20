@@ -1,4 +1,4 @@
-// 顶部导航：sticky 毛玻璃、桌面链接 + 移动端抽屉、搜索/主题/RSS/GitHub/支持操作区。
+// 顶部导航：sticky 毛玻璃、桌面链接 + 移动端抽屉、搜索/主题/语言/RSS/GitHub/支持操作区。
 
 import { Heart, Menu, Rss, Search, X } from "lucide-react";
 import { useState } from "react";
@@ -7,12 +7,14 @@ import { Link } from "@/components/Shell.tsx";
 import { ThemeToggle } from "@/components/ThemeToggle.tsx";
 import { siteConfig } from "@/config/site.ts";
 import { cn } from "@/lib/cn.ts";
-import { useT } from "@/lib/i18n.ts";
+import { useLocale, useLocaleSwitch, useT } from "@/lib/i18n.ts";
 import { useRouter } from "@/lib/router.tsx";
 import { ICON_BTN } from "@/lib/styles.ts";
 
 export function Navigation() {
   const t = useT();
+  const locale = useLocale();
+  const switchLocale = useLocaleSwitch();
   const { data } = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -56,14 +58,14 @@ export function Navigation() {
           {/* Logo */}
           <Link className="group flex items-center gap-2.5" href="/">
             <img
-              alt={siteConfig.author}
+              alt={t("site.author")}
               className="size-8 rounded-full object-cover ring-1 ring-line"
               height={32}
               loading="eager"
               src="/avatar.jpg"
               width={32}
             />
-            <span className="font-serif text-base font-semibold tracking-tight">{siteConfig.name}</span>
+            <span className="font-serif text-base font-semibold tracking-tight">{t("site.brand")}</span>
           </Link>
 
           {/* 桌面导航 */}
@@ -101,6 +103,16 @@ export function Navigation() {
               <Search aria-hidden="true" className="size-4" />
             </button>
             <ThemeToggle />
+            {/* UI 语言切换：显示目标语言标签（中文界面显示 EN，英文界面显示 中） */}
+            <button
+              aria-label={t("nav.language")}
+              className={cn(ICON_BTN, "font-mono text-[11px] font-semibold")}
+              onClick={switchLocale}
+              title={t("nav.language")}
+              type="button"
+            >
+              {locale === "zh-CN" ? "EN" : "中"}
+            </button>
             <a
               aria-label={t("nav.rss")}
               className={cn(ICON_BTN, "hidden sm:grid")}

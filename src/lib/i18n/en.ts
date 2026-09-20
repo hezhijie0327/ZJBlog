@@ -4,6 +4,15 @@
 // {name} 形式的占位符由 t(key, params) 替换。
 
 export const EN = {
+  // 站点（UI 层品牌与作者；构建期元数据在 config/site.ts）
+  "site.brand": "Zhijie Online",
+  "site.author": "Zhijie He",
+
+  // Hero
+  "hero.kicker": "Tech · Open Source · Life",
+  "hero.greeting": "Hi, I'm ",
+  "hero.motto": "Stay Hungry, Stay Foolish.",
+
   // 导航
   "nav.home": "Home",
   "nav.projects": "Projects",
@@ -15,6 +24,7 @@ export const EN = {
   "nav.themeAuto": "Theme: system",
   "nav.themeLight": "Theme: light",
   "nav.themeDark": "Theme: dark",
+  "nav.language": "Switch to 中文",
   "nav.rss": "RSS Feed",
   "nav.github": "GitHub",
   "nav.openMenu": "Open menu",

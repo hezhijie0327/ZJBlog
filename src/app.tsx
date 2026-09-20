@@ -4,10 +4,10 @@
 // Suspense 骨架兜底。404 体积小，保持急加载。
 
 import { LoaderCircle } from "lucide-react";
-import { Suspense } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { CommandPalette } from "@/components/CommandPalette.tsx";
 import { Shell } from "@/components/Shell.tsx";
-import { I18nContext } from "@/lib/i18n.ts";
+import { I18nContext, readLocalePreference, storeLocalePreference, type UiLocale } from "@/lib/i18n.ts";
 import { RouterProvider, useRouter } from "@/lib/router.tsx";
 import type { AnyPageData, SyncPages } from "@/lib/types.ts";
 import {
@@ -103,9 +103,27 @@ export function App({
   /** SSR/预渲染的同步页面组件表；客户端不传，走 registry 分块。 */
   syncPages?: SyncPages;
 }) {
-  const locale = initialData?.globals.locale ?? "zh-CN";
+  // UI 语言默认跟随 payload（zh-CN，与预渲染一致保证水合无差）；挂载后从
+  // localStorage 校正一次用户偏好（与 ThemeToggle 同款模式——无法 pre-paint，
+  // 英文偏好用户会有一帧中文闪烁）。切换即时生效并同步 <html lang>。
+  const [locale, setLocale] = useState<UiLocale>(initialData?.globals.locale ?? "zh-CN");
+  useEffect(() => {
+    const stored = readLocalePreference();
+    document.documentElement.lang = stored === "en" ? "en" : "zh";
+    setLocale((current) => (stored === current ? current : stored));
+  }, []);
+
+  const switchLocale = useCallback(() => {
+    const next = locale === "zh-CN" ? "en" : "zh-CN";
+    storeLocalePreference(next);
+    document.documentElement.lang = next === "en" ? "en" : "zh";
+    setLocale(next);
+  }, [locale]);
+
+  const i18n = useMemo(() => ({ locale, switchLocale }), [locale, switchLocale]);
+
   return (
-    <I18nContext.Provider value={locale}>
+    <I18nContext.Provider value={i18n}>
       <RouterProvider initialData={initialData} onPageData={preloadPage}>
         <Shell>
           <Pages syncPages={syncPages} />

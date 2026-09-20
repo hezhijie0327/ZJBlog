@@ -14,7 +14,7 @@ function globals<P extends PageKind>(page: P, title: string, description: string
   return {
     page,
     locale: "zh-CN",
-    siteName: siteConfig.name,
+    siteName: siteConfig.title,
     siteUrl: siteConfig.url,
     title: page === "home" ? siteConfig.title : `${title}${TITLE_SUFFIX}`,
     description,

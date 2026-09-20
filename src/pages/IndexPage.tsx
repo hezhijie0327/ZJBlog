@@ -3,7 +3,7 @@
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { SectionHeading } from "@/components/SectionHeading.tsx";
 import { Link } from "@/components/Shell.tsx";
-import { featuredProjectCount, siteConfig } from "@/config/site.ts";
+import { featuredProjectCount } from "@/config/site.ts";
 import { cn } from "@/lib/cn.ts";
 import { formatDateISO } from "@/lib/format.ts";
 import { useT } from "@/lib/i18n.ts";
@@ -22,16 +22,16 @@ export function IndexPage({ data }: { data: HomeData }) {
       {/* Hero */}
       <section className="container mx-auto px-4 pb-16 pt-20 sm:pb-24 sm:pt-32">
         <div className="mx-auto max-w-3xl">
-          <p className="animate-fade-up mb-6 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.24em] text-ink-3">
+          <p className="animate-fade-up mb-6 flex items-center gap-2 font-mono text-[11px] tracking-[0.24em] text-ink-3">
             <span aria-hidden="true" className="inline-block size-1.5 rounded-full bg-accent-strong" />
-            Technology · Engineering · Notes
+            {t("hero.kicker")}
           </p>
           <h1 className="animate-fade-up font-serif text-4xl font-black leading-tight tracking-tight text-ink [animation-delay:60ms] sm:text-6xl">
-            {siteConfig.hero.greeting}
-            {siteConfig.author}
+            {t("hero.greeting")}
+            {t("site.author")}
           </h1>
-          <p className="animate-fade-up mt-4 text-base text-ink-2 [animation-delay:120ms] sm:text-lg">
-            {siteConfig.hero.role} — {siteConfig.hero.tagline}
+          <p className="animate-fade-up mt-6 border-l-2 border-accent-strong pl-4 font-serif text-sm italic leading-relaxed text-ink-2 [animation-delay:120ms] sm:text-base">
+            {t("hero.motto")}
           </p>
           <div className="animate-fade-up mt-10 flex flex-wrap items-center gap-3 [animation-delay:180ms]">
             <Link className={BTN_PRIMARY} href="/projects/">

@@ -4,6 +4,15 @@
 import type { StringKey } from "@/lib/i18n/en.ts";
 
 export const ZH_CN: Record<StringKey, string> = {
+  // 站点（UI 层品牌与作者）
+  "site.brand": "治杰 Online",
+  "site.author": "贺治杰",
+
+  // Hero
+  "hero.kicker": "技术 · 开源 · 生活",
+  "hero.greeting": "Hi, 我是",
+  "hero.motto": "求知若渴，虚心若愚。",
+
   // 导航
   "nav.home": "首页",
   "nav.projects": "项目",
@@ -15,6 +24,7 @@ export const ZH_CN: Record<StringKey, string> = {
   "nav.themeAuto": "主题：跟随系统",
   "nav.themeLight": "主题：亮色",
   "nav.themeDark": "主题：暗色",
+  "nav.language": "切换到 English",
   "nav.rss": "RSS 订阅",
   "nav.github": "GitHub",
   "nav.openMenu": "打开菜单",
