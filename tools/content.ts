@@ -5,17 +5,23 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import matter from "gray-matter";
+import { pandocMarkFromMarkdown } from "mdast-util-mark";
+import { pandocMark } from "micromark-extension-mark";
 import readingTime from "reading-time";
 import rehypeExternalLinks from "rehype-external-links";
 import rehypeKatex from "rehype-katex";
+import rehypeRaw from "rehype-raw";
 import rehypeSlug from "rehype-slug";
 import rehypeStringify from "rehype-stringify";
+import remarkDeflist from "remark-deflist";
+import remarkEmoji from "remark-emoji";
 import remarkGfm from "remark-gfm";
+import { remarkAlert } from "remark-github-blockquote-alert";
 import remarkMath from "remark-math";
 import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import { createHighlighter } from "shiki";
-import { unified } from "unified";
+import { type Processor, unified } from "unified";
 
 const contentDirectory = path.join(process.cwd(), "content");
 
@@ -45,11 +51,50 @@ const highlighter = await createHighlighter({
   themes: [SHIKI_LIGHT, SHIKI_DARK],
 });
 
+// ==高亮==（Pandoc/Typora 风格）：micromark 微扩展经标准注入点挂进 remark-parse。
+// 注意 data(key, value) 是整体替换而非追加 —— 必须读出现有列表再 push，
+// 否则会把 remark-gfm / remark-math 已注册的扩展整个顶掉（pandocMark 是
+// 工厂函数，须调用取扩展对象）。mark mdast 节点没有官方 hast handler，
+// 内联补一个（输出形态对齐 gfm strikethrough 的 handler）。
+function remarkMark(this: Processor) {
+  const data = this.data() as {
+    micromarkExtensions?: unknown[];
+    mdastExtensions?: unknown[];
+    handlers?: Record<string, unknown>;
+  };
+  data.micromarkExtensions ??= [];
+  data.micromarkExtensions.push(pandocMark());
+  data.mdastExtensions ??= [];
+  data.mdastExtensions.push(pandocMarkFromMarkdown);
+  type HastElement = {
+    type: "element";
+    tagName: string;
+    properties: Record<string, unknown>;
+    children: unknown[];
+  };
+  const markToHast = (state: { all: (node: unknown) => HastElement[] }, node: unknown): HastElement => ({
+    type: "element",
+    tagName: "mark",
+    properties: {},
+    children: state.all(node),
+  });
+  data.handlers ??= {};
+  data.handlers.mark = markToHast;
+}
+
 const processor = unified()
   .use(remarkParse)
   .use(remarkGfm)
   .use(remarkMath)
-  .use(remarkRehype, { allowDangerousHtml: false })
+  .use(remarkMark)
+  .use(remarkEmoji)
+  .use(remarkAlert)
+  .use(remarkDeflist)
+  // raw HTML：内容构建期编译且仅来自本人撰写，视为可信 —— 放行后由
+  // rehype-raw 重解析回元素树（此前 allowDangerousHtml:false 会把 HTML
+  // 节点整体丢弃，造成「HTML 支持情况」一类章节内容静默消失）。
+  .use(remarkRehype, { allowDangerousHtml: true })
+  .use(rehypeRaw)
   .use(rehypeKatex)
   .use(rehypeSlug)
   .use(rehypeExternalLinks, { rel: ["noopener", "noreferrer"], target: "_blank" })
@@ -214,6 +259,7 @@ const FRONTMATTER_KEYS = new Set([
   "link",
   "image",
   "draft",
+  "summary",
 ]);
 
 function validateFrontmatter(type: string, slug: string, data: Record<string, unknown>): void {
