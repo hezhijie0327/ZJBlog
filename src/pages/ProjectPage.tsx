@@ -63,7 +63,7 @@ export function ProjectPage({ data }: { data: ProjectData }) {
         </header>
 
         {/* 正文 */}
-        <Prose html={project.contentHtml} />
+        <Prose html={project.contentHtml ?? ""} />
 
         {/* GitHub 评论 */}
         <GitHubComments repo={project.githubRepo} title={t("comments.discussionTitle", { title: project.title })} />

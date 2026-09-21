@@ -63,7 +63,9 @@ export interface BlogsData {
 
 export interface BlogPostData {
   globals: PageGlobals & { page: "blog-post" };
-  post: BlogListItem & { contentHtml: string; toc: TocItem[] };
+  /** contentHtml 不进 page-data 脚本（长文会让文档体积翻倍）：正文单份存于
+   *  DOM，由启动管道（首帧）与换页管道（fetch 解析）注入后才存在 */
+  post: BlogListItem & { toc: TocItem[]; contentHtml?: string };
 }
 
 export interface ProjectsData {
@@ -73,7 +75,8 @@ export interface ProjectsData {
 
 export interface ProjectData {
   globals: PageGlobals & { page: "project" };
-  project: ProjectListItem & { contentHtml: string };
+  /** 同 BlogPostData：contentHtml 由 DOM 注入，不进 page-data */
+  project: ProjectListItem & { contentHtml?: string };
 }
 
 export interface ArchivesData {

@@ -11,7 +11,7 @@ import { renderToString } from "react-dom/server";
 import { App } from "../src/app.tsx";
 import { siteConfig } from "../src/config/site.ts";
 import { THEME_BOOTSTRAP } from "../src/lib/theme.ts";
-import { isBlogPostData, type PageKind, type SyncPages } from "../src/lib/types.ts";
+import { type AnyPageData, isBlogPostData, isProjectData, type PageKind, type SyncPages } from "../src/lib/types.ts";
 import { ArchivesPage } from "../src/pages/ArchivesPage.tsx";
 import { BlogPostPage } from "../src/pages/BlogPostPage.tsx";
 import { BlogsPage } from "../src/pages/BlogsPage.tsx";
@@ -89,6 +89,20 @@ const DEV_ASSETS: AssetUrls = { js: "/src/main.tsx", css: [] };
 
 function escapeHtml(text: string): string {
   return text.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
+}
+
+/** page-data 剔除正文 HTML：正文单份存于 DOM（SEO/首帧看 DOM，客户端换页
+ *  时从 fetch 到的文档解析回填），长文文档体积不因 SPA 契约翻倍。 */
+function slimForClient(data: AnyPageData): AnyPageData {
+  if (isBlogPostData(data)) {
+    const { contentHtml: _contentHtml, ...post } = data.post;
+    return { ...data, post };
+  }
+  if (isProjectData(data)) {
+    const { contentHtml: _contentHtml, ...project } = data.project;
+    return { ...data, project };
+  }
+  return data;
 }
 
 /** 默认分享卡（public/og-default.png，1200×630；模板 scripts/og-template.html）。 */
@@ -181,7 +195,7 @@ export async function renderRoute(rawPath: string, assets?: AssetUrls): Promise<
   const jsonLdTag = jsonLd ? `<script type="application/ld+json">${jsonLd.replaceAll("<", "\\u003c")}</script>` : "";
   const cssLinks = a.css.map((href) => `<link rel="stylesheet" crossorigin href="${href}">`).join("\n    ");
   const devClient = a.js.startsWith("/src/") ? `<script type="module" src="/@vite/client"></script>` : "";
-  const pageDataJson = JSON.stringify(payload).replaceAll("<", "\\u003c");
+  const pageDataJson = JSON.stringify(slimForClient(payload)).replaceAll("<", "\\u003c");
 
   return `<!doctype html>
 <html lang="zh">

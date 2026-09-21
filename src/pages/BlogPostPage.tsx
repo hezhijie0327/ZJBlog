@@ -39,8 +39,8 @@ export function BlogPostPage({ data }: { data: BlogPostData }) {
             <TagList className="mt-4" exclude={post.category} tags={post.tags} />
           </header>
 
-          {/* 正文 */}
-          <Prose html={post.contentHtml} />
+          {/* 正文（contentHtml 由启动/换页管道从 DOM 注入） */}
+          <Prose html={post.contentHtml ?? ""} />
 
           {/* GitHub 评论 */}
           <GitHubComments repo={siteConfig.commentsRepo} title={t("comments.discussionTitle", { title: post.title })} />
