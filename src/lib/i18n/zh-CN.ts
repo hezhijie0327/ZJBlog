@@ -54,6 +54,7 @@ export const ZH_CN: Record<StringKey, string> = {
   "home.contact.title": "打个招呼。",
   "home.contact.en": "SAY HELLO",
   "home.contact.desc": "对项目或文章有想法？来 GitHub 找我，或通过 RSS 订阅更新。",
+  "home.storybar": "页面章节",
 
   // 计数
   "count.projects": "共 {n} 个",
@@ -62,6 +63,8 @@ export const ZH_CN: Record<StringKey, string> = {
 
   // 博客
   "blog.back": "BLOG / 全部文章",
+  "blog.rail": "最近文章",
+  "blog.tagDesc": "标签「{tag}」下的全部文章",
   "blog.empty.title": "暂无文章",
   "blog.empty.desc": "内容正在整理中，敬请期待。",
   "blog.notFound": "文章未找到",
@@ -71,6 +74,12 @@ export const ZH_CN: Record<StringKey, string> = {
   "post.toc": "本页目录",
   "post.copyCode": "复制",
   "post.copied": "已复制",
+  "post.summary": "摘要",
+  "post.prev": "上一篇",
+  "post.next": "下一篇",
+  "post.authorBy": "撰文 · {author}",
+  "post.licenseNote": "转载请保留署名与链接",
+  "post.storynav": "文章导航",
 
   // 归档
   "archives.empty": "暂无可归档的内容。",

@@ -4,7 +4,16 @@
 
 import type { ComponentType } from "react";
 
-export type PageKind = "home" | "blogs" | "blog-post" | "projects" | "project" | "archives" | "support" | "not-found";
+export type PageKind =
+  | "home"
+  | "blogs"
+  | "blog-post"
+  | "blog-tag"
+  | "projects"
+  | "project"
+  | "archives"
+  | "support"
+  | "not-found";
 
 /** 文章目录条目（构建期提取，id = rehype-slug 锚点）。 */
 export interface TocItem {
@@ -65,7 +74,28 @@ export interface BlogPostData {
   globals: PageGlobals & { page: "blog-post" };
   /** contentHtml 不进 page-data 脚本（长文会让文档体积翻倍）：正文单份存于
    *  DOM，由启动管道（首帧）与换页管道（fetch 解析）注入后才存在 */
-  post: BlogListItem & { toc: TocItem[]; contentHtml?: string };
+  post: BlogListItem & {
+    toc: TocItem[];
+    contentHtml?: string;
+    /** 手写摘要（frontmatter.summary，有才渲染摘要卡） */
+    summary?: string;
+    /** 时间线上更旧 / 更新的一篇（构建期算好；边界为 undefined） */
+    prev?: PostNavLink;
+    next?: PostNavLink;
+  };
+}
+
+/** 上一篇 / 下一篇导航链接 */
+export interface PostNavLink {
+  slug: string;
+  title: string;
+}
+
+export interface BlogTagData {
+  globals: PageGlobals & { page: "blog-tag" };
+  /** 标签名（解码后的原文） */
+  tag: string;
+  blogs: BlogListItem[];
 }
 
 export interface ProjectsData {
@@ -96,6 +126,7 @@ export type AnyPageData =
   | HomeData
   | BlogsData
   | BlogPostData
+  | BlogTagData
   | ProjectsData
   | ProjectData
   | ArchivesData
@@ -111,6 +142,9 @@ export function isBlogsData(data: AnyPageData): data is BlogsData {
 }
 export function isBlogPostData(data: AnyPageData): data is BlogPostData {
   return data.globals.page === "blog-post";
+}
+export function isBlogTagData(data: AnyPageData): data is BlogTagData {
+  return data.globals.page === "blog-tag";
 }
 export function isProjectsData(data: AnyPageData): data is ProjectsData {
   return data.globals.page === "projects";
@@ -131,6 +165,7 @@ export interface SyncPages {
   home: ComponentType<{ data: HomeData }>;
   blogs: ComponentType<{ data: BlogsData }>;
   "blog-post": ComponentType<{ data: BlogPostData }>;
+  "blog-tag": ComponentType<{ data: BlogTagData }>;
   projects: ComponentType<{ data: ProjectsData }>;
   project: ComponentType<{ data: ProjectData }>;
   archives: ComponentType<{ data: ArchivesData }>;

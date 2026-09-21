@@ -54,6 +54,7 @@ export const EN = {
   "home.contact.title": "Say hello.",
   "home.contact.en": "SAY HELLO",
   "home.contact.desc": "Ideas about a project or a post? Find me on GitHub, or subscribe via RSS to follow along.",
+  "home.storybar": "Page sections",
 
   // 计数
   "count.projects": "{n} in total",
@@ -62,6 +63,8 @@ export const EN = {
 
   // 博客
   "blog.back": "BLOG / All Posts",
+  "blog.rail": "Recent Posts",
+  "blog.tagDesc": 'All posts tagged "{tag}"',
   "blog.empty.title": "No posts yet",
   "blog.empty.desc": "Content is being prepared — stay tuned.",
   "blog.notFound": "Post not found",
@@ -71,6 +74,12 @@ export const EN = {
   "post.toc": "On this page",
   "post.copyCode": "Copy",
   "post.copied": "Copied",
+  "post.summary": "Summary",
+  "post.prev": "Previous",
+  "post.next": "Next",
+  "post.authorBy": "Written by {author}",
+  "post.licenseNote": "keep attribution and link when sharing",
+  "post.storynav": "Post navigation",
 
   // 归档
   "archives.empty": "Nothing to archive yet.",

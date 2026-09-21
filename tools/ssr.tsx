@@ -15,6 +15,7 @@ import { type AnyPageData, isBlogPostData, isProjectData, type PageKind, type Sy
 import { ArchivesPage } from "../src/pages/ArchivesPage.tsx";
 import { BlogPostPage } from "../src/pages/BlogPostPage.tsx";
 import { BlogsPage } from "../src/pages/BlogsPage.tsx";
+import { BlogTagPage } from "../src/pages/BlogTagPage.tsx";
 import { IndexPage } from "../src/pages/IndexPage.tsx";
 import { ProjectPage } from "../src/pages/ProjectPage.tsx";
 import { ProjectsPage } from "../src/pages/ProjectsPage.tsx";
@@ -35,6 +36,7 @@ const SYNC_PAGES: SyncPages = {
   home: IndexPage,
   blogs: BlogsPage,
   "blog-post": BlogPostPage,
+  "blog-tag": BlogTagPage,
   projects: ProjectsPage,
   project: ProjectPage,
   archives: ArchivesPage,
@@ -46,6 +48,7 @@ const PAGE_CHUNK_SOURCES: Record<Exclude<PageKind, "not-found">, string> = {
   home: "src/pages/IndexPage.tsx",
   blogs: "src/pages/BlogsPage.tsx",
   "blog-post": "src/pages/BlogPostPage.tsx",
+  "blog-tag": "src/pages/BlogTagPage.tsx",
   projects: "src/pages/ProjectsPage.tsx",
   project: "src/pages/ProjectPage.tsx",
   archives: "src/pages/ArchivesPage.tsx",

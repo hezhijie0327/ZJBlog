@@ -10,6 +10,7 @@ export const pageLoaders = {
   home: () => import("@/pages/IndexPage.tsx"),
   blogs: () => import("@/pages/BlogsPage.tsx"),
   "blog-post": () => import("@/pages/BlogPostPage.tsx"),
+  "blog-tag": () => import("@/pages/BlogTagPage.tsx"),
   projects: () => import("@/pages/ProjectsPage.tsx"),
   project: () => import("@/pages/ProjectPage.tsx"),
   archives: () => import("@/pages/ArchivesPage.tsx"),
@@ -28,6 +29,7 @@ export function preloadPage(data: AnyPageData): void {
 
 /** URL → 页面 chunk（路由模式表；顺序敏感，具体路径先于列表路径匹配）。 */
 const ROUTE_PATTERNS: ReadonlyArray<readonly [RegExp, LoadablePage]> = [
+  [/^\/blogs\/tags\/[^/]+\/$/, "blog-tag"],
   [/^\/blogs\/[^/]+\/$/, "blog-post"],
   [/^\/blogs\/$/, "blogs"],
   [/^\/projects\/[^/]+\/$/, "project"],
@@ -59,6 +61,7 @@ export function prefetchHref(href: string): void {
 export const LazyIndexPage = lazy(async () => ({ default: (await pageLoaders.home()).IndexPage }));
 export const LazyBlogsPage = lazy(async () => ({ default: (await pageLoaders.blogs()).BlogsPage }));
 export const LazyBlogPostPage = lazy(async () => ({ default: (await pageLoaders["blog-post"]()).BlogPostPage }));
+export const LazyBlogTagPage = lazy(async () => ({ default: (await pageLoaders["blog-tag"]()).BlogTagPage }));
 export const LazyProjectsPage = lazy(async () => ({ default: (await pageLoaders.projects()).ProjectsPage }));
 export const LazyProjectPage = lazy(async () => ({ default: (await pageLoaders.project()).ProjectPage }));
 export const LazyArchivesPage = lazy(async () => ({ default: (await pageLoaders.archives()).ArchivesPage }));

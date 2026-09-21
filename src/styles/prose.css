@@ -149,3 +149,44 @@
 .prose .table-scroll table {
   min-width: 36rem;
 }
+
+/* Hero 纸片便签（纯装饰，aria-hidden）：撕边 clip-path + 横线纸纹 +
+   随撕边轮廓的投影（clip-path 会裁掉 box-shadow，故用 drop-shadow）。 */
+.paper-note {
+  background:
+    repeating-linear-gradient(transparent 0 30px, color-mix(in oklab, var(--line) 60%, transparent) 30px 31px),
+    var(--surface);
+  clip-path: polygon(
+    1% 2%,
+    7% 0.5%,
+    16% 1.8%,
+    29% 0%,
+    42% 1.8%,
+    56% 0.4%,
+    69% 1.8%,
+    83% 0%,
+    94% 1.6%,
+    99.2% 3%,
+    100% 13%,
+    99.4% 28%,
+    100% 44%,
+    99% 61%,
+    100% 77%,
+    99.3% 91%,
+    97.2% 100%,
+    86% 99%,
+    71% 100%,
+    56% 98.6%,
+    41% 100%,
+    27% 99.2%,
+    13% 100%,
+    3.2% 98.6%,
+    0% 91%,
+    1.4% 75%,
+    0% 59%,
+    1.8% 43%,
+    0.4% 27%,
+    1% 13%
+  );
+  filter: drop-shadow(0 10px 18px rgb(32 29 23 / 0.14));
+}

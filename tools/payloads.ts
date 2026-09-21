@@ -65,18 +65,27 @@ function toProjectListItem(entry: {
   };
 }
 
-/** 全部已发布路由（URL 形态，带尾斜杠；首页为 "/"）。sitemap 与预渲染共用。 */
+/** 全部已发布路由（URL 形态，带尾斜杠；首页为 "/"）。预渲染与 RSS/sitemap
+ *  的路线来源共用；注意：generateSitemap 只列内容页，标签筛选页属重复内容
+ *  视图，刻意不进 sitemap。 */
 export function allRoutes(): string[] {
   const { blogs, projects } = loadContent();
+  const tags = [...new Set(blogs.flatMap((blog) => blog.tags))];
   return [
     "/",
     "/blogs/",
     ...blogs.map((blog) => `/blogs/${encodeURIComponent(blog.slug)}/`),
+    ...tags.map((tag) => `/blogs/tags/${encodeURIComponent(tag)}/`),
     "/archives/",
     "/projects/",
     ...projects.map((project) => `/projects/${encodeURIComponent(project.slug)}/`),
     "/support/",
   ];
+}
+
+/** 全部标签（按出现顺序去重）。 */
+export function allTags(): string[] {
+  return [...new Set(loadContent().blogs.flatMap((blog) => blog.tags))];
 }
 
 /** 路由 → payload。未知路径返回 not-found payload（预渲染 404 页与
@@ -106,17 +115,39 @@ export function buildPayload(pathname: string): AnyPageData {
     return { globals: globals("support", t("page.support.title"), t("support.metaDesc")) };
   }
 
+  const tagMatch = pathname.match(/^\/blogs\/tags\/(.+)\/$/);
+  if (tagMatch?.[1]) {
+    const tag = decodeURIComponent(tagMatch[1]);
+    const tagged = blogLists.filter((blog) => blog.tags.includes(tag));
+    return {
+      globals: globals("blog-tag", `#${tag}`, t("blog.tagDesc", { tag })),
+      tag,
+      blogs: tagged,
+    };
+  }
+
   const blogMatch = pathname.match(/^\/blogs\/(.+)\/$/);
   if (blogMatch?.[1]) {
-    const post = blogs.find((entry) => entry.slug === blogMatch[1]);
+    const index = blogs.findIndex((entry) => entry.slug === blogMatch[1]);
+    const post = blogs[index];
     if (post) {
       const item = toBlogListItem(post);
+      // blogs 已按日期倒序：i-1 更新（下一篇），i+1 更旧（上一篇）
+      const newer = index > 0 ? blogs[index - 1] : undefined;
+      const older = index >= 0 && index < blogs.length - 1 ? blogs[index + 1] : undefined;
       return {
         globals: {
           ...globals("blog-post", post.title, post.description ?? t("blog.fallbackDesc")),
           og: { type: "article", publishedTime: post.date, tags: post.tags },
         },
-        post: { ...item, contentHtml: post.contentHtml, toc: post.toc },
+        post: {
+          ...item,
+          toc: post.toc,
+          contentHtml: post.contentHtml,
+          summary: post.summary,
+          ...(older ? { prev: { slug: older.slug, title: older.title } } : {}),
+          ...(newer ? { next: { slug: newer.slug, title: newer.title } } : {}),
+        },
       };
     }
   }

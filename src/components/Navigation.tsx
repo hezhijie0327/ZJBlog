@@ -34,6 +34,7 @@ export function Navigation() {
         return "/";
       case "blogs":
       case "blog-post":
+      case "blog-tag":
         return "/blogs/";
       case "projects":
       case "project":
@@ -75,16 +76,8 @@ export function Navigation() {
     <header className="sticky top-0 z-50 border-b border-line/80 bg-bg/80 backdrop-blur-md">
       <div className="container mx-auto px-4">
         <div className="flex h-14 items-center justify-between gap-3">
-          {/* Logo */}
-          <Link className="group flex items-center gap-2.5" href="/">
-            <img
-              alt={t("site.author")}
-              className="size-8 rounded-full object-cover ring-1 ring-line"
-              height={32}
-              loading="eager"
-              src="/avatar.jpg"
-              width={32}
-            />
+          {/* Logo（纯文字字标，头像只在 Hero 纸片与署名卡出现） */}
+          <Link className="group flex items-center" href="/">
             <span className="whitespace-nowrap font-serif text-base font-semibold tracking-tight">
               {t("site.brand")}
             </span>

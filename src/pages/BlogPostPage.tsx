@@ -1,7 +1,10 @@
-// 文章详情页：头部元信息 + 构建期编译的正文 + 目录右栏（xl 宽屏）+ GitHub 评论区。
+// 文章详情页：头部元信息 + 摘要卡 + 构建期编译的正文 + 目录右栏（xl 宽屏）
+// + 上下篇导航 + 署名卡 + GitHub 评论区。
 
 import { Clock } from "lucide-react";
+import { AuthorCard } from "@/components/AuthorCard.tsx";
 import { BackLink } from "@/components/BackLink.tsx";
+import { PostNav } from "@/components/PostNav.tsx";
 import { TableOfContents } from "@/components/TableOfContents.tsx";
 import { TagList } from "@/components/TagList.tsx";
 import { siteConfig } from "@/config/site.ts";
@@ -36,11 +39,25 @@ export function BlogPostPage({ data }: { data: BlogPostData }) {
               </span>
               {post.category && <span className={CHIP}>{post.category}</span>}
             </div>
-            <TagList className="mt-4" exclude={post.category} tags={post.tags} />
+            <TagList className="mt-4" exclude={post.category} linkTags tags={post.tags} />
           </header>
 
-          {/* 正文（contentHtml 由启动/换页管道从 DOM 注入） */}
+          {/* 手写摘要卡（frontmatter.summary，可选） */}
+          {post.summary && (
+            <div className="mb-8 rounded-xl border border-accent/30 bg-accent-soft/40 p-4">
+              <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-ink-2">✨ {t("post.summary")}</p>
+              <p className="mt-1.5 text-sm leading-relaxed text-ink">{post.summary}</p>
+            </div>
+          )}
+
+          {/* 正文 */}
           <Prose html={post.contentHtml ?? ""} />
+
+          {/* 上一篇 / 下一篇 */}
+          <PostNav next={post.next} prev={post.prev} />
+
+          {/* 署名卡 */}
+          <AuthorCard />
 
           {/* GitHub 评论 */}
           <GitHubComments repo={siteConfig.commentsRepo} title={t("comments.discussionTitle", { title: post.title })} />

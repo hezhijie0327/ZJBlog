@@ -153,6 +153,8 @@ export interface BlogEntry {
   tags: string[];
   /** 阅读时长（分钟，向上取整；展示文案由 i18n 负责） */
   readingMinutes: number;
+  /** 手写摘要（frontmatter.summary，文章页摘要卡用；不填则无卡） */
+  summary?: string;
   contentHtml: string;
   /** h2/h3 目录（rehype-slug 的 id，客户端 TOC 与锚点共用） */
   toc: TocItem[];
@@ -188,6 +190,7 @@ type RawEntry = {
   githubRepo?: string;
   image?: string;
   readingMinutes?: number;
+  summary?: string;
   contentHtml?: string;
   toc?: TocItem[];
   content?: string;
@@ -270,6 +273,7 @@ function readEntries(type: "blogs" | "projects"): RawEntry[] {
       githubRepo: parseGitHubRepo(data.link),
       image: data.image,
       readingMinutes: Math.ceil(readingTime(content).minutes),
+      summary: typeof data.summary === "string" ? data.summary : undefined,
       contentHtml: compiled.html,
       toc: compiled.toc,
       content,
@@ -309,6 +313,7 @@ export function loadContent(): ContentIndex {
       category: entry.category,
       tags: entry.tags ?? [],
       readingMinutes: entry.readingMinutes ?? 1,
+      summary: entry.summary,
       contentHtml: entry.contentHtml ?? "",
       toc: entry.toc ?? [],
       content: entry.content ?? "",

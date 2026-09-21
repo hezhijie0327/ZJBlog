@@ -14,6 +14,7 @@ import {
   isArchivesData,
   isBlogPostData,
   isBlogsData,
+  isBlogTagData,
   isHomeData,
   isProjectData,
   isProjectsData,
@@ -24,6 +25,7 @@ import {
   LazyArchivesPage,
   LazyBlogPostPage,
   LazyBlogsPage,
+  LazyBlogTagPage,
   LazyIndexPage,
   LazyProjectPage,
   LazyProjectsPage,
@@ -68,6 +70,12 @@ function Pages({ syncPages }: { syncPages?: SyncPages }) {
     const Sync = syncPages?.["blog-post"];
     return (
       <Suspense fallback={<PageFallback />}>{Sync ? <Sync data={data} /> : <LazyBlogPostPage data={data} />}</Suspense>
+    );
+  }
+  if (isBlogTagData(data)) {
+    const Sync = syncPages?.["blog-tag"];
+    return (
+      <Suspense fallback={<PageFallback />}>{Sync ? <Sync data={data} /> : <LazyBlogTagPage data={data} />}</Suspense>
     );
   }
   if (isProjectsData(data)) {
