@@ -1,14 +1,14 @@
 // 顶部导航：sticky 毛玻璃、桌面链接 + 移动端抽屉、搜索/主题/语言/RSS/GitHub/支持操作区。
 // 窄屏（<sm）时 RSS/支持 收进抽屉（抽屉内本就有第二入口），头部图标行才放得下 320px。
 
-import { Heart, Menu, Rss, Search, X } from "lucide-react";
+import { Heart, Languages, Menu, Rss, Search, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { GithubIcon } from "@/components/icons.tsx";
 import { Link } from "@/components/Shell.tsx";
 import { ThemeToggle } from "@/components/ThemeToggle.tsx";
 import { siteConfig } from "@/config/site.ts";
 import { cn } from "@/lib/cn.ts";
-import { useLocale, useLocaleSwitch, useT } from "@/lib/i18n.ts";
+import { useLocaleSwitch, useT } from "@/lib/i18n.ts";
 import { useRouter } from "@/lib/router.tsx";
 import { ICON_BTN } from "@/lib/styles.ts";
 
@@ -16,7 +16,6 @@ const MOBILE_MENU_ID = "mobile-menu";
 
 export function Navigation() {
   const t = useT();
-  const locale = useLocale();
   const switchLocale = useLocaleSwitch();
   const { data, href } = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -130,15 +129,16 @@ export function Navigation() {
               <Search aria-hidden="true" className="size-4" />
             </button>
             <ThemeToggle />
-            {/* UI 语言切换：显示目标语言标签（中文界面显示 EN，英文界面显示 中） */}
+            {/* UI 语言切换：文A 图标（与整体图标语言统一）；aria-label/title
+                播报目标语言（t("nav.language") 随当前语言翻转） */}
             <button
               aria-label={t("nav.language")}
-              className={cn(ICON_BTN, "max-sm:size-8 font-mono text-[11px] font-semibold")}
+              className={cn(ICON_BTN, "max-sm:size-8")}
               onClick={switchLocale}
               title={t("nav.language")}
               type="button"
             >
-              {locale === "zh-CN" ? "EN" : "中"}
+              <Languages aria-hidden="true" className="size-4" />
             </button>
             <a
               aria-label={t("nav.github")}
