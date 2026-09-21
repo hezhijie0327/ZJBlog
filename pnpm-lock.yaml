@@ -208,9 +208,6 @@ importers:
       remark-emoji:
         specifier: ^5.0.2
         version: 5.0.2
-      remark-github-blockquote-alert:
-        specifier: ^2.1.0
-        version: 2.1.0
       remark-math:
         specifier: ^6.0.0
         version: 6.0.0(supports-color@7.2.0)
@@ -230,6 +227,9 @@ importers:
       '@tailwindcss/vite':
         specifier: ^4.3.3
         version: 4.3.3(vite@8.3.0(@types/node@26.6.2)(jiti@2.7.0))
+      '@types/mdast':
+        specifier: ^4.0.4
+        version: 4.0.4
       '@types/node':
         specifier: ^26.6.2
         version: 26.6.2
@@ -242,6 +242,9 @@ importers:
       '@types/three':
         specifier: ^0.186.0
         version: 0.186.0
+      '@types/unist':
+        specifier: ^3.0.3
+        version: 3.0.3
       browserslist:
         specifier: ^4.29.0
         version: 4.29.0
@@ -296,6 +299,9 @@ importers:
       unified:
         specifier: ^11.0.5
         version: 11.0.5
+      unist-util-visit:
+        specifier: ^5.1.0
+        version: 5.1.0
       vite:
         specifier: ^8.3.0
         version: 8.3.0(@types/node@26.6.2)(jiti@2.7.0)
@@ -2194,10 +2200,6 @@ packages:
 
   remark-gfm@4.0.1:
     resolution: {integrity: sha512-1quofZ2RQ9EWdeN34S79+KExV1764+wCUGop5CPL1WGdD0ocPpu91lzPGbwWMECpEpd42kJGQwzRfyov9j4yNg==}
-
-  remark-github-blockquote-alert@2.1.0:
-    resolution: {integrity: sha512-J392jmIP684d7iGsENN0uguL10IGbRdc8bTUSrd/jOLzdWkwg721Fj3JPQGN8tF6fTIrE5HHOIA3nBuwuaeuPQ==}
-    engines: {node: '>=16'}
 
   remark-math@6.0.0:
     resolution: {integrity: sha512-MMqgnP74Igy+S3WwnhQ7kqGlEerTETXMvJhrUzDikVZ2/uogJCb+WHUg97hK9/jcfc0dkD73s3LN8zU49cTEtA==}
@@ -4722,10 +4724,6 @@ snapshots:
       unified: 11.0.5
     transitivePeerDependencies:
       - supports-color
-
-  remark-github-blockquote-alert@2.1.0:
-    dependencies:
-      unist-util-visit: 5.1.0
 
   remark-math@6.0.0(supports-color@7.2.0):
     dependencies:

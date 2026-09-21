@@ -343,3 +343,56 @@
 .prose .markdown-alert-caution .markdown-alert-title {
   color: var(--warning);
 }
+
+/* Obsidian Callouts（tools/callouts.ts 输出）：类别 → --callout-color，
+   边框与底色都从这一个变量派生，叠加在表意之上只差一层透明度 */
+.prose .callout {
+  --callout-color: var(--accent-strong);
+  margin-block: 1.5em;
+  padding: 0.75rem 1rem;
+  border-left: 3px solid var(--callout-color);
+  border-radius: 0.25rem 0.75rem 0.25rem 0.75rem;
+  background: color-mix(in oklab, var(--callout-color) 7%, var(--surface));
+}
+
+.prose .callout > :last-child {
+  margin-bottom: 0;
+}
+
+.prose .callout-title {
+  margin: 0 0 0.35rem;
+  font-weight: 600;
+  color: var(--callout-color);
+}
+
+.prose details.callout > .callout-title {
+  cursor: pointer;
+  user-select: none;
+}
+
+.prose .callout-info,
+.prose .callout-todo {
+  --callout-color: var(--accent);
+}
+
+.prose .callout-tip,
+.prose .callout-success {
+  --callout-color: var(--ok);
+}
+
+.prose .callout-question,
+.prose .callout-warning {
+  --callout-color: var(--warning);
+}
+
+.prose .callout-danger {
+  --callout-color: var(--danger);
+}
+
+.prose .callout-example {
+  --callout-color: var(--accent-strong);
+}
+
+.prose .callout-quote {
+  --callout-color: var(--ink-3);
+}

@@ -1,8 +1,8 @@
 // 正文图片灯箱：原生 <dialog> 顶层弹层 —— Esc 原生关闭、模态期焦点困在
-// 弹层内；多图时提供上一张/下一张（含 ←/→ 键），点击背板关闭。
-// 借鉴 justin3go 的 ImageViewer 交互，零依赖实现（参考站用的 TDesign）。
+// 弹层内；50%–200% 缩放（步进 25%，按钮 / +− 键 / 点击百分比复位），
+// 缩放后可在弹层内滚动平移；点击背板关闭。零依赖实现。
 
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Minus, Plus, X } from "lucide-react";
 import { type KeyboardEvent, type MouseEvent, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn.ts";
 import { useT } from "@/lib/i18n.ts";
@@ -12,6 +12,12 @@ export interface LightboxImage {
   alt: string;
   src: string;
 }
+
+const ZOOM_MIN = 0.5;
+const ZOOM_MAX = 2;
+const ZOOM_STEP = 0.25;
+
+const clampZoom = (value: number): number => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Math.round(value * 100) / 100));
 
 export function Lightbox({
   images,
@@ -24,6 +30,9 @@ export function Lightbox({
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [index, setIndex] = useState(initialIndex);
+  const [zoom, setZoom] = useState(1);
+  /** 缩放基准：图片按视口约束适配后的宽度（px），onLoad 时测量 */
+  const [fitWidth, setFitWidth] = useState<number | null>(null);
   const t = useT();
   const image = images[index];
 
@@ -50,7 +59,10 @@ export function Lightbox({
   /** 关闭面板（背板/关闭按钮）：交给原生 close()，close 事件驱动父级卸载。 */
   const close = () => dialogRef.current?.close();
 
-  const step = (delta: number) => setIndex((current) => (current + delta + images.length) % images.length);
+  const step = (delta: number) => {
+    setIndex((current) => (current + delta + images.length) % images.length);
+    setZoom(1);
+  };
 
   // 点击背板关闭：事件坐标落在 dialog 矩形外即背板（面板内点击不受影响）。
   // 键盘触发的 click（Enter/Space）坐标是 (0,0)，永远落在矩形外，先排除，
@@ -74,16 +86,26 @@ export function Lightbox({
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLDialogElement>) => {
-    if (images.length < 2) {
+    if (event.key === "ArrowLeft" || event.key === "-") {
+      event.preventDefault();
+      if (event.key === "ArrowLeft" && images.length > 1) {
+        step(-1);
+      } else if (event.key === "-") {
+        setZoom((current) => clampZoom(current - ZOOM_STEP));
+      }
       return;
     }
-    if (event.key === "ArrowLeft") {
+    if (event.key === "ArrowRight" || event.key === "+" || event.key === "=") {
       event.preventDefault();
-      step(-1);
+      if (event.key === "ArrowRight" && images.length > 1) {
+        step(1);
+      } else {
+        setZoom((current) => clampZoom(current + ZOOM_STEP));
+      }
+      return;
     }
-    if (event.key === "ArrowRight") {
-      event.preventDefault();
-      step(1);
+    if (event.key === "0") {
+      setZoom(1);
     }
   };
 
@@ -92,8 +114,6 @@ export function Lightbox({
   }
 
   return (
-    // fixed + inset-0 + m-auto：视口居中（UA 的 absolute 定位会跟随文档流位置，
-    // showModal 聚焦时把页面滚到弹层在文档中的位置 —— 即「跳到顶部」的根源）
     <dialog
       {...(image.alt ? { "aria-label": image.alt } : {})}
       className={cn(CARD, "lightbox fixed inset-0 m-auto max-h-[92dvh] max-w-[94vw] p-4 sm:p-5")}
@@ -107,15 +127,53 @@ export function Lightbox({
             {index + 1} / {images.length}
           </span>
         )}
+        <button
+          aria-label={t("lightbox.zoomOut")}
+          className={ICON_BTN}
+          disabled={zoom <= ZOOM_MIN}
+          onClick={() => setZoom((current) => clampZoom(current - ZOOM_STEP))}
+          type="button"
+        >
+          <Minus aria-hidden="true" className="size-4" />
+        </button>
+        {/* 点击百分比复位 100% */}
+        <button
+          className="min-w-12 rounded px-1 font-mono text-xs text-ink-2 transition-colors hover:text-ink"
+          onClick={() => setZoom(1)}
+          type="button"
+        >
+          {Math.round(zoom * 100)}%
+        </button>
+        <button
+          aria-label={t("lightbox.zoomIn")}
+          className={ICON_BTN}
+          disabled={zoom >= ZOOM_MAX}
+          onClick={() => setZoom((current) => clampZoom(current + ZOOM_STEP))}
+          type="button"
+        >
+          <Plus aria-hidden="true" className="size-4" />
+        </button>
         <button aria-label={t("lightbox.close")} className={ICON_BTN} onClick={close} type="button">
           <X aria-hidden="true" className="size-4" />
         </button>
       </div>
-      <img
-        alt={image.alt}
-        className="mx-auto max-h-[calc(100dvh-10rem)] max-w-full rounded-lg object-contain"
-        src={image.src}
-      />
+      {/* 缩放后超出弹层时借助原生滚动平移；fit 宽度按视口约束测量 */}
+      <div className="flex max-h-[calc(92dvh-7rem)] justify-center overflow-auto">
+        <img
+          alt={image.alt}
+          className="m-auto rounded-lg"
+          onLoad={(event) => {
+            const img = event.currentTarget;
+            const maxW = dialogRef.current?.clientWidth ?? img.naturalWidth;
+            const maxH = window.innerHeight * 0.8;
+            // 缩放基准 = 图片按弹层约束适配后的宽度（不超过原尺寸）
+            const fit = Math.min(1, maxW / img.naturalWidth, maxH / img.naturalHeight);
+            setFitWidth(img.naturalWidth * fit);
+          }}
+          src={image.src}
+          style={{ width: fitWidth === null ? undefined : `${fitWidth * zoom}px` }}
+        />
+      </div>
       {images.length > 1 && (
         <>
           <button

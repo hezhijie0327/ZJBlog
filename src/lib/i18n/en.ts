@@ -85,6 +85,8 @@ export const EN = {
   "lightbox.close": "Close",
   "lightbox.prev": "Previous image",
   "lightbox.next": "Next image",
+  "lightbox.zoomOut": "Zoom out",
+  "lightbox.zoomIn": "Zoom in",
 
   // 归档
   "archives.empty": "Nothing to archive yet.",

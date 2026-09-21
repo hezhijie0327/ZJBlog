@@ -16,12 +16,12 @@ import rehypeStringify from "rehype-stringify";
 import remarkDeflist from "remark-deflist";
 import remarkEmoji from "remark-emoji";
 import remarkGfm from "remark-gfm";
-import { remarkAlert } from "remark-github-blockquote-alert";
 import remarkMath from "remark-math";
 import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import { createHighlighter } from "shiki";
 import { type Processor, unified } from "unified";
+import { remarkCallouts } from "./callouts";
 import {
   plantumlFigure,
   renderGeoSvg,
@@ -95,7 +95,7 @@ const processor = unified()
   .use(remarkMath)
   .use(remarkMark)
   .use(remarkEmoji)
-  .use(remarkAlert)
+  .use(remarkCallouts)
   .use(remarkDeflist)
   // raw HTML：内容构建期编译且仅来自本人撰写，视为可信 —— 放行后由
   // rehype-raw 重解析回元素树（此前 allowDangerousHtml:false 会把 HTML

@@ -85,6 +85,8 @@ export const ZH_CN: Record<StringKey, string> = {
   "lightbox.close": "关闭",
   "lightbox.prev": "上一张",
   "lightbox.next": "下一张",
+  "lightbox.zoomOut": "缩小",
+  "lightbox.zoomIn": "放大",
 
   // 归档
   "archives.empty": "暂无可归档的内容。",
