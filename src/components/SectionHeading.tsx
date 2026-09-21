@@ -7,8 +7,8 @@ interface SectionHeadingProps {
   index: string;
   /** 中文标题 */
   title: string;
-  /** 英文小标签（等宽字体） */
-  en: string;
+  /** 小标签（等宽字体；英文界面为英文，中文界面为空隐藏） */
+  en?: string;
   /** 右侧补充说明（如数量） */
   hint?: string;
   className?: string;
@@ -20,7 +20,9 @@ export function SectionHeading({ index, title, en, hint, className }: SectionHea
       <div className="flex items-baseline gap-4">
         <span className="font-mono text-sm font-medium text-accent">{index}</span>
         <h2 className="font-serif text-2xl font-semibold tracking-tight text-ink sm:text-3xl">{title}</h2>
-        <span className="hidden font-mono text-[11px] uppercase tracking-[0.2em] text-ink-3 sm:inline">{en}</span>
+        {en && (
+          <span className="hidden font-mono text-[11px] uppercase tracking-[0.2em] text-ink-3 sm:inline">{en}</span>
+        )}
       </div>
       {hint && <span className="font-mono text-xs text-ink-3">{hint}</span>}
     </div>

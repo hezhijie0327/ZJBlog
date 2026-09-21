@@ -33,26 +33,26 @@ export const ZH_CN: Record<StringKey, string> = {
 
   // 页头（SectionHeading）
   "page.blogs.title": "全部文章",
-  "page.blogs.en": "Blog",
+  "page.blogs.en": "",
   "page.archives.title": "归档",
-  "page.archives.en": "Archive",
+  "page.archives.en": "",
   "page.projects.title": "项目",
-  "page.projects.en": "Projects",
+  "page.projects.en": "",
   "page.support.title": "支持",
 
   // 首页章节
   "home.featured.title": "精选项目",
-  "home.featured.en": "Selected Work",
+  "home.featured.en": "",
   "home.recent.title": "最新思考",
-  "home.recent.en": "Recent Posts",
+  "home.recent.en": "",
   "home.cta.projects": "查看项目",
   "home.cta.blogs": "阅读博客",
-  "home.moreProjects": "MORE PROJECTS · 更多项目",
+  "home.moreProjects": "更多项目",
   "home.viewAllProjects": "查看全部项目",
   "home.viewAllPosts": "查看全部文章",
   "home.emptyPosts": "还没有文章，敬请期待。",
   "home.contact.title": "打个招呼。",
-  "home.contact.en": "SAY HELLO",
+  "home.contact.en": "",
   "home.contact.desc": "对项目或文章有想法？来 GitHub 找我，或通过 RSS 订阅更新。",
   "home.storybar": "页面章节",
 
@@ -62,7 +62,7 @@ export const ZH_CN: Record<StringKey, string> = {
   "count.nPosts": "{n} 篇",
 
   // 博客
-  "blog.back": "BLOG / 全部文章",
+  "blog.back": "博客 / 全部文章",
   "blog.rail": "最近文章",
   "blog.tagDesc": "标签「{tag}」下的全部文章",
   "blog.empty.title": "暂无文章",
@@ -86,12 +86,12 @@ export const ZH_CN: Record<StringKey, string> = {
   "archives.unknownYear": "未知",
 
   // 项目
-  "project.back": "PROJECTS / 全部项目",
+  "project.back": "项目 / 全部项目",
   "project.personal": "个人项目",
   "project.starred": "精选项目",
   "project.viewRepo": "查看仓库",
   "project.visitLink": "访问链接",
-  "projects.selectedLabel": "PERSONAL WORK · 个人项目",
+  "projects.selectedLabel": "个人项目",
   "projects.empty.title": "暂无项目",
   "projects.empty.desc": "项目正在整理中，敬请期待。",
   "projects.githubMore": "在 GitHub 查看更多",
@@ -145,7 +145,7 @@ export const ZH_CN: Record<StringKey, string> = {
   "comments.blurbIssues": "对此内容有疑问或建议？通过 Issues 提出问题和建议",
   "comments.submitIssue": "提交 Issue",
   "comments.createDiscussion": "创建讨论",
-  "comments.issuesCount": "待回应 ISSUES · {n}",
+  "comments.issuesCount": "待回应问题 · {n}",
   "comments.discussionsCount": "讨论 · {n}",
   "comments.fallbackTitle": "问题反馈",
   "comments.fallbackDiscussion": "新的讨论",

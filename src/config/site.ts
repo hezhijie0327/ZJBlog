@@ -20,3 +20,5 @@ export const siteConfig = {
 
 // 首页「精选项目」展示数量，其余个人项目折叠进「更多项目」
 export const featuredProjectCount = 4;
+// 「更多项目」列表的展示上限（其余从「查看全部项目」进入）
+export const moreProjectsCount = 4;

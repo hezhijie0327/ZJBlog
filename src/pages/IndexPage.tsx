@@ -7,7 +7,7 @@ import { SectionHeading } from "@/components/SectionHeading.tsx";
 import { Link } from "@/components/Shell.tsx";
 import { StoryBar } from "@/components/StoryBar.tsx";
 import { ViewAllLink } from "@/components/ViewAllLink.tsx";
-import { featuredProjectCount, siteConfig } from "@/config/site.ts";
+import { featuredProjectCount, moreProjectsCount, siteConfig } from "@/config/site.ts";
 import { cn } from "@/lib/cn.ts";
 import { formatDateISO } from "@/lib/format.ts";
 import { useT } from "@/lib/i18n.ts";
@@ -19,7 +19,7 @@ export function IndexPage({ data }: { data: HomeData }) {
   // 精选：作者标记 starred 的项目优先（按日期已倒序），不足再由最新个人项目补齐
   const ordered = [...data.projects].sort((a, b) => Number(b.type === "starred") - Number(a.type === "starred"));
   const featured = ordered.slice(0, featuredProjectCount);
-  const moreProjects = ordered.slice(featuredProjectCount);
+  const moreProjects = ordered.slice(featuredProjectCount, featuredProjectCount + moreProjectsCount);
   const latestBlogs = data.blogs.slice(0, 3);
 
   return (
