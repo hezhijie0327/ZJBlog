@@ -10,14 +10,16 @@ import { useEffect, useRef, useState } from "react";
 import { siteConfig } from "@/config/site.ts";
 import { cn } from "@/lib/cn.ts";
 import { useLocale, useT } from "@/lib/i18n.ts";
+import { useRouter } from "@/lib/router.tsx";
 import { CARD } from "@/lib/styles.ts";
-
-/** 透明暗色：iframe 无自带底色，融入站点卡片区；亮态用官方 light。 */
-type GiscusTheme = "light" | "transparent_dark";
 
 export function GiscusComments() {
   const t = useT();
   const locale = useLocale();
+  const { href } = useRouter();
+  // SPA 换页时 pathname 变化而本组件保持挂载 —— 以 pathname 作为 giscus
+  // widget 的 key 强制重挂载，iframe 才会按新路径加载对应讨论
+  const pathname = new URL(href, "http://localhost").pathname;
   const containerRef = useRef<HTMLElement>(null);
   // 旧浏览器无 IntersectionObserver 时直接以可见起始，避免在 effect 里同步 setState；
   // 初始化器在 SSR 也会执行，读 DOM 前必须守卫 window
@@ -59,7 +61,10 @@ export function GiscusComments() {
     return () => observer.disconnect();
   }, [visible, configured]);
 
-  const theme: GiscusTheme = dark ? "transparent_dark" : "light";
+  // 自托管主题 CSS（映射站点 token 色板，见 public/giscus-*.css）：
+  // giscus 以完整 URL 加载自定义主题，跨域 iframe 必须用绝对地址
+  const origin = window.location.origin;
+  const theme = `${origin}/giscus-${dark ? "dark" : "light"}.css`;
 
   return (
     <section className="mt-14 border-t border-line pt-8" ref={containerRef}>
@@ -80,6 +85,9 @@ export function GiscusComments() {
             categoryId={categoryId}
             emitMetadata="0"
             inputPosition="top"
+            // key 含路径与明暗：任一变化都整体重挂载 iframe（换文加载对应
+            // 讨论；明暗切换加载对应主题 CSS 文件），不依赖跨域 setConfig
+            key={`${pathname}-${dark}`}
             lang={locale}
             mapping="pathname"
             reactionsEnabled="1"
