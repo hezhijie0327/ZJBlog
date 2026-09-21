@@ -1,0 +1,10 @@
+# pnpm 设置（pnpm 12+：package.json 的 pnpm 字段已废弃，设置迁到这里）
+packages: []
+
+# 仅允许这些依赖运行安装脚本
+onlyBuiltDependencies:
+  - esbuild
+
+# 依赖版本覆盖：强制 mermaid 的解析链使用已修复 lodash-es 漏洞（GHSA-f23m-r3pf-42rh）的版本
+overrides:
+  lodash-es: ^4.18.1
