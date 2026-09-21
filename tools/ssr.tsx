@@ -229,14 +229,14 @@ export async function renderRoute(rawPath: string, assets?: AssetUrls): Promise<
   const katexLink = needsKatex(payload)
     ? `<link rel="stylesheet" crossorigin href="${a.js.startsWith("/src/") ? `/@fs${katexAssetPath()}` : KATEX_HREF}">`
     : "";
-  // 生产：入口 CSS 内联进 <head>（零串行请求，首帧前样式即绪）；KaTeX 仅
-  // 含公式页注入。dev：CSS 经 vite JS 模块注入，KaTeX 走 /@fs/。
-  const cssLinks = a.js.startsWith("/src/")
-    ? a.css
-        .map((href) => `<link rel="stylesheet" crossorigin href="${href}">`)
-        .concat(katexLink)
-        .join("\n    ")
-    : `<style>${a.cssInline}</style>${katexLink ? `\n    ${katexLink}` : ""}`;
+  // 生产：入口 CSS 以 <link> 送达（单一 CSS 入口=请求合并的既有设计；对比
+  // 实验显示内联与 <link> 的 simulated FCP 相同，首帧由关键链之外的因素
+  // 主导，保留 <link> 换取浏览器 CSS 缓存复用）。dev：CSS 经 vite JS 模块
+  // 注入，KaTeX 走 /@fs/。
+  const cssLinks = a.css
+    .map((href) => `<link rel="stylesheet" crossorigin href="${href}">`)
+    .concat(katexLink)
+    .join("\n    ");
   const devClient = a.js.startsWith("/src/") ? `<script type="module" src="/@vite/client"></script>` : "";
   const pageDataJson = JSON.stringify(slimForClient(payload)).replaceAll("<", "\\u003c");
 

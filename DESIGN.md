@@ -44,6 +44,8 @@
 
 **产品级扩展**（博客）：`--code-bg/--code-fg`（暖黑代码块）与 `--font-serif`，已注册进同一 @property/主题体系，属文档化的合法扩展；新扩展照此办理。
 
+**依赖样式按需加载**（博客先例）：KaTeX 样式（25KB raw）不做全站 render-blocking —— 构建期标记含公式页（`needsKatex`），SSR 仅对这些页注入 `/katex.min.css`（含 fonts/ 拷贝），客户端 SPA 换页由 `Prose.ensureKatexStyles` 幂等补注。同类「大而少用」的样式资产照此办理。
+
 ## 3. 字体（零 webfont）
 
 | 栈 | 变量 | 用途 |
@@ -68,8 +70,12 @@
 | 悬停 | 仅 `transition-colors` / `transition-shadow` |
 | 明暗切换 | 整页交叉淡化（@property 插值）+ 350ms stand-down 窗口（`zjs-palette-anim`） |
 | 换页 | 顶部 2px `animate-progress` 进度条 |
+| 折叠块展开/收起（`<details>`） | `interpolate-size: allow-keywords` + `::details-content` 高度过渡（Chrome 131+ 渐进增强，behaviors.css） |
+| 灯箱进入 | `dialog[open]` 播 `fade-up`，背板 `fade-in`（behaviors.css） |
+| 命令面板开/关 | 背板 `animate-fade-in` / `animate-fade-out`；关闭经 `animationend` 卸载 + 240ms 超时兜底 |
+| 移动抽屉开/合 | 常驻 DOM + `grid-template-rows 0fr↔1fr` 过渡 + `invisible` 管可聚焦性 |
 
-全局尊重 `prefers-reduced-motion`（behaviors.css 一律 0.01ms 收掉）。
+原则：**每个可交互面都要有进入/退出动画**（模块级条件渲染直切视为缺陷）；退出卸载依赖动画事件时必须有超时兜底。全局尊重 `prefers-reduced-motion`（behaviors.css 一律 0.01ms 收掉）。
 
 ## 6. 组件片段（`lib/styles.ts`）
 
@@ -84,7 +90,7 @@
 ```
 Shell（min-h-dvh 纵向 flex）
 ├── ProgressBar        # 换页顶部进度条（loading 时）
-├── Navigation         # sticky 毛玻璃 h-14：品牌区 / 链接组(active 下划线+aria-current) / 搜索·主题·RSS·GitHub / 移动端抽屉
+├── Navigation         # sticky 毛玻璃 h-14：品牌区 / 链接组(active 下划线+aria-current) / 搜索·主题·语言 / 移动端抽屉（grid-rows 过渡）
 ├── <main>             # 页面内容（每页一个语义区块）
 ├── Footer             # 版权一行
 └── BackToTop          # 右下角悬浮返回顶部（滚动超过 400px 出现）
@@ -132,9 +138,10 @@ src/
 1. `tsc --noEmit` 零错误（strict + noUncheckedIndexedAccess）
 2. `biome check` 零错误
 3. 生产构建成功
-4. **Lighthouse 门禁**：全站每页 Performance / Accessibility / Best Practices / SEO 全类别满分基准（ZJSearch 定义的 Agentic Browsing 类别一并保留）；门禁脚本模式见 `scripts/audit.mjs`（本地静态服务器镜像生产 CDN：压缩、缓存、/cdn-cgi/trace、404 语义）
+4. **Lighthouse 门禁**：全站每页，**桌面端与移动端** Performance / Accessibility / Best Practices / SEO 全类别满分基准（ZJSearch 定义的 Agentic Browsing 类别一并保留）；门禁脚本模式见 `scripts/audit.mjs`（本地静态服务器镜像生产 CDN：**brotli 优先**、缓存、/cdn-cgi/trace、404 语义；headless Chrome 连跑多页不稳，脚本每 4 页自动重启浏览器）
 5. 浏览器目标 `baseline 2022, not dead`
-6. 可访问性硬规则：焦点环、aria-label、aria-current、reduced-motion、装饰元素 aria-hidden
+6. 可访问性硬规则：焦点环、aria-label、aria-current、reduced-motion、装饰元素 aria-hidden；**正文半透明前景色（color-mix 带 alpha）会让对比度无法判定而挂审计** —— 关键文字显式 token 实色；内容页固定色值（`<font color>`/`bgcolor`）物理上无法在亮暗两套调色板同时达标，演示场景一律以代码块展示
+7. **水合一致性**：凡参与 SSR 的排序/文案禁止依赖运行时 locale（`localeCompare` 的 collation 在 Node 与浏览器 ICU 不同 → React #418 水合不匹配），用 codepoint 比较
 
 ## 12. 衍生产品接入 Checklist
 

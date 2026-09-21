@@ -46,8 +46,8 @@ export function SupportPage() {
               <img
                 alt={item.image.alt}
                 className="size-full rounded-lg object-contain"
+                fetchPriority="high"
                 height={192}
-                loading="lazy"
                 src={item.image.src}
                 width={192}
               />
