@@ -16,6 +16,7 @@ export function Link({
   children,
   className,
   ariaLabel,
+  ariaCurrent,
   title,
   external,
   onClick,
@@ -24,6 +25,8 @@ export function Link({
   children: ReactNode;
   className?: string;
   ariaLabel?: string;
+  /** 当前项标记（导航激活态），如 aria-current="page" */
+  ariaCurrent?: "page" | "location" | "step" | "true";
   title?: string;
   external?: boolean;
   /** 追加的点击回调（如关闭移动端菜单），先于导航逻辑执行 */
@@ -53,6 +56,7 @@ export function Link({
     <a
       className={className}
       href={href}
+      {...(ariaCurrent ? { "aria-current": ariaCurrent } : {})}
       onClick={handleClick}
       onFocus={handlePrefetch}
       onPointerEnter={handlePrefetch}

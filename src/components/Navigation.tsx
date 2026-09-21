@@ -1,7 +1,7 @@
 // 顶部导航：sticky 毛玻璃、桌面链接 + 移动端抽屉、搜索/主题/语言/RSS/GitHub/支持操作区。
 // 窄屏（<sm）时 RSS/支持 收进抽屉（抽屉内本就有第二入口），头部图标行才放得下 320px。
 
-import { Heart, Languages, Menu, Rss, Search, X } from "lucide-react";
+import { Languages, Menu, Rss, Search, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { GithubIcon } from "@/components/icons.tsx";
 import { Link } from "@/components/Shell.tsx";
@@ -25,6 +25,7 @@ export function Navigation() {
     { name: t("nav.projects"), href: "/projects/" },
     { name: t("nav.blogs"), href: "/blogs/" },
     { name: t("nav.archives"), href: "/archives/" },
+    { name: t("nav.support"), href: "/support/" },
   ];
 
   // 激活态从 payload 的页面类型推导（而非 window.location）：
@@ -47,7 +48,6 @@ export function Navigation() {
         return null;
     }
   })();
-  const isSupport = data?.globals.page === "support";
 
   const openSearch = () => {
     window.dispatchEvent(new CustomEvent("open-command-palette"));
@@ -98,7 +98,7 @@ export function Navigation() {
               const isActive = item.href === activeHref;
               return (
                 <Link
-                  aria-current={isActive ? "page" : undefined}
+                  ariaCurrent={isActive ? "page" : undefined}
                   className={cn(
                     "relative rounded-full px-3 py-1.5 text-sm transition-colors",
                     isActive ? "font-medium text-ink" : "text-ink-2 hover:text-ink",
@@ -140,6 +140,15 @@ export function Navigation() {
             >
               <Languages aria-hidden="true" className="size-4" />
             </button>
+            {/* RSS：桌面顶栏 + 移动端抽屉（<sm 折叠进抽屉，保住 320px） */}
+            <a
+              aria-label={t("nav.rss")}
+              className={cn(ICON_BTN, "hidden sm:grid")}
+              href="/rss.xml"
+              title={t("nav.rss")}
+            >
+              <Rss aria-hidden="true" className="size-4" />
+            </a>
             <a
               aria-label={t("nav.github")}
               className={cn(ICON_BTN, "max-sm:size-8")}
@@ -169,7 +178,7 @@ export function Navigation() {
           </div>
         </div>
 
-        {/* 移动端导航：页面链接 + 支持 / RSS（顶栏图标之外的第二入口） */}
+        {/* 移动端导航：页面链接（含支持 tab）+ RSS（顶栏 <sm 不放 RSS 图标） */}
         {isMenuOpen && (
           <nav aria-label={t("nav.mobileNav")} className="border-t border-line/80 py-3 md:hidden" id={MOBILE_MENU_ID}>
             <div className="flex flex-col">
@@ -177,7 +186,7 @@ export function Navigation() {
                 const isActive = item.href === activeHref;
                 return (
                   <Link
-                    aria-current={isActive ? "page" : undefined}
+                    ariaCurrent={isActive ? "page" : undefined}
                     className={cn(
                       "rounded-lg px-3 py-2 text-sm transition-colors",
                       isActive ? "bg-surface-2 font-medium text-ink" : "text-ink-2 hover:bg-surface-2 hover:text-ink",
@@ -194,19 +203,6 @@ export function Navigation() {
               })}
             </div>
             <div className="mt-3 border-t border-line/70 pt-3">
-              <Link
-                className={cn(
-                  "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors",
-                  isSupport ? "bg-surface-2 font-medium text-ink" : "text-ink-2 hover:bg-surface-2 hover:text-ink",
-                )}
-                href="/support/"
-                onClick={() => {
-                  setIsMenuOpen(false);
-                }}
-              >
-                <Heart aria-hidden="true" className="size-3.5" />
-                {t("nav.support")}
-              </Link>
               <a
                 className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink"
                 href="/rss.xml"

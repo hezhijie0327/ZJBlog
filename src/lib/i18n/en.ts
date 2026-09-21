@@ -146,7 +146,6 @@ export const EN = {
   // 杂项
   "misc.backToTop": "Back to top",
   "misc.skipToContent": "Skip to content",
-  "footer.links": "Site links",
   "mermaid.figure": "Mermaid diagram",
   "mermaid.loading": "Rendering diagram…",
   "mermaid.failed": "Mermaid rendering failed",

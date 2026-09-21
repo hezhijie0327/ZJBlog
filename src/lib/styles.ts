@@ -45,6 +45,3 @@ export const SECTION = "container mx-auto px-4 py-14 sm:py-20";
 
 /** 详情页 section 外壳（正文页节奏更紧凑） */
 export const SECTION_DETAIL = "container mx-auto px-4 py-12 sm:py-16";
-
-/** 页脚链接（等宽小字，悬停提亮） */
-export const FOOTER_LINK = "rounded px-2 py-1 transition-colors hover:text-ink";

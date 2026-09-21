@@ -145,7 +145,6 @@ export const ZH_CN: Record<StringKey, string> = {
   // 杂项
   "misc.backToTop": "返回顶部",
   "misc.skipToContent": "跳到内容",
-  "footer.links": "站点链接",
   "mermaid.figure": "Mermaid 流程图",
   "mermaid.loading": "正在渲染流程图...",
   "mermaid.failed": "Mermaid 渲染失败",
