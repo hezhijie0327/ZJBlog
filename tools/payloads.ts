@@ -49,7 +49,6 @@ function toProjectListItem(entry: {
   type: "personal" | "starred";
   tags: string[];
   link?: string;
-  githubRepo?: string;
   image?: string;
 }): ProjectListItem {
   return {
@@ -60,7 +59,6 @@ function toProjectListItem(entry: {
     type: entry.type,
     tags: entry.tags,
     link: entry.link,
-    githubRepo: entry.githubRepo,
     image: entry.image,
   };
 }

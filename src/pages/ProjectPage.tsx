@@ -1,11 +1,10 @@
-// 项目详情页：仓库/链接 CTA + 正文 + 该仓库评论区。
+// 项目详情页：外链 CTA + 正文 + giscus 评论区。
 // 封面仅在 frontmatter.image 提供时渲染，无图直接以标题开页。
 
 import { ArrowUpRight } from "lucide-react";
 import { BackLink } from "@/components/BackLink.tsx";
-import { GithubIcon } from "@/components/icons.tsx";
 import { TagList } from "@/components/TagList.tsx";
-import { GitHubComments } from "@/features/comments/GitHubComments.tsx";
+import { GiscusComments } from "@/features/comments/GiscusComments.tsx";
 import { Prose } from "@/features/markdown/Prose.tsx";
 import { formatDateISO } from "@/lib/format.ts";
 import { useT } from "@/lib/i18n.ts";
@@ -51,12 +50,8 @@ export function ProjectPage({ data }: { data: ProjectData }) {
           {project.link && (
             <div className="mt-7">
               <a className={BTN_PRIMARY} href={project.link} rel="noopener noreferrer" target="_blank">
-                {project.githubRepo ? (
-                  <GithubIcon aria-hidden="true" className="size-4" />
-                ) : (
-                  <ArrowUpRight aria-hidden="true" className="size-4" />
-                )}
-                {project.githubRepo ? t("project.viewRepo") : t("project.visitLink")}
+                <ArrowUpRight aria-hidden="true" className="size-4" />
+                {t("project.visitLink")}
               </a>
             </div>
           )}
@@ -65,8 +60,8 @@ export function ProjectPage({ data }: { data: ProjectData }) {
         {/* 正文 */}
         <Prose html={project.contentHtml ?? ""} />
 
-        {/* GitHub 评论 */}
-        <GitHubComments repo={project.githubRepo} title={t("comments.discussionTitle", { title: project.title })} />
+        {/* giscus 评论（GitHub Discussions，按路径映射） */}
+        <GiscusComments />
       </article>
     </div>
   );

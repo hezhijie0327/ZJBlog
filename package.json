@@ -19,11 +19,15 @@
     "not dead"
   ],
   "dependencies": {
+    "@giscus/react": "^3.1.0",
     "clsx": "^2.1.1",
+    "katex": "^0.18.7",
     "lucide-react": "^1.47.0",
     "mermaid": "^12.0.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
+    "rehype-katex": "^7.0.1",
+    "remark-math": "^6.0.0",
     "tailwind-merge": "^3.7.0"
   },
   "devDependencies": {

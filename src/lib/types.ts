@@ -54,7 +54,6 @@ export interface ProjectListItem {
   type: "personal" | "starred";
   tags: string[];
   link?: string;
-  githubRepo?: string;
   /** 封面图（frontmatter.image）；缺省时页面不渲染封面位 */
   image?: string;
 }

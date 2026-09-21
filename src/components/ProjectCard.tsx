@@ -18,14 +18,21 @@ interface ProjectCardProps {
   heading: "h2" | "h3";
 }
 
-/** 卡片上的域名行：GitHub 仓库显示仓库名，其余取主机名。 */
+/** 卡片上的域名行：GitHub 链接显示 owner/repo，其余取主机名。 */
 function domainOf(project: ProjectListItem): string {
-  if (project.githubRepo) {
-    return project.githubRepo.split("/")[1] ?? project.githubRepo;
-  }
   if (project.link) {
     try {
-      return new URL(project.link).hostname.replace(/^www\./, "");
+      const url = new URL(project.link);
+      if (url.hostname === "github.com") {
+        const segments = url.pathname.split("/").filter(Boolean);
+        if (segments.length > 0) {
+          return segments
+            .slice(0, 2)
+            .join("/")
+            .replace(/\.git$/, "");
+        }
+      }
+      return url.hostname.replace(/^www\./, "");
     } catch {
       /* 非法链接退回 slug */
     }

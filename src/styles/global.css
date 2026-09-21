@@ -3,6 +3,7 @@
    够不到的部分：token、元素默认值、长文排印、文档级行为。
    导入顺序即级联顺序 —— behaviors.css 有意不入层，必须最后。 */
 @import "tailwindcss";
+@import "katex/dist/katex.min.css";
 @import "./tokens.css";
 @import "./base.css";
 @import "./prose.css";

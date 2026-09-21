@@ -2,6 +2,18 @@
 // 注意：UI 层文案（品牌名 / 作者名 / hero 文案）不在这里 —— 它们在
 // lib/i18n/*.ts 词库里，随界面语言切换；本文件只承载不翻译的元数据。
 
+/** giscus 评论配置（github.com/giscus/giscus 组件所需的仓库与分区标识） */
+export interface GiscusConfig {
+  /** owner/repo 形态的仓库标识 */
+  repo: `${string}/${string}`;
+  /** 仓库的 GraphQL node id（giscus.app 生成） */
+  repoId: string;
+  /** Discussion 分区名 */
+  category: string;
+  /** 分区的 GraphQL node id（giscus.app 生成）；空串视为未配置 */
+  categoryId: string;
+}
+
 export const siteConfig = {
   // SEO 基准标题与描述（构建期元数据，语言跟随内容：中文）
   title: "治杰 Online",
@@ -14,8 +26,16 @@ export const siteConfig = {
   social: {
     github: "https://github.com/hezhijie0327",
   },
-  // 博客评论所在的 GitHub 仓库（owner/repo）
-  commentsRepo: "hezhijie0327/blog",
+  // giscus 评论（GitHub Discussions 驱动，按页面路径映射）。repo / repoId
+  // 已按仓库元数据填好；category / categoryId 需在 https://giscus.app
+  // 生成配置后补齐 —— categoryId 为空时评论区渲染占位卡片
+  // （见 features/comments/GiscusComments.tsx）。
+  giscus: {
+    repo: "hezhijie0327/blog",
+    repoId: "R_kgDOQsmIRg",
+    category: "General",
+    categoryId: "",
+  } satisfies GiscusConfig,
 };
 
 // 首页「精选项目」展示数量，其余个人项目折叠进「更多项目」

@@ -94,7 +94,6 @@ export const EN = {
   "project.back": "PROJECTS / All Projects",
   "project.personal": "Personal Project",
   "project.starred": "Starred Project",
-  "project.viewRepo": "View Repository",
   "project.visitLink": "Visit Link",
   "projects.selectedLabel": "PERSONAL WORK · Personal",
   "projects.empty.title": "No projects yet",
@@ -131,30 +130,10 @@ export const EN = {
   "support.thanks": "Thank you for your support",
   "support.metaDesc": "If this site helped you, support me to keep creating",
 
-  // 评论（GitHub）
-  "comments.discussions": "Discussions",
-  "comments.discussionTitle": 'Discussion: "{title}"',
-  "comments.issues": "Issues & Feedback",
-  "comments.loading": "Loading comments…",
-  "comments.unavailable": "Comments unavailable right now",
-  "comments.unavailableBlurb":
-    "The GitHub API is temporarily unreachable (possibly rate-limited) — refresh a bit later.",
-  "comments.noRepo": "No GitHub repository linked to this content",
-  "comments.welcome": "Join the discussion",
-  "comments.welcomeIssues": "Feedback welcome",
-  "comments.noRepoBlurb": "Questions or suggestions? Visit the repository on GitHub to join in.",
-  "comments.openRepo": "Open Repository",
-  "comments.noDescription": "No description",
-  "comments.stateOpen": "Open",
-  "comments.stateClosed": "Closed",
-  "comments.blurbDiscussions": "Questions or suggestions? Submit an issue or start a new discussion.",
-  "comments.blurbIssues": "Questions or suggestions? Raise them through Issues.",
-  "comments.submitIssue": "Submit Issue",
-  "comments.createDiscussion": "New Discussion",
-  "comments.issuesCount": "OPEN ISSUES · {n}",
-  "comments.discussionsCount": "DISCUSSIONS · {n}",
-  "comments.fallbackTitle": "Feedback",
-  "comments.fallbackDiscussion": "New discussion",
+  // giscus 评论
+  "comments.title": "Comments",
+  "comments.notConfigured": "Comments are on the way",
+  "comments.notConfiguredBlurb": "The comment section will appear here once giscus is configured.",
 
   // 404
   "notFound.blurb": "This page doesn't exist or has moved.",

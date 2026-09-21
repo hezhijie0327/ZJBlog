@@ -1,5 +1,5 @@
 // 文章详情页：头部元信息 + 摘要卡 + 构建期编译的正文 + 目录右栏（xl 宽屏）
-// + 上下篇导航 + 署名卡 + GitHub 评论区。
+// + 上下篇导航 + 署名卡 + giscus 评论区。
 
 import { Clock } from "lucide-react";
 import { AuthorCard } from "@/components/AuthorCard.tsx";
@@ -7,8 +7,7 @@ import { BackLink } from "@/components/BackLink.tsx";
 import { PostNav } from "@/components/PostNav.tsx";
 import { TableOfContents } from "@/components/TableOfContents.tsx";
 import { TagList } from "@/components/TagList.tsx";
-import { siteConfig } from "@/config/site.ts";
-import { GitHubComments } from "@/features/comments/GitHubComments.tsx";
+import { GiscusComments } from "@/features/comments/GiscusComments.tsx";
 import { Prose } from "@/features/markdown/Prose.tsx";
 import { formatDateISO } from "@/lib/format.ts";
 import { useT } from "@/lib/i18n.ts";
@@ -59,8 +58,8 @@ export function BlogPostPage({ data }: { data: BlogPostData }) {
           {/* 署名卡 */}
           <AuthorCard />
 
-          {/* GitHub 评论 */}
-          <GitHubComments repo={siteConfig.commentsRepo} title={t("comments.discussionTitle", { title: post.title })} />
+          {/* giscus 评论（GitHub Discussions，按路径映射） */}
+          <GiscusComments />
         </article>
 
         {/* 目录右栏：宽屏 sticky 跟随 */}

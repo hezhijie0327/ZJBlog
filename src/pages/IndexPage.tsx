@@ -1,6 +1,7 @@
 // 首页：Hero + 精选项目（starred 优先）+ 最新文章 + 联系（GitHub / RSS）。
 
 import { ArrowRight, ArrowUpRight, Rss } from "lucide-react";
+import { EmptyState } from "@/components/EmptyState.tsx";
 import { GithubIcon } from "@/components/icons.tsx";
 import { ProjectCard } from "@/components/ProjectCard.tsx";
 import { SectionHeading } from "@/components/SectionHeading.tsx";
@@ -118,41 +119,52 @@ export function IndexPage({ data }: { data: HomeData }) {
           index="01"
           title={t("home.featured.title")}
         />
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {featured.map((project, i) => (
-            <ProjectCard heading="h3" index={i} key={project.slug} project={project} />
-          ))}
-        </div>
-
-        {moreProjects.length > 0 && (
-          <div className="mt-8">
-            <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.2em] text-ink-3">{t("home.moreProjects")}</p>
-            {/* 开放列表（对标参考站更多项目）：短横标记 + 下划线品名 + 金色 ↗ + 行内描述 */}
-            <ul>
-              {moreProjects.map((project) => (
-                <li key={project.slug}>
-                  <Link className="group flex items-baseline gap-3 py-3.5" href={`/projects/${project.slug}/`}>
-                    <span
-                      aria-hidden="true"
-                      className="shrink-0 font-mono text-xs text-ink-3 transition-colors group-hover:text-accent"
-                    >
-                      —
-                    </span>
-                    <span className="shrink-0 text-sm font-medium text-ink underline decoration-line underline-offset-4 transition-colors group-hover:text-accent group-hover:decoration-accent">
-                      {project.title}
-                      <ArrowUpRight aria-hidden="true" className="ml-0.5 inline size-3.5 align-[-0.1em] text-accent" />
-                    </span>
-                    {project.description && (
-                      <span className="min-w-0 flex-1 truncate text-sm text-ink-2">{project.description}</span>
-                    )}
-                  </Link>
-                </li>
+        {data.projects.length > 0 ? (
+          <>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {featured.map((project, i) => (
+                <ProjectCard heading="h3" index={i} key={project.slug} project={project} />
               ))}
-            </ul>
-          </div>
-        )}
+            </div>
 
-        <ViewAllLink href="/projects/" label={t("home.viewAllProjects")} />
+            {moreProjects.length > 0 && (
+              <div className="mt-8">
+                <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.2em] text-ink-3">
+                  {t("home.moreProjects")}
+                </p>
+                {/* 开放列表（对标参考站更多项目）：短横标记 + 下划线品名 + 金色 ↗ + 行内描述 */}
+                <ul>
+                  {moreProjects.map((project) => (
+                    <li key={project.slug}>
+                      <Link className="group flex items-baseline gap-3 py-3.5" href={`/projects/${project.slug}/`}>
+                        <span
+                          aria-hidden="true"
+                          className="shrink-0 font-mono text-xs text-ink-3 transition-colors group-hover:text-accent"
+                        >
+                          —
+                        </span>
+                        <span className="shrink-0 text-sm font-medium text-ink underline decoration-line underline-offset-4 transition-colors group-hover:text-accent group-hover:decoration-accent">
+                          {project.title}
+                          <ArrowUpRight
+                            aria-hidden="true"
+                            className="ml-0.5 inline size-3.5 align-[-0.1em] text-accent"
+                          />
+                        </span>
+                        {project.description && (
+                          <span className="min-w-0 flex-1 truncate text-sm text-ink-2">{project.description}</span>
+                        )}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <ViewAllLink href="/projects/" label={t("home.viewAllProjects")} />
+          </>
+        ) : (
+          <EmptyState className="mx-auto max-w-md" desc={t("projects.empty.desc")} title={t("projects.empty.title")} />
+        )}
       </section>
 
       {/* 02 最新博客 */}
@@ -186,7 +198,7 @@ export function IndexPage({ data }: { data: HomeData }) {
             <p className="px-6 py-8 text-center text-sm text-ink-3">{t("home.emptyPosts")}</p>
           )}
         </div>
-        <ViewAllLink href="/blogs/" label={t("home.viewAllPosts")} />
+        {data.blogs.length > 0 && <ViewAllLink href="/blogs/" label={t("home.viewAllPosts")} />}
       </section>
 
       {/* 03 联系：GitHub / RSS（参考 justin3go SAY HELLO 的胶囊链接形态） */}

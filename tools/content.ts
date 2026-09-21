@@ -7,9 +7,11 @@ import path from "node:path";
 import matter from "gray-matter";
 import readingTime from "reading-time";
 import rehypeExternalLinks from "rehype-external-links";
+import rehypeKatex from "rehype-katex";
 import rehypeSlug from "rehype-slug";
 import rehypeStringify from "rehype-stringify";
 import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
 import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import { createHighlighter } from "shiki";
@@ -46,7 +48,9 @@ const highlighter = await createHighlighter({
 const processor = unified()
   .use(remarkParse)
   .use(remarkGfm)
+  .use(remarkMath)
   .use(remarkRehype, { allowDangerousHtml: false })
+  .use(rehypeKatex)
   .use(rehypeSlug)
   .use(rehypeExternalLinks, { rel: ["noopener", "noreferrer"], target: "_blank" })
   .use(rehypeStringify);
@@ -170,7 +174,6 @@ export interface ProjectEntry {
   type: "personal" | "starred";
   tags: string[];
   link?: string;
-  githubRepo?: string;
   /** 封面图（frontmatter.image，站点根路径如 /images/xxx.png） */
   image?: string;
   contentHtml: string;
@@ -187,7 +190,6 @@ type RawEntry = {
   type?: "personal" | "starred";
   tags?: string[];
   link?: string;
-  githubRepo?: string;
   image?: string;
   readingMinutes?: number;
   summary?: string;
@@ -270,7 +272,6 @@ function readEntries(type: "blogs" | "projects"): RawEntry[] {
       tags: data.tags ?? [],
       type: data.type === "starred" ? "starred" : "personal",
       link: data.link,
-      githubRepo: parseGitHubRepo(data.link),
       image: data.image,
       readingMinutes: Math.ceil(readingTime(content).minutes),
       summary: typeof data.summary === "string" ? data.summary : undefined,
@@ -286,19 +287,6 @@ function readEntries(type: "blogs" | "projects"): RawEntry[] {
     }
     return a.date ? -1 : b.date ? 1 : 0;
   });
-}
-
-// 解析 GitHub 仓库链接 → "owner/repo"
-function parseGitHubRepo(link?: string): string | undefined {
-  if (!link) {
-    return undefined;
-  }
-  const match = link.match(/github\.com\/([^/]+)\/([^/?#]+)/i);
-  if (!match) {
-    return undefined;
-  }
-  const repo = match[2]?.replace(/\.git$/, "") ?? "";
-  return `${match[1]}/${repo}`;
 }
 
 let cache: ContentIndex | null = null;
@@ -326,7 +314,6 @@ export function loadContent(): ContentIndex {
       type: entry.type === "starred" ? "starred" : "personal",
       tags: entry.tags ?? [],
       link: entry.link,
-      githubRepo: entry.githubRepo,
       image: entry.image,
       contentHtml: entry.contentHtml ?? "",
       content: entry.content ?? "",
