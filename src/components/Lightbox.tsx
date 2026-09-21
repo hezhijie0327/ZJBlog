@@ -92,9 +92,11 @@ export function Lightbox({
   }
 
   return (
+    // fixed + inset-0 + m-auto：视口居中（UA 的 absolute 定位会跟随文档流位置，
+    // showModal 聚焦时把页面滚到弹层在文档中的位置 —— 即「跳到顶部」的根源）
     <dialog
       {...(image.alt ? { "aria-label": image.alt } : {})}
-      className={cn(CARD, "lightbox relative mx-auto max-w-[94vw] p-4 sm:p-5")}
+      className={cn(CARD, "lightbox fixed inset-0 m-auto max-h-[92dvh] max-w-[94vw] p-4 sm:p-5")}
       onClick={onDialogClick}
       onKeyDown={onKeyDown}
       ref={dialogRef}

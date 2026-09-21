@@ -70,6 +70,64 @@
   min-height: 2rem;
 }
 
+/* 图示卡（geojson/topojson/plantuml 的构建期产物）：与 code-card 同构的
+   头部标签 + 主题化图体 */
+.prose .diagram-card {
+  margin-block: 1.5em;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  background: var(--surface);
+}
+
+.prose .diagram-card > .geo-map,
+.prose .diagram-card > .plantuml-img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* GeoJSON 投影 SVG：几何元素 token 配色，随整页明暗交叉淡化 */
+.prose .geo-map-bg {
+  fill: color-mix(in oklab, var(--accent-soft) 30%, var(--surface));
+}
+
+.prose .geo-polygon {
+  fill: color-mix(in oklab, var(--accent) 20%, transparent);
+  stroke: var(--accent-strong);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+
+.prose .geo-line {
+  fill: none;
+  stroke: var(--accent-strong);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.prose .geo-point {
+  fill: var(--accent-strong);
+  stroke: var(--surface);
+  stroke-width: 1.5;
+}
+
+/* STL 3D 查看器占位：渲染前的最小高度防布局跳动 */
+.prose .stl-placeholder {
+  min-height: 280px;
+}
+
+.prose .stl-stage canvas {
+  display: block;
+  width: 100%;
+  cursor: grab;
+}
+
+.prose .stl-stage canvas:active {
+  cursor: grabbing;
+}
+
 /* 代码块卡片（构建期生成）：语言标签 + 复制按钮 + shiki 双主题高亮。
    shiki 以 defaultColor:false 输出 --shiki-light/dark 变量（无内联色），
    文字颜色与底色都由站点 token 驱动，明暗切换与整页交叉淡化同步。 */

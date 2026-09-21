@@ -22,6 +22,13 @@ import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import { createHighlighter } from "shiki";
 import { type Processor, unified } from "unified";
+import {
+  plantumlFigure,
+  renderGeoSvg,
+  topoToGeo,
+  translateFlowToMermaid,
+  translateSequenceToMermaid,
+} from "./diagrams";
 
 const contentDirectory = path.join(process.cwd(), "content");
 
@@ -151,14 +158,49 @@ function renderCodeBlock(lang: string, code: string): string {
   return `<div class="code-card" data-lang="${escapeAttr(label)}"><div class="code-card-head"><span class="code-lang">${escapeHtml(label)}</span><button class="copy-code" type="button">复制</button></div>${body}</div>`;
 }
 
+/** 图示卡外壳：与 code-card 同语言的头部标签（无复制按钮）。 */
+function diagramFigure(lang: string, body: string): string {
+  return `<figure class="diagram-card"><figcaption class="code-card-head"><span class="code-lang">${escapeHtml(lang)}</span></figcaption>${body}</figure>`;
+}
+
+/** Typora 专属 fence 的构建期兼容层：非法数据一律回退普通代码块，不吞内容。 */
+function renderDiagram(lang: string, code: string): string | undefined {
+  try {
+    switch (lang) {
+      case "sequence":
+      case "flow": {
+        const chart = lang === "sequence" ? translateSequenceToMermaid(code) : translateFlowToMermaid(code);
+        return `<div class="mermaid-placeholder" data-chart="${escapeAttr(chart)}"></div>`;
+      }
+      case "geojson":
+      case "topojson": {
+        const json = JSON.parse(code) as Record<string, unknown>;
+        const geo = lang === "topojson" ? topoToGeo(json) : json;
+        return diagramFigure(lang, renderGeoSvg(geo));
+      }
+      case "plantuml":
+        return diagramFigure(lang, plantumlFigure(code));
+      case "stl":
+        return `<div class="stl-placeholder" data-lang="stl" data-stl="${escapeAttr(code)}"></div>`;
+      default:
+        return undefined;
+    }
+  } catch {
+    return renderCodeBlock(lang, code);
+  }
+}
+
 /** Markdown → HTML + 目录。后处理：
- *  1. mermaid 代码块 → 占位容器（data-chart 存原文），客户端进视口后才
- *     动态加载 mermaid 渲染（库 ~2.7MB，预加载曾致 perf 掉到 82）；
- *  2. 其余代码块 → code-card（语言标签 + 复制按钮 + shiki 高亮）；
- *  3. 表格包一层横向滚动容器（窄屏不挤压列）；
- *  4. GFM 任务清单复选框补 aria-hidden（纯装饰）；
- *  5. 剥掉行首 h1（页面头部已渲染标题，避免双 h1 + 标题重复）；
- *  6. h2/h3 收进目录（id 由 rehype-slug 生成，正文锚点与 TOC 同源）。 */
+ *  1. mermaid / sequence / flow 代码块 → mermaid 占位容器（前者原文直存，
+ *     后两者构建期翻译为 mermaid 源码），客户端进视口后才动态加载 mermaid
+ *     渲染（库 ~2.7MB，预加载曾致 perf 掉到 82）；
+ *  2. geojson / topojson → 构建期直接投影成静态 SVG 图卡；plantuml → 公共
+ *     渲染服务的 lazy img；stl → 占位容器（客户端 three.js 惰性渲染）；
+ *  3. 其余代码块 → code-card（语言标签 + 复制按钮 + shiki 高亮）；
+ *  4. 表格包一层横向滚动容器（窄屏不挤压列）；
+ *  5. GFM 任务清单复选框补 aria-hidden（纯装饰）；
+ *  6. 剥掉行首 h1（页面头部已渲染标题，避免双 h1 + 标题重复）；
+ *  7. h2/h3 收进目录（id 由 rehype-slug 生成，正文锚点与 TOC 同源）。 */
 function compileMarkdown(markdown: string): { html: string; toc: TocItem[] } {
   const html = processor
     .processSync(markdown)
@@ -168,11 +210,16 @@ function compileMarkdown(markdown: string): { html: string; toc: TocItem[] } {
     .replace(
       /<pre><code(?: class="language-([\w#+.-]+)")?>([\s\S]*?)<\/code><\/pre>/g,
       (match, lang: string | undefined, code: string) => {
+        const decoded = decodeEntities(code);
         if (lang === "mermaid") {
-          return `<div class="mermaid-placeholder" data-chart="${escapeAttr(decodeEntities(code))}"></div>`;
+          return `<div class="mermaid-placeholder" data-chart="${escapeAttr(decoded)}"></div>`;
         }
         if (lang) {
-          return renderCodeBlock(lang, decodeEntities(code));
+          const diagram = renderDiagram(lang, decoded);
+          if (diagram !== undefined) {
+            return diagram;
+          }
+          return renderCodeBlock(lang, decoded);
         }
         // 无语言标注：保留转义后的原文，仅补 code-card 外壳与复制按钮
         return `<div class="code-card"><div class="code-card-head"><button class="copy-code" type="button">复制</button></div>${match}</div>`;

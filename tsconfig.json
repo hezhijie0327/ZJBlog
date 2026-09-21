@@ -22,7 +22,9 @@
     "paths": {
       "@/*": ["./src/*"],
       "mdast-util-mark": ["./tools/types/mdast-util-mark.d.ts"],
-      "micromark-extension-mark": ["./tools/types/micromark-extension-mark.d.ts"]
+      "micromark-extension-mark": ["./tools/types/micromark-extension-mark.d.ts"],
+      "topojson-client": ["./tools/types/topojson-client.d.ts"],
+      "plantuml-encoder": ["./tools/types/plantuml-encoder.d.ts"]
     }
   },
   "include": ["src", "tools", "vite.config.ts"]

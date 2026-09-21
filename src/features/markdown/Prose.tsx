@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { Lightbox, type LightboxImage } from "@/components/Lightbox.tsx";
 import { MermaidRenderer } from "@/features/markdown/MermaidRenderer.tsx";
+import { StlViewer } from "@/features/markdown/StlViewer.tsx";
 import { useT } from "@/lib/i18n.ts";
 
 export function Prose({ html }: { html: string }) {
@@ -27,6 +28,11 @@ export function Prose({ html }: { html: string }) {
     for (const el of container.querySelectorAll<HTMLElement>(".mermaid-placeholder")) {
       const root = createRoot(el);
       root.render(<MermaidRenderer chart={el.dataset.chart ?? ""} />);
+      roots.push(root);
+    }
+    for (const el of container.querySelectorAll<HTMLElement>(".stl-placeholder")) {
+      const root = createRoot(el);
+      root.render(<StlViewer stl={el.dataset.stl ?? ""} />);
       roots.push(root);
     }
     return () => {
