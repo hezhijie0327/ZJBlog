@@ -51,7 +51,7 @@ const processor = unified()
   .use(rehypeExternalLinks, { rel: ["noopener", "noreferrer"], target: "_blank" })
   .use(rehypeStringify);
 
-/** 解码 rehype-stringify 的字符引用（喂给 shiki 前必须还原原文）。
+/** 解码 rehype-stringify 的字符引用（喂给 shiki / TOC 文本前必须还原原文）。
  *  顺序敏感：先解命名/数字实体，最后解 &amp; —— 否则 "&amp;lt;" 会被
  *  二次解码成 "<"。 */
 function decodeEntities(text: string): string {
@@ -63,6 +63,7 @@ function decodeEntities(text: string): string {
     .replaceAll("&#x27;", "'")
     .replaceAll("&#x3C;", "<")
     .replaceAll("&#x3c;", "<")
+    .replaceAll("&#x26;", "&")
     .replaceAll("&#x60;", "`")
     .replaceAll("&amp;", "&");
 }
