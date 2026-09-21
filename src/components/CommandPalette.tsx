@@ -33,28 +33,56 @@ export function CommandPalette() {
   const t = useT();
   const { navigate } = useRouter();
   const [open, setOpen] = useState(false);
+  // 退出动画窗口：关闭请求先播 fade-out，动画结束才真正卸载（期间保持
+  // 滚动锁与面板 DOM，视觉上开合对称）
+  const [closing, setClosing] = useState(false);
   const [query, setQuery] = useState("");
   const [index, setIndex] = useState<SearchItem[] | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
-  const dialogRef = useRef<HTMLDivElement>(null);
   // 打开时的触发元素，关闭时归还焦点
   const openerRef = useRef<HTMLElement | null>(null);
 
   const typeLabel = useMemo(() => ({ blog: t("search.typeBlog"), project: t("search.typeProject") }) as const, [t]);
+
+  /** 真正卸载：清空查询状态并归还焦点（退出动画结束后由 onAnimationEnd 调用）。 */
+  const finishClose = useCallback(() => {
+    setOpen(false);
+    setClosing(false);
+    setQuery("");
+    setActiveIndex(0);
+    openerRef.current?.focus();
+  }, []);
+
+  /** 关闭请求：先播退出动画，动画结束再卸载（finishClose）。 */
+  const close = useCallback(() => {
+    if (!open || closing) {
+      return;
+    }
+    setClosing(true);
+    // 兜底：animationend 依赖渲染管线（页面隐藏时动画时间线冻结、事件可能
+    // 丢失），超时后无条件收尾；finishClose 幂等，与 onAnimationEnd 谁先到一致
+    window.setTimeout(finishClose, 240);
+  }, [open, closing, finishClose]);
 
   // Ctrl/⌘+K 与自定义事件触发
   useEffect(() => {
     const onKeydown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
-        setOpen((v) => !v);
+        if (open && !closing) {
+          close();
+        } else {
+          setClosing(false);
+          setOpen(true);
+        }
       }
       if (e.key === "Escape") {
-        setOpen(false);
+        close();
       }
     };
     const onOpen = () => {
+      setClosing(false);
       setOpen(true);
     };
     window.addEventListener("keydown", onKeydown);
@@ -63,7 +91,7 @@ export function CommandPalette() {
       window.removeEventListener("keydown", onKeydown);
       window.removeEventListener("open-command-palette", onOpen);
     };
-  }, []);
+  }, [close, open, closing]);
 
   // 首次打开时懒加载索引
   useEffect(() => {
@@ -87,13 +115,6 @@ export function CommandPalette() {
       cancelled = true;
     };
   }, [open, index]);
-
-  const close = useCallback(() => {
-    setOpen(false);
-    setQuery("");
-    setActiveIndex(0);
-    openerRef.current?.focus();
-  }, []);
 
   // 打开期间锁定背景滚动；记录触发者并聚焦输入框
   useEffect(() => {
@@ -160,9 +181,17 @@ export function CommandPalette() {
     <div
       aria-label={t("search.title")}
       aria-modal="true"
-      className="fixed inset-0 z-100 flex items-start justify-center bg-ink/30 px-4 pt-[12vh] backdrop-blur-[2px] animate-fade-in"
+      className={cn(
+        "fixed inset-0 z-100 flex items-start justify-center bg-ink/30 px-4 pt-[12vh] backdrop-blur-[2px]",
+        closing ? "animate-fade-out" : "animate-fade-in",
+      )}
+      onAnimationEnd={(e) => {
+        // 只认背板自身的动画结束（子元素动画冒泡忽略）；退出动画播完才卸载
+        if (closing && e.target === e.currentTarget) {
+          finishClose();
+        }
+      }}
       onClick={close}
-      ref={dialogRef}
       role="dialog"
     >
       <div

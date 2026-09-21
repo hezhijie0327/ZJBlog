@@ -5,7 +5,8 @@
 //   vite build --ssr tools/ssr.tsx → .vite-ssr/ssr.mjs
 //   scripts/prerender.mjs → import .vite-ssr/ssr.mjs 调用 prerenderAll()
 
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import path from "node:path";
 import { renderToString } from "react-dom/server";
 import { App } from "../src/app.tsx";
@@ -58,6 +59,8 @@ const PAGE_CHUNK_SOURCES: Record<Exclude<PageKind, "not-found">, string> = {
 interface AssetUrls {
   js: string;
   css: string[];
+  /** 入口 CSS 内容（构建期读出，内联进每页 <head>，消除串行请求的渲染阻塞） */
+  cssInline: string;
   /** 生产构建完整 manifest，用于解析每页 chunk 的 modulepreload */
   manifest?: Record<string, { file: string }>;
 }
@@ -75,7 +78,13 @@ function clientAssets(): AssetUrls {
   if (!entry) {
     throw new Error("manifest 中找不到客户端入口");
   }
-  return { js: `/${entry.file}`, css: (entry.css ?? []).map((file) => `/${file}`), manifest };
+  const css = (entry.css ?? []).map((file) => `/${file}`);
+  // 单一 CSS 入口是既有设计（请求合并）；内联省掉它仅剩的一次串行 RTT。
+  // </style> 防御性转义：构建产物 CSS 理论上不会包含该子串。
+  const cssInline = css
+    .map((href) => readFileSync(path.join(DIST_DIR, href.slice(1)), "utf8").replaceAll("</style", "<\\/style"))
+    .join("\n");
+  return { js: `/${entry.file}`, css, cssInline, manifest };
 }
 
 /** 当前页 chunk 的 modulepreload（与入口 JS 并行取块，水合前就绪）。 */
@@ -88,7 +97,7 @@ function pagePreload(kind: PageKind, assets: AssetUrls): string {
 }
 
 /** Dev 模式资产：源码入口 + vite client（CSS 经 JS 模块注入）。 */
-const DEV_ASSETS: AssetUrls = { js: "/src/main.tsx", css: [] };
+const DEV_ASSETS: AssetUrls = { js: "/src/main.tsx", css: [], cssInline: "" };
 
 function escapeHtml(text: string): string {
   return text.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
@@ -110,6 +119,26 @@ function slimForClient(data: AnyPageData): AnyPageData {
 
 /** 默认分享卡（public/og-default.png，1200×630；模板 scripts/og-template.html）。 */
 const OG_IMAGE = "/og-default.png";
+
+/** KaTeX 样式按需加载：仅含公式的页面注入（全站 render-blocking 代价过高）。
+ *  文件在预渲染阶段从 node_modules 拷入 dist/（版本随 pnpm-lock 固定）。 */
+const KATEX_HREF = "/katex.min.css";
+
+function katexAssetPath(): string {
+  const require = createRequire(import.meta.url);
+  return require.resolve("katex/dist/katex.min.css");
+}
+
+/** 页面 payload 是否需要 KaTeX 样式。 */
+function needsKatex(payload: AnyPageData): boolean {
+  if (isBlogPostData(payload)) {
+    return payload.post.needsKatex === true;
+  }
+  if (isProjectData(payload)) {
+    return payload.project.needsKatex === true;
+  }
+  return false;
+}
 
 /** 结构化数据：文章页 BlogPosting，首页 WebSite + Person，其余页不输出。 */
 function jsonLdFor(payload: ReturnType<typeof buildPayload>, pathname: string): string {
@@ -196,7 +225,18 @@ export async function renderRoute(rawPath: string, assets?: AssetUrls): Promise<
   ].join("\n    ");
   const jsonLd = jsonLdFor(payload, pathname);
   const jsonLdTag = jsonLd ? `<script type="application/ld+json">${jsonLd.replaceAll("<", "\\u003c")}</script>` : "";
-  const cssLinks = a.css.map((href) => `<link rel="stylesheet" crossorigin href="${href}">`).join("\n    ");
+  // dev 模式 KaTeX 样式直连 node_modules（/@fs/），生产指向拷贝到 dist 的文件
+  const katexLink = needsKatex(payload)
+    ? `<link rel="stylesheet" crossorigin href="${a.js.startsWith("/src/") ? `/@fs${katexAssetPath()}` : KATEX_HREF}">`
+    : "";
+  // 生产：入口 CSS 内联进 <head>（零串行请求，首帧前样式即绪）；KaTeX 仅
+  // 含公式页注入。dev：CSS 经 vite JS 模块注入，KaTeX 走 /@fs/。
+  const cssLinks = a.js.startsWith("/src/")
+    ? a.css
+        .map((href) => `<link rel="stylesheet" crossorigin href="${href}">`)
+        .concat(katexLink)
+        .join("\n    ")
+    : `<style>${a.cssInline}</style>${katexLink ? `\n    ${katexLink}` : ""}`;
   const devClient = a.js.startsWith("/src/") ? `<script type="module" src="/@vite/client"></script>` : "";
   const pageDataJson = JSON.stringify(slimForClient(payload)).replaceAll("<", "\\u003c");
 
@@ -262,4 +302,11 @@ export async function prerenderAll(): Promise<void> {
 
   // manifest 只在构建期用于解析资产名，发布物不需要
   rmSync(path.join(DIST_DIR, ".vite"), { recursive: true, force: true });
+
+  // KaTeX 样式按需加载（needsKatex 页面注入引用）；CSS 内字体是相对路径
+  // （fonts/…），随文件一并拷入 dist/fonts/
+  const katexDist = path.dirname(katexAssetPath());
+  copyFileSync(path.join(katexDist, "katex.min.css"), path.join(DIST_DIR, "katex.min.css"));
+  cpSync(path.join(katexDist, "fonts"), path.join(DIST_DIR, "fonts"), { recursive: true });
+  console.log("  copied /katex.min.css + /fonts/");
 }

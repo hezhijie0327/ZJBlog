@@ -76,6 +76,8 @@ export interface BlogPostData {
   post: BlogListItem & {
     toc: TocItem[];
     contentHtml?: string;
+    /** 正文含 KaTeX 公式：页面需加载 katex.min.css（SSR 注入 / Prose 补注） */
+    needsKatex?: boolean;
     /** 手写摘要（frontmatter.summary，有才渲染摘要卡） */
     summary?: string;
     /** 时间线上更旧 / 更新的一篇（构建期算好；边界为 undefined） */
@@ -105,7 +107,7 @@ export interface ProjectsData {
 export interface ProjectData {
   globals: PageGlobals & { page: "project" };
   /** 同 BlogPostData：contentHtml 由 DOM 注入，不进 page-data */
-  project: ProjectListItem & { contentHtml?: string };
+  project: ProjectListItem & { contentHtml?: string; needsKatex?: boolean };
 }
 
 export interface ArchivesData {

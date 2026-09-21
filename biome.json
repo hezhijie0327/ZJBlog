@@ -13,7 +13,8 @@
       "!.lighthouse-archive",
       "!content",
       "!public",
-      "!pnpm-lock.yaml"
+      "!pnpm-lock.yaml",
+      "!tools/math-gfm.js"
     ]
   },
   "formatter": {

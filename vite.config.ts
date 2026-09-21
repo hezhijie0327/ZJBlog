@@ -12,8 +12,20 @@ import browserslistToEsbuild from "browserslist-to-esbuild";
 import { defineConfig, type Plugin, type ViteDevServer } from "vite";
 import manifest from "./package.json" with { type: "json" };
 
+/** 构建期生成的静态文件：生产由预渲染落盘 dist/，dev 缺了会导致命令面板
+ *  索引 404、RSS 入口失效 —— dev 中间件按同一路径同构地产出。 */
+const GENERATED_FILES: Record<string, { fn: string; type: string }> = {
+  "/rss.xml": { fn: "generateRss", type: "application/rss+xml; charset=utf-8" },
+  "/sitemap.xml": { fn: "generateSitemap", type: "application/xml; charset=utf-8" },
+  "/robots.txt": { fn: "generateRobots", type: "text/plain; charset=utf-8" },
+  "/search-index.json": { fn: "generateSearchIndex", type: "application/json; charset=utf-8" },
+  "/llms.txt": { fn: "generateLlms", type: "text/plain; charset=utf-8" },
+  "/llms-full.txt": { fn: "generateLlmsFull", type: "text/plain; charset=utf-8" },
+};
+
 /** Dev 中间件：页面请求走与生产一致的 SSR 渲染（ssrLoadModule 复用 tools/ssr.tsx），
- *  资源 / 模块请求放行给 Vite。content/ 下的 md 变更触发整页刷新。 */
+ *  生成文件同构地产出（GENERATED_FILES），资源 / 模块请求放行给 Vite。
+ *  content/ 下的 md 变更触发整页刷新。 */
 function plgDevServer(): Plugin {
   return {
     name: "blog-dev-server",
@@ -23,6 +35,18 @@ function plgDevServer(): Plugin {
       server.middlewares.use(async (req, res, next) => {
         const raw = req.url ?? "/";
         const path = raw.split("?")[0] ?? "/";
+        const generated = GENERATED_FILES[path];
+        if (generated) {
+          try {
+            const mod = (await server.ssrLoadModule("/tools/generators.ts")) as Record<string, () => string>;
+            res.statusCode = 200;
+            res.setHeader("Content-Type", generated.type);
+            res.end(mod[generated.fn]?.() ?? "");
+          } catch (error) {
+            next(error);
+          }
+          return;
+        }
         const accept = req.headers.accept ?? "";
         const wantsDocument =
           (accept.includes("text/html") || accept === "*/*") &&

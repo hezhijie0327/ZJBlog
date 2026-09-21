@@ -142,6 +142,7 @@ export function buildPayload(pathname: string): AnyPageData {
           ...item,
           toc: post.toc,
           contentHtml: post.contentHtml,
+          needsKatex: post.needsKatex,
           summary: post.summary,
           ...(older ? { prev: { slug: older.slug, title: older.title } } : {}),
           ...(newer ? { next: { slug: newer.slug, title: newer.title } } : {}),
@@ -157,7 +158,7 @@ export function buildPayload(pathname: string): AnyPageData {
       const item = toProjectListItem(project);
       return {
         globals: globals("project", project.title, project.description ?? t("project.fallbackDesc")),
-        project: { ...item, contentHtml: project.contentHtml },
+        project: { ...item, contentHtml: project.contentHtml, needsKatex: project.needsKatex },
       };
     }
   }

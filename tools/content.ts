@@ -3,9 +3,11 @@
 // 客户端 bundle 永不引入本文件 —— Markdown 在构建期编译，运行时零编译成本。
 
 import { existsSync, readdirSync, readFileSync } from "node:fs";
-import path from "node:path";
+import path, { join } from "node:path";
 import matter from "gray-matter";
+import { imageSize } from "image-size";
 import { pandocMarkFromMarkdown } from "mdast-util-mark";
+import { mathFromMarkdown } from "mdast-util-math";
 import { pandocMark } from "micromark-extension-mark";
 import readingTime from "reading-time";
 import rehypeExternalLinks from "rehype-external-links";
@@ -16,11 +18,12 @@ import rehypeStringify from "rehype-stringify";
 import remarkDeflist from "remark-deflist";
 import remarkEmoji from "remark-emoji";
 import remarkGfm from "remark-gfm";
-import remarkMath from "remark-math";
 import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import { createHighlighter } from "shiki";
 import { type Processor, unified } from "unified";
+import type { Node } from "unist";
+import { visit } from "unist-util-visit";
 import { remarkCallouts } from "./callouts";
 import {
   plantumlFigure,
@@ -29,6 +32,7 @@ import {
   translateFlowToMermaid,
   translateSequenceToMermaid,
 } from "./diagrams";
+import { mathGfm } from "./math-gfm";
 
 const contentDirectory = path.join(process.cwd(), "content");
 
@@ -66,33 +70,87 @@ const highlighter = await createHighlighter({
 function remarkMark(this: Processor) {
   const data = this.data() as {
     micromarkExtensions?: unknown[];
-    mdastExtensions?: unknown[];
-    handlers?: Record<string, unknown>;
+    fromMarkdownExtensions?: unknown[];
   };
   data.micromarkExtensions ??= [];
   data.micromarkExtensions.push(pandocMark());
-  data.mdastExtensions ??= [];
-  data.mdastExtensions.push(pandocMarkFromMarkdown);
-  type HastElement = {
-    type: "element";
-    tagName: string;
-    properties: Record<string, unknown>;
-    children: unknown[];
+  // mdast 层：pandocMarkFromMarkdown 产出 type:"mark" 节点但不带 hast 信息，
+  // 包装其 enter.mark 补 data.hName="mark"（与 gfm delete 的 data.hName 同机制，
+  // remarkRehype 的未知节点兜底会按它输出 <mark>）
+  const inner = pandocMarkFromMarkdown;
+  const originalEnterMark = inner.enter.mark;
+  const fromMarkdownExt = {
+    canContainEols: inner.canContainEols,
+    enter: {
+      ...inner.enter,
+      mark: function (this: unknown, token: unknown) {
+        const node = originalEnterMark?.call(this, token) as { data?: { hName?: string } } | undefined;
+        if (node) {
+          node.data ??= {};
+          node.data.hName = "mark";
+        }
+        return node;
+      },
+    },
+    exit: inner.exit,
   };
-  const markToHast = (state: { all: (node: unknown) => HastElement[] }, node: unknown): HastElement => ({
-    type: "element",
-    tagName: "mark",
-    properties: {},
-    children: state.all(node),
-  });
-  data.handlers ??= {};
-  data.handlers.mark = markToHast;
+  data.fromMarkdownExtensions ??= [];
+  data.fromMarkdownExtensions.push(fromMarkdownExt);
+}
+
+/** GitHub 风格数学语法：tools/math-gfm.js 的打补丁扩展（$数字不开公式、
+ *  关闭符后跟数字不闭合、式内 \$ 转义），替换 remark-math 的默认规则。 */
+function remarkMathGfm(this: Processor) {
+  const data = this.data() as {
+    micromarkExtensions?: unknown[];
+    fromMarkdownExtensions?: unknown[];
+  };
+  data.micromarkExtensions ??= [];
+  data.micromarkExtensions.push(mathGfm());
+  data.fromMarkdownExtensions ??= [];
+  data.fromMarkdownExtensions.push(mathFromMarkdown());
+}
+
+/** 站内图片注入固有尺寸（src 以 / 开头 → public/ 下的文件）：正文里的
+ *  Markdown 图片与 raw <img> 缺 width/height 会引入 CLS 并挂 a11y 审计
+ *  （unsized-images）；外站图无法取尺寸，保持原样。缺 alt 一并兜底为空
+ *  （装饰语义）。 */
+/** hast 元素节点的本地结构类型（项目不直接依赖 @types/hast） */
+interface HastElement extends Node {
+  type: "element";
+  tagName: string;
+  properties?: Record<string, unknown>;
+  children?: unknown[];
+}
+
+function rehypeLocalImageSize() {
+  return (tree: Node) => {
+    visit(tree, "element", (node: HastElement) => {
+      if (node.tagName !== "img") {
+        return;
+      }
+      node.properties ??= {};
+      const properties = node.properties;
+      const src = String(properties.src ?? "");
+      if (!src.startsWith("/")) {
+        return;
+      }
+      try {
+        const dim = imageSize(readFileSync(join(process.cwd(), "public", src)));
+        properties.width ??= dim.width;
+        properties.height ??= dim.height;
+      } catch {
+        // public/ 下找不到对应文件（含百分比 width 的演示标签），不注入
+      }
+      properties.alt ??= "";
+    });
+  };
 }
 
 const processor = unified()
   .use(remarkParse)
   .use(remarkGfm)
-  .use(remarkMath)
+  .use(remarkMathGfm)
   .use(remarkMark)
   .use(remarkEmoji)
   .use(remarkCallouts)
@@ -102,6 +160,7 @@ const processor = unified()
   // 节点整体丢弃，造成「HTML 支持情况」一类章节内容静默消失）。
   .use(remarkRehype, { allowDangerousHtml: true })
   .use(rehypeRaw)
+  .use(rehypeLocalImageSize)
   .use(rehypeKatex)
   .use(rehypeSlug)
   .use(rehypeExternalLinks, { rel: ["noopener", "noreferrer"], target: "_blank" })
@@ -255,6 +314,8 @@ export interface BlogEntry {
   /** 手写摘要（frontmatter.summary，文章页摘要卡用；不填则无卡） */
   summary?: string;
   contentHtml: string;
+  /** 正文含 KaTeX 公式（页面需按需加载 katex.min.css） */
+  needsKatex: boolean;
   /** h2/h3 目录（rehype-slug 的 id，客户端 TOC 与锚点共用） */
   toc: TocItem[];
   /** 原始 Markdown 正文（llms-full.txt 用，不进页面 payload） */
@@ -272,6 +333,8 @@ export interface ProjectEntry {
   /** 封面图（frontmatter.image，站点根路径如 /images/xxx.png） */
   image?: string;
   contentHtml: string;
+  /** 正文含 KaTeX 公式（页面需按需加载 katex.min.css） */
+  needsKatex: boolean;
   /** 原始 Markdown 正文（llms-full.txt 用，不进页面 payload） */
   content: string;
 }
@@ -289,6 +352,7 @@ type RawEntry = {
   readingMinutes?: number;
   summary?: string;
   contentHtml?: string;
+  needsKatex?: boolean;
   toc?: TocItem[];
   content?: string;
 };
@@ -330,6 +394,12 @@ function validateFrontmatter(type: string, slug: string, data: Record<string, un
 }
 
 function parseDate(type: string, slug: string, value: unknown): string | undefined {
+  // 无引号的 YAML 日期（date: 2023-06-01）会被 gray-matter 解析成 Date 实例，
+  // 必须一并接受并取回日历字段，否则整条日期被静默丢弃（列表无日期、
+  // 归档进「未知」、sitemap 无 lastmod）。
+  if (value instanceof Date) {
+    return value.toISOString().slice(0, 10);
+  }
   if (typeof value !== "string" || value === "") {
     return undefined;
   }
@@ -372,6 +442,7 @@ function readEntries(type: "blogs" | "projects"): RawEntry[] {
       readingMinutes: Math.ceil(readingTime(content).minutes),
       summary: typeof data.summary === "string" ? data.summary : undefined,
       contentHtml: compiled.html,
+      needsKatex: compiled.html.includes('class="katex'),
       toc: compiled.toc,
       content,
     });
@@ -399,6 +470,7 @@ export function loadContent(): ContentIndex {
       readingMinutes: entry.readingMinutes ?? 1,
       summary: entry.summary,
       contentHtml: entry.contentHtml ?? "",
+      needsKatex: entry.needsKatex ?? false,
       toc: entry.toc ?? [],
       content: entry.content ?? "",
     });
@@ -412,6 +484,7 @@ export function loadContent(): ContentIndex {
       link: entry.link,
       image: entry.image,
       contentHtml: entry.contentHtml ?? "",
+      needsKatex: entry.needsKatex ?? false,
       content: entry.content ?? "",
     });
     cache = {

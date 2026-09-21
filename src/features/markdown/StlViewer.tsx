@@ -2,8 +2,11 @@
 // 动态加载（模块级缓存），拖拽旋转 / 滚轮缩放，慢速自转。挂载点由 Prose
 // 扫描 .stl-placeholder（data-stl 存 ASCII 源文）逐个渲染，模式与
 // MermaidRenderer 一致。
+// 渲染循环跟随视口：模型滚出视口即停帧（setAnimationLoop(null)），回到视口
+// 恢复 —— autoRotate 场景下不停帧会持续吃满 CPU/GPU。
 
 import { useEffect, useRef, useState } from "react";
+import { useT } from "@/lib/i18n.ts";
 
 interface StlViewerProps {
   stl: string;
@@ -28,7 +31,9 @@ function loadThree() {
 }
 
 export function StlViewer({ stl }: StlViewerProps) {
+  const t = useT();
   const containerRef = useRef<HTMLDivElement>(null);
+  // 旧浏览器无 IntersectionObserver 时直接以可见起始，避免在 effect 里同步 setState
   const [visible, setVisible] = useState(() => typeof window !== "undefined" && !("IntersectionObserver" in window));
   const [failed, setFailed] = useState(false);
 
@@ -101,13 +106,31 @@ export function StlViewer({ stl }: StlViewerProps) {
         controls.autoRotateSpeed = 1.6;
         controls.enableDamping = true;
 
-        renderer.setAnimationLoop(() => {
-          controls.update();
-          renderer.render(scene, camera);
-        });
+        // 渲染循环跟随视口：拖拽/缩放由 OrbitControls 事件驱动，与循环独立；
+        // 停帧只是暂停 autoRotate 的持续重绘
+        const syncLoop = (inView: boolean) => {
+          if (inView) {
+            renderer.setAnimationLoop(() => {
+              controls.update();
+              renderer.render(scene, camera);
+            });
+          } else {
+            renderer.setAnimationLoop(null);
+          }
+        };
+        const observer = new IntersectionObserver(
+          (entries) => {
+            syncLoop(entries.some((entry) => entry.isIntersecting));
+          },
+          { rootMargin: "120px" },
+        );
+        observer.observe(el);
+        syncLoop(true);
+
         el.appendChild(renderer.domElement);
 
         teardown = () => {
+          observer.disconnect();
           renderer.setAnimationLoop(null);
           controls.dispose();
           geometry.dispose();
@@ -131,8 +154,8 @@ export function StlViewer({ stl }: StlViewerProps) {
   if (failed) {
     return (
       <div className="rounded-lg border border-danger/60 bg-danger/10 p-4 text-sm" role="alert">
-        <p className="font-semibold text-ink">3D 视图渲染失败</p>
-        <p className="mt-1 text-xs text-ink-2">请确认 STL 数据完整后刷新重试。</p>
+        <p className="font-semibold text-ink">{t("stl.failed")}</p>
+        <p className="mt-1 text-xs text-ink-2">{t("stl.failedHint")}</p>
       </div>
     );
   }

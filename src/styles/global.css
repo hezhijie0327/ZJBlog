@@ -1,9 +1,11 @@
 /* ZJBlog 设计系统 —— 单一 CSS 入口（ZJSearch 同构）。
    组件样式 = Tailwind utilities（TSX 内）；这里的分件只承载 utilities
    够不到的部分：token、元素默认值、长文排印、文档级行为。
+   KaTeX 样式不在此处（全站 render-blocking 代价过高）：构建期由
+   rehypeLocalImageSize 同级的管线标记含公式页（needsKatex），SSR 对这些
+   页面注入 /katex.min.css，客户端 SPA 换页时由 Prose 按需补注。
    导入顺序即级联顺序 —— behaviors.css 有意不入层，必须最后。 */
 @import "tailwindcss";
-@import "katex/dist/katex.min.css";
 @import "./tokens.css";
 @import "./base.css";
 @import "./prose.css";

@@ -3,7 +3,6 @@
 
 import { siteConfig } from "../src/config/site.ts";
 import { loadContent } from "./content.ts";
-import { allRoutes } from "./payloads.ts";
 
 function escapeXml(value: string): string {
   return value
@@ -201,9 +200,4 @@ export function generateLlmsFull(): string {
   }
 
   return lines.join("\n");
-}
-
-/** 全部 sitemap 路由（供审计脚本核对页面清单）。 */
-export function sitemapRoutes(): string[] {
-  return allRoutes();
 }

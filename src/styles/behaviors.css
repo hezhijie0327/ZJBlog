@@ -1,5 +1,35 @@
 /* 文档级行为（有意不入 @layer，保持在级联末端）：
-   全局 reduced-motion 闸、调色板交叉淡化与它的 stand-down 窗口。 */
+   全局 reduced-motion 闸、调色板交叉淡化与它的 stand-down 窗口、
+   原生折叠元素（details / dialog）的过渡增强。 */
+
+/* details 展开收起动画（渐进增强）：interpolate-size 让 auto 参与插值、
+   ::details-content 承载高度过渡 —— Chrome 131+ 生效；旧浏览器与
+   reduced-motion 用户保持原生瞬时切换。 */
+html {
+  interpolate-size: allow-keywords;
+}
+
+.prose details::details-content {
+  block-size: 0;
+  overflow: clip;
+  transition:
+    block-size 0.25s ease,
+    content-visibility 0.25s allow-discrete;
+}
+
+.prose details[open]::details-content {
+  block-size: auto;
+}
+
+/* 灯箱进入动画：showModal 挂载 [open] 时播一次（面板轻微上浮 + 背板淡入）；
+   reduced-motion 闸统一收掉。 */
+.lightbox[open] {
+  animation: fade-up 0.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.lightbox[open]::backdrop {
+  animation: fade-in 0.2s ease-out both;
+}
 
 @media (prefers-reduced-motion: reduce) {
   *,

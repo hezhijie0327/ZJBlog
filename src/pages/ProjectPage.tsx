@@ -58,7 +58,7 @@ export function ProjectPage({ data }: { data: ProjectData }) {
         </header>
 
         {/* 正文 */}
-        <Prose html={project.contentHtml ?? ""} />
+        <Prose html={project.contentHtml ?? ""} needsKatex={project.needsKatex} />
 
         {/* giscus 评论（GitHub Discussions，按路径映射） */}
         <GiscusComments />

@@ -26,7 +26,6 @@ export const EN = {
   "nav.themeDark": "Theme: dark",
   "nav.language": "Switch to 中文",
   "nav.rss": "RSS Feed",
-  "nav.github": "GitHub",
   "nav.openMenu": "Open menu",
   "nav.closeMenu": "Close menu",
   "nav.mobileNav": "Mobile navigation",
@@ -67,7 +66,6 @@ export const EN = {
   "blog.tagDesc": 'All posts tagged "{tag}"',
   "blog.empty.title": "No posts yet",
   "blog.empty.desc": "Content is being prepared — stay tuned.",
-  "blog.notFound": "Post not found",
   "blog.fallbackDesc": "Personal tech blog",
 
   // 文章页
@@ -147,6 +145,8 @@ export const EN = {
   "mermaid.figure": "Mermaid diagram",
   "mermaid.loading": "Rendering diagram…",
   "mermaid.failed": "Mermaid rendering failed",
+  "stl.failed": "3D view failed to render",
+  "stl.failedHint": "Check that the STL data is complete and refresh.",
 } as const;
 
 export type StringKey = keyof typeof EN;

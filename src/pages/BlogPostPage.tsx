@@ -50,7 +50,7 @@ export function BlogPostPage({ data }: { data: BlogPostData }) {
           )}
 
           {/* 正文 */}
-          <Prose html={post.contentHtml ?? ""} />
+          <Prose html={post.contentHtml ?? ""} needsKatex={post.needsKatex} />
 
           {/* 上一篇 / 下一篇 */}
           <PostNav next={post.next} prev={post.prev} />

@@ -149,10 +149,19 @@ export function Navigation() {
           </div>
         </div>
 
-        {/* 移动端导航：页面链接（RSS 已常驻顶栏，不进抽屉） */}
-        {isMenuOpen && (
-          <nav aria-label={t("nav.mobileNav")} className="border-t border-line/80 py-3 md:hidden" id={MOBILE_MENU_ID}>
-            <div className="flex flex-col">
+        {/* 移动端导航：常驻 DOM + grid-rows 高度过渡（展开/收起都有动画，
+            收起态 invisible 使链接不可聚焦），页面链接（RSS 已常驻顶栏，不进抽屉） */}
+        <nav
+          aria-hidden={!isMenuOpen}
+          aria-label={t("nav.mobileNav")}
+          className={cn(
+            "grid border-line/80 transition-[grid-template-rows,visibility] duration-200 ease-out md:hidden",
+            isMenuOpen ? "visible border-t [grid-template-rows:1fr]" : "invisible [grid-template-rows:0fr]",
+          )}
+          id={MOBILE_MENU_ID}
+        >
+          <div className="overflow-hidden">
+            <div className="flex flex-col py-3">
               {navigation.map((item) => {
                 const isActive = item.href === activeHref;
                 return (
@@ -173,8 +182,8 @@ export function Navigation() {
                 );
               })}
             </div>
-          </nav>
-        )}
+          </div>
+        </nav>
       </div>
     </header>
   );

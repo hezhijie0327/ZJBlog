@@ -26,7 +26,6 @@ export const ZH_CN: Record<StringKey, string> = {
   "nav.themeDark": "主题：暗色",
   "nav.language": "切换到 English",
   "nav.rss": "RSS 订阅",
-  "nav.github": "GitHub",
   "nav.openMenu": "打开菜单",
   "nav.closeMenu": "关闭菜单",
   "nav.mobileNav": "移动端导航",
@@ -67,7 +66,6 @@ export const ZH_CN: Record<StringKey, string> = {
   "blog.tagDesc": "标签「{tag}」下的全部文章",
   "blog.empty.title": "暂无文章",
   "blog.empty.desc": "内容正在整理中，敬请期待。",
-  "blog.notFound": "文章未找到",
   "blog.fallbackDesc": "个人技术博客",
 
   // 文章页
@@ -144,7 +142,9 @@ export const ZH_CN: Record<StringKey, string> = {
   // 杂项
   "misc.backToTop": "返回顶部",
   "misc.skipToContent": "跳到内容",
-  "mermaid.figure": "Mermaid 流程图",
-  "mermaid.loading": "正在渲染流程图...",
+  "mermaid.figure": "Mermaid 图示",
+  "mermaid.loading": "正在渲染图示...",
   "mermaid.failed": "Mermaid 渲染失败",
+  "stl.failed": "3D 视图渲染失败",
+  "stl.failedHint": "请确认 STL 数据完整后刷新重试。",
 };

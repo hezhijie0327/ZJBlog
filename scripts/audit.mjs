@@ -183,14 +183,27 @@ async function main() {
   try {
     await waitFor(`${BASE}/`);
     const { launch } = await import("chrome-launcher");
-    chrome = await launch({ chromeFlags: ["--headless=new"] });
     const lighthouse = (await import("lighthouse")).default;
     const config = MOBILE ? undefined : (await import("lighthouse/core/config/desktop-config.js")).default;
 
-    /** 单页审计；headless Chrome 偶发 trace 中止（全 0 分）时重试一次 */
+    // headless Chrome 连跑多个 trace 会累积不稳（本机实测 5 页左右崩实例），
+    // 每 RESTART_EVERY 页重启一次浏览器，代价是每轮约 1s 启动开销
+    const RESTART_EVERY = 4;
+    async function freshChrome() {
+      if (chrome) {
+        // chrome-launcher 的 kill() 在不同版本可能返回 void,统一包成 Promise
+        await Promise.resolve(chrome.kill()).catch(() => {});
+        chrome = undefined;
+      }
+      chrome = await launch({ chromeFlags: ["--headless=new"] });
+      return chrome;
+    }
+    await freshChrome();
+
+    /** 单页审计；headless Chrome 偶发 trace 中止时换新实例重试（至多 3 次） */
     async function runPage(url) {
       let lastError;
-      for (let attempt = 1; attempt <= 2; attempt++) {
+      for (let attempt = 1; attempt <= 3; attempt++) {
         try {
           const result = await lighthouse(url, { port: chrome.port, output: "json" }, config);
           const lhr = result.lhr;
@@ -200,8 +213,9 @@ async function main() {
         } catch (error) {
           lastError = error;
         }
-        if (attempt === 1) {
-          console.log("  … lighthouse trace failed, retrying once");
+        if (attempt < 3) {
+          console.log("  … lighthouse trace failed, retrying with a fresh browser");
+          await freshChrome();
           await new Promise((r) => setTimeout(r, 2000));
         }
       }
@@ -224,8 +238,13 @@ async function main() {
       return perfOf(second) > perf ? second : first;
     }
 
+    let pageIndex = 0;
     for (const path of paths) {
       console.log(`\n${path}${MOBILE ? "  (mobile)" : ""}`);
+      pageIndex += 1;
+      if (pageIndex > 1 && (pageIndex - 1) % RESTART_EVERY === 0) {
+        await freshChrome();
+      }
       let lhr;
       try {
         lhr = await runPageStable(`${BASE}${path}`);

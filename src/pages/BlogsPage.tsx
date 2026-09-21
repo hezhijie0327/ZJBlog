@@ -13,7 +13,9 @@ import type { BlogsData } from "@/lib/types.ts";
 export function BlogsPage({ data }: { data: BlogsData }) {
   const t = useT();
   const recent = data.blogs.slice(0, 5);
-  const tags = [...new Set(data.blogs.flatMap((blog) => blog.tags))].sort((a, b) => a.localeCompare(b));
+  // 标签排序用 codepoint 比较：localeCompare 的 collation 在构建期 Node 与
+  // 浏览器 ICU 之间不一致，曾致水合文本顺序不匹配（React #418）
+  const tags = [...new Set(data.blogs.flatMap((blog) => blog.tags))].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
 
   return (
     <div className={SECTION}>

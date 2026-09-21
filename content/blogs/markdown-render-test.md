@@ -113,11 +113,11 @@ tags:
 
 链接悬停提示写法：[Title](https://a.com "hint")
 
-![图片链接](https://commonmark.org/help/images/favicon.png)
+![图片链接](/test/favicon.png)
 
 ![图片链接带脚注][2]
 
-[2]: https://commonmark.org/help/images/favicon.png " 图片标题 "
+[2]: /test/favicon.png " 图片标题 "
 
 【提示】Obsidian 在浏览模式下正常，在编辑模式有点迷惑，这是由它们的链接特色决定的。
 
@@ -152,6 +152,8 @@ GitHub Flavored Markdown, often shortened as GFM, is the dialect of Markdown tha
 这里只介绍 [基本撰写和格式语法 - GitHub 文档](https://docs.github.com/zh/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax) 提及的规范。
 
 与 CommonMark 对比新增了以下语法：
+
+### 支持更深层级标题（类 Atx 形式，井号方式）
 
 #### 支持四级标题（类 Atx 形式，井号方式）
 
@@ -702,11 +704,11 @@ Markdown 风格的嵌入，使用 **\!\[AltText\|100x100\]\(https://url/to/image
 >
 > 行内代码：`Class<?> class = MyClass.class;`
 >
-> 图片：![图片链接](https://commonmark.org/help/images/favicon.png)
+> 图片：![图片链接](/test/favicon.png)
 
 > [!error] 标题内公式 $a^2+b^2=c^2$，标题内代码 `Hello world!`
 
-> [!cite] 标题内图片：![图片链接](https://commonmark.org/help/images/favicon.png)图片后文字
+> [!cite] 标题内图片：![图片链接](/test/favicon.png)图片后文字
 
 > [!question] Can callouts be nested?
 > > [!todo] Yes!, they can.
@@ -753,7 +755,11 @@ Microsoft Learn 还支持自定义 Markdown 扩展。
 ## HTML 支持情况
 
 
+```html
 <iframe height='265' scrolling='no' title='Fancy Animated SVG Menu' src='http://codepen.io/jeangontijo/embed/OxVywj/?height=265&theme-id=0&default-tab=css,result&embed-version=2' frameborder='no' allowtransparency='true' allowfullscreen='true' style='width: 100%;'></iframe>
+```
+
+【提示】站点审计要求零第三方依赖，这里以代码块展示 iframe 语法，不做真实外站嵌入。
 
 ```
 <video src="xxx.mp4" />  # 这个放在Hexo会使后文无法显示，故此处以代码块包围
@@ -761,7 +767,7 @@ Microsoft Learn 还支持自定义 Markdown 扩展。
 
 可以使用普通的 `<img>` 标签指定图片的高度与宽度：
 
-<img src="https://commonmark.org/help/images/favicon.png" width="30%">
+<img src="/test/favicon.png" alt="图片尺寸演示" height="72">
 
 ### 一般标签
 
@@ -783,7 +789,11 @@ Microsoft Learn 还支持自定义 Markdown 扩展。
 
 <mark>黄色高亮</mark>
 
+颜色演示（裸色值不随站点主题明暗切换、无法两端同时满足对比度门禁，改为代码块展示）：
+
+```html
 <font color=#00ffff size=3>#00ffff</font>   <font color=gray size=3>gray 色</font>    <font color=#0099ff size=5 face="黑体">#0099ff size=5 黑体</font>
+```
 
 <a href='#color'>附录：颜色名列表</a>
 
@@ -809,12 +819,12 @@ content
 <table><tbody>
     <tr>
         <th rowspan="3">我占了三行</th>
-        <th><font color="Green">第一列</font></th>
+        <th>第一列</th>
         <th>第二列</th>
         <th>第三列</th>
     </tr>
     <tr>
-        <td bgcolor="Tomato">第一列</td>
+        <td>第一列（原演示含 bgcolor="Tomato"，裸底色不随主题切换，已按门禁去除）</td>
         <td>第二列</td>
         <td>第三列</td>
     </tr>
