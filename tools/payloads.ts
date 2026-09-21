@@ -116,7 +116,7 @@ export function buildPayload(pathname: string): AnyPageData {
           ...globals("blog-post", post.title, post.description ?? t("blog.fallbackDesc")),
           og: { type: "article", publishedTime: post.date, tags: post.tags },
         },
-        post: { ...item, contentHtml: post.contentHtml },
+        post: { ...item, contentHtml: post.contentHtml, toc: post.toc },
       };
     }
   }

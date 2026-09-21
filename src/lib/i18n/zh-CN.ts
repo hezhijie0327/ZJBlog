@@ -29,6 +29,7 @@ export const ZH_CN: Record<StringKey, string> = {
   "nav.github": "GitHub",
   "nav.openMenu": "打开菜单",
   "nav.closeMenu": "关闭菜单",
+  "nav.mobileNav": "移动端导航",
 
   // 页头（SectionHeading）
   "page.blogs.title": "全部文章",
@@ -38,7 +39,6 @@ export const ZH_CN: Record<StringKey, string> = {
   "page.projects.title": "项目",
   "page.projects.en": "Projects",
   "page.support.title": "支持",
-  "page.support.en": "Support",
 
   // 首页章节
   "home.featured.title": "精选项目",
@@ -54,7 +54,6 @@ export const ZH_CN: Record<StringKey, string> = {
 
   // 计数
   "count.projects": "共 {n} 个",
-  "count.nProjects": "{n} 个",
   "count.posts": "共 {n} 篇",
   "count.nPosts": "{n} 篇",
 
@@ -64,6 +63,11 @@ export const ZH_CN: Record<StringKey, string> = {
   "blog.empty.desc": "内容正在整理中，敬请期待。",
   "blog.notFound": "文章未找到",
   "blog.fallbackDesc": "个人技术博客",
+
+  // 文章页
+  "post.toc": "本页目录",
+  "post.copyCode": "复制",
+  "post.copied": "已复制",
 
   // 归档
   "archives.empty": "暂无可归档的内容。",
@@ -94,6 +98,7 @@ export const ZH_CN: Record<StringKey, string> = {
   "search.emptyIndex": "暂无可搜索的内容",
   "search.typeBlog": "博客",
   "search.typeProject": "项目",
+  "search.results": "搜索结果",
   "search.hintSelect": "选择",
   "search.hintOpen": "打开",
   "search.hintClose": "关闭",
@@ -128,6 +133,10 @@ export const ZH_CN: Record<StringKey, string> = {
   "comments.blurbIssues": "对此内容有疑问或建议？通过 Issues 提出问题和建议",
   "comments.submitIssue": "提交 Issue",
   "comments.createDiscussion": "创建讨论",
+  "comments.issuesCount": "待回应 ISSUES · {n}",
+  "comments.discussionsCount": "讨论 · {n}",
+  "comments.fallbackTitle": "问题反馈",
+  "comments.fallbackDiscussion": "新的讨论",
 
   // 404
   "notFound.blurb": "页面不存在或已被移动。",
@@ -135,7 +144,8 @@ export const ZH_CN: Record<StringKey, string> = {
 
   // 杂项
   "misc.backToTop": "返回顶部",
-  "markdown.empty": "内容为空或加载失败。",
+  "misc.skipToContent": "跳到内容",
+  "mermaid.figure": "Mermaid 流程图",
   "mermaid.loading": "正在渲染流程图...",
   "mermaid.failed": "Mermaid 渲染失败",
 };

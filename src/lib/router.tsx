@@ -1,6 +1,10 @@
 // 轻量 SPA 路由（ZJSearch 同款 fetch-and-swap）：每条路由都是完整预渲染
 // HTML；站内导航 fetch 目标 URL，从返回的 HTML 提取 page-data payload，
 // pushState 换页。网络级失败回退整页加载。
+//
+// 会话级 payload 缓存（payload 是不可变构建产物）：前进/后退与重访零请求；
+// scrollRestoration 手工接管（浏览器自动恢复发生在换页前，位置必然错）；
+// 换页后把焦点移到 main h1，读屏器与键盘用户才能感知页面已变更。
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { extractPageData } from "@/lib/pageData.ts";
@@ -16,7 +20,7 @@ interface RouterContextValue {
   error: string | null;
   /** 站内导航；失败时回退整页加载。 */
   navigate: (url: string, options?: NavigateOptions) => void;
-  /** 重新拉取当前 URL。 */
+  /** 重新拉取当前 URL（绕过缓存）。 */
   reload: () => void;
   /** 当前完整 href（含 origin），供导航高亮等使用。 */
   href: string;
@@ -24,12 +28,35 @@ interface RouterContextValue {
 
 const RouterContext = createContext<RouterContextValue | null>(null);
 
+/** 缓存 / 滚动位置的键：pathname + search（去 hash，跨 encode 稳定）。 */
+function routeKey(value: string): string {
+  const url = new URL(value, window.location.href);
+  return `${url.pathname}${url.search}`;
+}
+
 /** 换页时同步文档头：title + description（爬虫看预渲染 HTML，这里服务用户）。 */
 function applyDocumentHead(data: AnyPageData) {
   document.title = data.globals.title;
   const description = document.querySelector('meta[name="description"]');
   description?.setAttribute("content", data.globals.description);
 }
+
+/** 把焦点移到页面标题（无 h1 时退到 main）。preventScroll：滚动由路由接管。 */
+function focusPageHeading() {
+  const target = document.querySelector<HTMLElement>("main h1") ?? document.querySelector<HTMLElement>("main");
+  if (!target) {
+    return;
+  }
+  if (!target.hasAttribute("tabindex")) {
+    target.setAttribute("tabindex", "-1");
+  }
+  target.focus({ preventScroll: true });
+}
+
+/** 会话级 payload 缓存：模块作用域，切换页面不丢失。 */
+const payloadCache = new Map<string, AnyPageData>();
+/** 离开页面时的滚动位置（routeKey → scrollY）。 */
+const scrollPositions = new Map<string, number>();
 
 export function RouterProvider({
   initialData,
@@ -49,12 +76,50 @@ export function RouterProvider({
   const abortRef = useRef<AbortController | null>(null);
   const seqRef = useRef(0);
 
+  // 浏览器的 auto 恢复发生在旧页面上（换页是异步的），位置必然错——全量手工接管
+  useEffect(() => {
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
+    }
+  }, []);
+
   const load = useCallback(
-    async (url: string, historyMode: "push" | "replace" | "none" = "push") => {
+    async (url: string, historyMode: "push" | "replace" | "none" = "push", options?: { bypassCache?: boolean }) => {
       const seq = ++seqRef.current;
       abortRef.current?.abort();
       const controller = new AbortController();
       abortRef.current = controller;
+      const key = routeKey(url);
+      const cached = options?.bypassCache ? undefined : payloadCache.get(key);
+
+      const finish = (pageData: AnyPageData) => {
+        if (seq !== seqRef.current) {
+          return; // 已被更新的导航取代
+        }
+        onPageData?.(pageData);
+        if (historyMode !== "none") {
+          // payload 不进 history state：数据在 React 状态里，popstate 按 URL 重取（走缓存）
+          window.history[historyMode === "replace" ? "replaceState" : "pushState"](null, "", url);
+        }
+        setHref(new URL(url, window.location.href).href);
+        setData(pageData);
+        setLoading(false);
+        applyDocumentHead(pageData);
+        if (historyMode === "none") {
+          // 前进/后退：恢复离开时的阅读位置
+          window.scrollTo(0, scrollPositions.get(key) ?? 0);
+        } else {
+          window.scrollTo(0, 0);
+        }
+        focusPageHeading();
+      };
+
+      // 命中会话缓存：零请求即时换页
+      if (cached) {
+        finish(cached);
+        return;
+      }
+
       setLoading(true);
       setError(null);
 
@@ -68,20 +133,8 @@ export function RouterProvider({
         }
         const html = await resp.text();
         const pageData = extractPageData(html);
-        if (seq !== seqRef.current) {
-          return; // 已被更新的导航取代
-        }
-        onPageData?.(pageData);
-        if (historyMode !== "none") {
-          // payload 不进 history state：数据在 React 状态里，popstate 按 URL 重取
-          window.history[historyMode === "replace" ? "replaceState" : "pushState"](null, "", url);
-        }
-        setHref(new URL(url, window.location.href).href);
-        setData(pageData);
-        setLoading(false);
-        applyDocumentHead(pageData);
-        // 有意立即跳顶（"auto" 不与 reduced-motion 对抗）
-        window.scrollTo(0, 0);
+        payloadCache.set(key, pageData);
+        finish(pageData);
       } catch (err) {
         if (controller.signal.aborted || seq !== seqRef.current) {
           return;
@@ -103,13 +156,15 @@ export function RouterProvider({
       if (url === window.location.href) {
         return;
       }
+      // 记录离开页的阅读位置（前进/后退恢复用）
+      scrollPositions.set(routeKey(window.location.href), window.scrollY);
       void load(url, options?.replace ? "replace" : "push");
     },
     [load],
   );
 
   const reload = useCallback(() => {
-    void load(window.location.href, "none");
+    void load(window.location.href, "none", { bypassCache: true });
   }, [load]);
 
   const hrefRef = useRef(href);

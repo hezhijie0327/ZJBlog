@@ -6,6 +6,13 @@ import type { ComponentType } from "react";
 
 export type PageKind = "home" | "blogs" | "blog-post" | "projects" | "project" | "archives" | "support" | "not-found";
 
+/** 文章目录条目（构建期提取，id = rehype-slug 锚点）。 */
+export interface TocItem {
+  id: string;
+  text: string;
+  depth: 2 | 3;
+}
+
 export interface PageGlobals {
   page: PageKind;
   /** UI 语言标签（对应 src/lib/i18n/ 下的词库文件名） */
@@ -56,7 +63,7 @@ export interface BlogsData {
 
 export interface BlogPostData {
   globals: PageGlobals & { page: "blog-post" };
-  post: BlogListItem & { contentHtml: string };
+  post: BlogListItem & { contentHtml: string; toc: TocItem[] };
 }
 
 export interface ProjectsData {

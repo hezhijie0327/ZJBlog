@@ -20,7 +20,7 @@ export function SectionHeading({ index, title, en, hint, className }: SectionHea
       <div className="flex items-baseline gap-4">
         <span className="font-mono text-sm font-medium text-accent">{index}</span>
         <h2 className="font-serif text-2xl font-semibold tracking-tight text-ink sm:text-3xl">{title}</h2>
-        <span className="hidden font-mono text-[10px] uppercase tracking-[0.2em] text-ink-3 sm:inline">{en}</span>
+        <span className="hidden font-mono text-[11px] uppercase tracking-[0.2em] text-ink-3 sm:inline">{en}</span>
       </div>
       {hint && <span className="font-mono text-xs text-ink-3">{hint}</span>}
     </div>

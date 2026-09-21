@@ -105,14 +105,14 @@ export function generateSearchIndex(): string {
       description: blog.description,
       type: "blog" as const,
       tags: blog.tags,
-      href: `/blogs/${blog.slug}/`,
+      href: `/blogs/${encodeURIComponent(blog.slug)}/`,
     })),
     ...projects.map((project) => ({
       title: project.title,
       description: project.description,
       type: "project" as const,
       tags: project.tags,
-      href: `/projects/${project.slug}/`,
+      href: `/projects/${encodeURIComponent(project.slug)}/`,
     })),
   ];
   return JSON.stringify(items);

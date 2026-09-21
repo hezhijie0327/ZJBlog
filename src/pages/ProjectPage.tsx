@@ -1,13 +1,15 @@
 // 项目详情页：仓库/链接 CTA + 正文 + 该仓库评论区。
 // 封面仅在 frontmatter.image 提供时渲染，无图直接以标题开页。
 
-import { ArrowLeft, ArrowUpRight } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
+import { BackLink } from "@/components/BackLink.tsx";
 import { GithubIcon } from "@/components/icons.tsx";
-import { Link } from "@/components/Shell.tsx";
+import { TagList } from "@/components/TagList.tsx";
 import { GitHubComments } from "@/features/comments/GitHubComments.tsx";
 import { Prose } from "@/features/markdown/Prose.tsx";
 import { formatDateISO } from "@/lib/format.ts";
 import { useT } from "@/lib/i18n.ts";
+import { BTN_PRIMARY, CHIP, SECTION_DETAIL } from "@/lib/styles.ts";
 import type { ProjectData } from "@/lib/types.ts";
 
 export function ProjectPage({ data }: { data: ProjectData }) {
@@ -15,16 +17,10 @@ export function ProjectPage({ data }: { data: ProjectData }) {
   const { project } = data;
 
   return (
-    <div className="container mx-auto px-4 py-12 sm:py-16">
+    <div className={SECTION_DETAIL}>
       <article className="mx-auto max-w-3xl">
         {/* 返回链接 */}
-        <Link
-          className="inline-flex items-center gap-1.5 font-mono text-xs text-ink-3 transition-colors hover:text-ink"
-          href="/projects/"
-        >
-          <ArrowLeft aria-hidden="true" className="size-3.5" />
-          {t("project.back")}
-        </Link>
+        <BackLink href="/projects/" label={t("project.back")} />
 
         {/* 项目头部 */}
         <header className="mb-10 mt-8 border-b border-line pb-8">
@@ -32,6 +28,8 @@ export function ProjectPage({ data }: { data: ProjectData }) {
             <img
               alt={project.title}
               className="mb-8 aspect-[21/9] w-full rounded-2xl border border-line object-cover shadow-card"
+              decoding="async"
+              fetchPriority="high"
               height={549}
               loading="eager"
               src={project.image}
@@ -46,26 +44,13 @@ export function ProjectPage({ data }: { data: ProjectData }) {
           )}
           <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 font-mono text-xs text-ink-3">
             {project.date && <time dateTime={project.date}>{formatDateISO(project.date)}</time>}
-            <span className="rounded-full border border-line px-2.5 py-0.5">
-              {project.type === "starred" ? t("project.starred") : t("project.personal")}
-            </span>
+            <span className={CHIP}>{project.type === "starred" ? t("project.starred") : t("project.personal")}</span>
           </div>
-          {project.tags.length > 0 && (
-            <div className="mt-4 flex flex-wrap gap-x-3 gap-y-1 text-xs text-ink-3">
-              {project.tags.map((tag) => (
-                <span key={tag}>#{tag}</span>
-              ))}
-            </div>
-          )}
+          <TagList className="mt-4" tags={project.tags} />
 
           {project.link && (
             <div className="mt-7">
-              <a
-                className="inline-flex h-10 items-center gap-2 rounded-full bg-accent-strong px-5 text-sm font-semibold text-accent-contrast shadow-card transition-all hover:bg-accent-strong-hover hover:shadow-pop"
-                href={project.link}
-                rel="noopener noreferrer"
-                target="_blank"
-              >
+              <a className={BTN_PRIMARY} href={project.link} rel="noopener noreferrer" target="_blank">
                 {project.githubRepo ? (
                   <GithubIcon aria-hidden="true" className="size-4" />
                 ) : (

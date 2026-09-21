@@ -18,16 +18,21 @@ export type UiLocale = "zh-CN" | "en";
 
 const LOCALE_STORAGE_KEY = "zj-locale";
 
-/** 读取用户语言偏好；无存储或非法值回退 zh-CN（与预渲染一致）。 */
+/** 读取用户语言偏好；无存储时首访按浏览器语言（英文浏览器 → en，其余 →
+ *  zh-CN），仍无法判定回退 zh-CN（与预渲染一致）。 */
 export function readLocalePreference(): UiLocale {
   if (typeof window === "undefined") {
     return "zh-CN";
   }
   try {
-    return window.localStorage.getItem(LOCALE_STORAGE_KEY) === "en" ? "en" : "zh-CN";
+    const stored = window.localStorage.getItem(LOCALE_STORAGE_KEY);
+    if (stored === "en" || stored === "zh-CN") {
+      return stored;
+    }
   } catch {
-    return "zh-CN";
+    // 隐私模式等存储不可用时按浏览器语言判定
   }
+  return typeof navigator !== "undefined" && navigator.language?.toLowerCase().startsWith("en") ? "en" : "zh-CN";
 }
 
 export function storeLocalePreference(locale: UiLocale): void {

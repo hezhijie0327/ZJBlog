@@ -15,7 +15,8 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn.ts";
-import { useT } from "@/lib/i18n.ts";
+import { formatDateLocale } from "@/lib/format.ts";
+import { useLocale, useT } from "@/lib/i18n.ts";
 import { BTN_OUTLINE, BTN_PRIMARY, CARD, CHIP, META } from "@/lib/styles.ts";
 import {
   type GitHubDiscussion,
@@ -35,6 +36,54 @@ interface CommentsData {
   repoInfo: GitHubRepoInfo | null;
   discussions: GitHubDiscussion[];
   issues: GitHubIssue[];
+}
+
+/** 列表行共用骨架：issues 与 discussions 的元信息位不同，标题/作者/日期一致。 */
+function CommentRow({
+  href,
+  title,
+  numberLabel,
+  author,
+  date,
+  meta,
+}: {
+  href: string;
+  title: string;
+  numberLabel?: string;
+  author: { login: string; avatarUrl: string };
+  date: string;
+  /** 日期之后的尾部元信息（评论数 / 状态 / 点赞 / 分区） */
+  meta: React.ReactNode;
+}) {
+  const locale = useLocale();
+  return (
+    <a
+      className="block rounded-xl border border-line bg-surface px-4 py-3 transition-colors hover:bg-surface-2"
+      href={href}
+      rel="noopener noreferrer"
+      target="_blank"
+    >
+      <p className="text-sm font-medium text-ink transition-colors hover:text-accent">
+        {numberLabel ? `${numberLabel} ` : ""}
+        {title}
+      </p>
+      <div className={cn(META, "mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px]")}>
+        <span className="inline-flex items-center gap-1">
+          <img
+            alt={author.login}
+            className="size-3.5 rounded-full"
+            height={14}
+            loading="lazy"
+            src={author.avatarUrl}
+            width={14}
+          />
+          {author.login}
+        </span>
+        <span>{formatDateLocale(date, locale)}</span>
+        {meta}
+      </div>
+    </a>
+  );
 }
 
 export function GitHubComments({ repo, title }: GitHubCommentsProps) {
@@ -98,10 +147,11 @@ export function GitHubComments({ repo, title }: GitHubCommentsProps) {
   return (
     <section className="mt-14 border-t border-line pt-8" ref={containerRef}>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <h3 className="flex items-center gap-2 font-serif text-lg font-semibold text-ink">
+        {/* h1 是文章标题，评论区是次级章节，用 h2 保持层级连续 */}
+        <h2 className="flex items-center gap-2 font-serif text-lg font-semibold text-ink">
           <MessageSquare aria-hidden="true" className="size-4 text-ink-3" />
           {sectionTitle}
-        </h3>
+        </h2>
         {data?.repoInfo && (
           <div className={cn(META, "flex items-center gap-4")}>
             <span className="inline-flex items-center gap-1">
@@ -170,7 +220,7 @@ export function GitHubComments({ repo, title }: GitHubCommentsProps) {
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-2">
-                {hasDiscussions && <span className={cn(CHIP, "font-mono text-[10px]")}>Discussions</span>}
+                {hasDiscussions && <span className={cn(CHIP, "font-mono text-[11px]")}>Discussions</span>}
                 <a
                   aria-label={t("nav.github")}
                   className="grid size-8 place-items-center rounded-full text-ink-3 transition-colors hover:bg-surface-2 hover:text-ink"
@@ -187,46 +237,33 @@ export function GitHubComments({ repo, title }: GitHubCommentsProps) {
           {/* Issues 列表 */}
           {data.issues.length > 0 && (
             <div className="mb-6">
-              <h4 className={cn(META, "mb-3 flex items-center gap-2")}>
+              <h3 className={cn(META, "mb-3 flex items-center gap-2")}>
                 <AlertCircle aria-hidden="true" className="size-3.5" />
-                OPEN ISSUES · {data.issues.length}
-              </h4>
+                {t("comments.issuesCount", { n: data.issues.length })}
+              </h3>
               <div className="space-y-2">
                 {data.issues.map((issue) => (
-                  <a
-                    className="block rounded-xl border border-line bg-surface px-4 py-3 transition-colors hover:bg-surface-2"
+                  <CommentRow
+                    author={issue.author}
+                    date={issue.createdAt}
                     href={issue.url}
                     key={issue.id}
-                    rel="noopener noreferrer"
-                    target="_blank"
-                  >
-                    <p className="text-sm font-medium text-ink transition-colors hover:text-accent">
-                      #{issue.number} {issue.title}
-                    </p>
-                    <div className={cn(META, "mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px]")}>
-                      <span className="inline-flex items-center gap-1">
-                        <img
-                          alt={issue.author.login}
-                          className="size-3.5 rounded-full"
-                          height={14}
-                          loading="lazy"
-                          src={issue.author.avatarUrl}
-                          width={14}
-                        />
-                        {issue.author.login}
-                      </span>
-                      <span>{new Date(issue.createdAt).toLocaleDateString("zh-CN")}</span>
-                      {issue.comments.totalCount > 0 && (
-                        <span className="inline-flex items-center gap-1">
-                          <MessageCircle aria-hidden="true" className="size-3" />
-                          {issue.comments.totalCount}
+                    meta={
+                      <>
+                        {issue.comments.totalCount > 0 && (
+                          <span className="inline-flex items-center gap-1">
+                            <MessageCircle aria-hidden="true" className="size-3" />
+                            {issue.comments.totalCount}
+                          </span>
+                        )}
+                        <span className={issue.state === "open" ? "text-ok" : "text-ink-3"}>
+                          {issue.state === "open" ? t("comments.stateOpen") : t("comments.stateClosed")}
                         </span>
-                      )}
-                      <span className={issue.state === "open" ? "text-ok" : "text-ink-3"}>
-                        {issue.state === "open" ? t("comments.stateOpen") : t("comments.stateClosed")}
-                      </span>
-                    </div>
-                  </a>
+                      </>
+                    }
+                    numberLabel={`#${issue.number}`}
+                    title={issue.title}
+                  />
                 ))}
               </div>
             </div>
@@ -235,52 +272,38 @@ export function GitHubComments({ repo, title }: GitHubCommentsProps) {
           {/* Discussions 列表 */}
           {data.discussions.length > 0 && (
             <div className="mb-6">
-              <h4 className={cn(META, "mb-3 flex items-center gap-2")}>
+              <h3 className={cn(META, "mb-3 flex items-center gap-2")}>
                 <MessageCircle aria-hidden="true" className="size-3.5" />
-                DISCUSSIONS · {data.discussions.length}
-              </h4>
+                {t("comments.discussionsCount", { n: data.discussions.length })}
+              </h3>
               <div className="space-y-2">
                 {data.discussions.map((discussion) => (
-                  <a
-                    className="block rounded-xl border border-line bg-surface px-4 py-3 transition-colors hover:bg-surface-2"
+                  <CommentRow
+                    author={discussion.author}
+                    date={discussion.createdAt}
                     href={discussion.url}
                     key={discussion.id}
-                    rel="noopener noreferrer"
-                    target="_blank"
-                  >
-                    <p className="text-sm font-medium text-ink transition-colors hover:text-accent">
-                      {discussion.title}
-                    </p>
-                    <div className={cn(META, "mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px]")}>
-                      <span className="inline-flex items-center gap-1">
-                        <img
-                          alt={discussion.author.login}
-                          className="size-3.5 rounded-full"
-                          height={14}
-                          loading="lazy"
-                          src={discussion.author.avatarUrl}
-                          width={14}
-                        />
-                        {discussion.author.login}
-                      </span>
-                      <span>{new Date(discussion.createdAt).toLocaleDateString("zh-CN")}</span>
-                      {discussion.comments.totalCount > 0 && (
-                        <span className="inline-flex items-center gap-1">
-                          <MessageCircle aria-hidden="true" className="size-3" />
-                          {discussion.comments.totalCount}
+                    meta={
+                      <>
+                        {discussion.comments.totalCount > 0 && (
+                          <span className="inline-flex items-center gap-1">
+                            <MessageCircle aria-hidden="true" className="size-3" />
+                            {discussion.comments.totalCount}
+                          </span>
+                        )}
+                        {discussion.upvoteCount > 0 && (
+                          <span className="inline-flex items-center gap-1">
+                            <ThumbsUp aria-hidden="true" className="size-3" />
+                            {discussion.upvoteCount}
+                          </span>
+                        )}
+                        <span>
+                          {discussion.category.emoji} {discussion.category.name}
                         </span>
-                      )}
-                      {discussion.upvoteCount > 0 && (
-                        <span className="inline-flex items-center gap-1">
-                          <ThumbsUp aria-hidden="true" className="size-3" />
-                          {discussion.upvoteCount}
-                        </span>
-                      )}
-                      <span>
-                        {discussion.category.emoji} {discussion.category.name}
-                      </span>
-                    </div>
-                  </a>
+                      </>
+                    }
+                    title={discussion.title}
+                  />
                 ))}
               </div>
             </div>
@@ -297,7 +320,7 @@ export function GitHubComments({ repo, title }: GitHubCommentsProps) {
             <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
               <a
                 className={BTN_PRIMARY}
-                href={`https://github.com/${repo}/issues/new?title=${encodeURIComponent(title || "问题反馈")}`}
+                href={`https://github.com/${repo}/issues/new?title=${encodeURIComponent(title || t("comments.fallbackTitle"))}`}
                 rel="noopener noreferrer"
                 target="_blank"
               >
@@ -307,7 +330,7 @@ export function GitHubComments({ repo, title }: GitHubCommentsProps) {
               {hasDiscussions && (
                 <a
                   className={BTN_OUTLINE}
-                  href={`https://github.com/${repo}/discussions/new?category=general&title=${encodeURIComponent(title || "新的讨论")}`}
+                  href={`https://github.com/${repo}/discussions/new?category=general&title=${encodeURIComponent(title || t("comments.fallbackDiscussion"))}`}
                   rel="noopener noreferrer"
                   target="_blank"
                 >

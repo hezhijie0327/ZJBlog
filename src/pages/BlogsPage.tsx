@@ -1,12 +1,13 @@
 // 全部文章列表页。
 
 import { ArrowUpRight } from "lucide-react";
+import { EmptyState } from "@/components/EmptyState.tsx";
 import { PageHeading } from "@/components/PageHeading.tsx";
 import { Link } from "@/components/Shell.tsx";
-import { cn } from "@/lib/cn.ts";
+import { TagList } from "@/components/TagList.tsx";
 import { formatDateISO } from "@/lib/format.ts";
 import { useT } from "@/lib/i18n.ts";
-import { CARD, SECTION } from "@/lib/styles.ts";
+import { CHIP, SECTION } from "@/lib/styles.ts";
 import type { BlogsData } from "@/lib/types.ts";
 
 export function BlogsPage({ data }: { data: BlogsData }) {
@@ -39,9 +40,7 @@ export function BlogsPage({ data }: { data: BlogsData }) {
                   <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 font-mono text-xs text-ink-3">
                     {blog.date && <time dateTime={blog.date}>{formatDateISO(blog.date)}</time>}
                     <span>{t("meta.readingTime", { n: blog.readingMinutes })}</span>
-                    {blog.category && (
-                      <span className="rounded-full border border-line px-2 py-0.5">{blog.category}</span>
-                    )}
+                    {blog.category && <span className={CHIP}>{blog.category}</span>}
                   </div>
 
                   {blog.description && (
@@ -50,26 +49,13 @@ export function BlogsPage({ data }: { data: BlogsData }) {
                     </p>
                   )}
 
-                  {blog.tags.length > 0 && (
-                    <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1">
-                      {blog.tags
-                        .filter((tag) => tag !== blog.category)
-                        .map((tag) => (
-                          <span className="text-xs text-ink-3 transition-colors group-hover:text-ink-2" key={tag}>
-                            #{tag}
-                          </span>
-                        ))}
-                    </div>
-                  )}
+                  <TagList className="mt-3" exclude={blog.category} hoverable tags={blog.tags} />
                 </Link>
               </article>
             ))}
           </div>
         ) : (
-          <div className={cn(CARD, "px-6 py-16 text-center")}>
-            <h2 className="font-serif text-lg font-semibold text-ink">{t("blog.empty.title")}</h2>
-            <p className="mt-2 text-sm text-ink-3">{t("blog.empty.desc")}</p>
-          </div>
+          <EmptyState desc={t("blog.empty.desc")} title={t("blog.empty.title")} />
         )}
       </div>
     </div>

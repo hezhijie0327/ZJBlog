@@ -9,8 +9,9 @@ import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { renderToString } from "react-dom/server";
 import { App } from "../src/app.tsx";
+import { siteConfig } from "../src/config/site.ts";
 import { THEME_BOOTSTRAP } from "../src/lib/theme.ts";
-import type { PageKind, SyncPages } from "../src/lib/types.ts";
+import { isBlogPostData, type PageKind, type SyncPages } from "../src/lib/types.ts";
 import { ArchivesPage } from "../src/pages/ArchivesPage.tsx";
 import { BlogPostPage } from "../src/pages/BlogPostPage.tsx";
 import { BlogsPage } from "../src/pages/BlogsPage.tsx";
@@ -90,6 +91,51 @@ function escapeHtml(text: string): string {
   return text.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
 }
 
+/** 默认分享卡（public/og-default.png，1200×630；模板 scripts/og-template.html）。 */
+const OG_IMAGE = "/og-default.png";
+
+/** 结构化数据：文章页 BlogPosting，首页 WebSite + Person，其余页不输出。 */
+function jsonLdFor(payload: ReturnType<typeof buildPayload>, pathname: string): string {
+  const g = payload.globals;
+  if (isBlogPostData(payload)) {
+    return JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      headline: payload.post.title,
+      description: g.description,
+      ...(payload.post.date ? { datePublished: payload.post.date } : {}),
+      ...(payload.post.tags.length > 0 ? { keywords: payload.post.tags.join(", ") } : {}),
+      author: { "@type": "Person", name: siteConfig.author, url: g.siteUrl },
+      mainEntityOfPage: { "@type": "WebPage", "@id": `${g.siteUrl}${pathname}` },
+      image: `${g.siteUrl}${OG_IMAGE}`,
+      inLanguage: "zh-CN",
+    });
+  }
+  if (g.page === "home") {
+    return JSON.stringify({
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          name: g.siteName,
+          url: g.siteUrl,
+          description: g.description,
+          inLanguage: "zh-CN",
+          publisher: { "@type": "Person", "@id": `${g.siteUrl}/#author` },
+        },
+        {
+          "@type": "Person",
+          "@id": `${g.siteUrl}/#author`,
+          name: siteConfig.author,
+          url: g.siteUrl,
+          sameAs: [siteConfig.social.github],
+        },
+      ],
+    });
+  }
+  return "";
+}
+
 /** 规范化请求路径：解码、补全首尾斜杠（与 trailingSlash 语义一致）。 */
 function normalizePathname(raw: string): string {
   let pathname = "/";
@@ -124,11 +170,15 @@ export async function renderRoute(rawPath: string, assets?: AssetUrls): Promise<
     `<meta property="og:url" content="${escapeHtml(`${g.siteUrl}${pathname}`)}">`,
     `<meta property="og:title" content="${escapeHtml(g.title)}">`,
     `<meta property="og:description" content="${escapeHtml(g.description)}">`,
+    `<meta property="og:image" content="${escapeHtml(`${g.siteUrl}${OG_IMAGE}`)}">`,
+    `<meta name="twitter:card" content="summary_large_image">`,
     ...(g.og?.publishedTime
       ? [`<meta property="article:published_time" content="${escapeHtml(g.og.publishedTime)}">`]
       : []),
     ...(g.og?.tags ?? []).map((tag) => `<meta property="article:tag" content="${escapeHtml(tag)}">`),
   ].join("\n    ");
+  const jsonLd = jsonLdFor(payload, pathname);
+  const jsonLdTag = jsonLd ? `<script type="application/ld+json">${jsonLd.replaceAll("<", "\\u003c")}</script>` : "";
   const cssLinks = a.css.map((href) => `<link rel="stylesheet" crossorigin href="${href}">`).join("\n    ");
   const devClient = a.js.startsWith("/src/") ? `<script type="module" src="/@vite/client"></script>` : "";
   const pageDataJson = JSON.stringify(payload).replaceAll("<", "\\u003c");
@@ -143,6 +193,7 @@ export async function renderRoute(rawPath: string, assets?: AssetUrls): Promise<
     <meta name="description" content="${escapeHtml(g.description)}">
     ${canonical}
     ${ogTags}
+    ${jsonLdTag}
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="shortcut icon" href="/favicon.png" type="image/png">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">

@@ -26,6 +26,36 @@ export function preloadPage(data: AnyPageData): void {
   }
 }
 
+/** URL → 页面 chunk（路由模式表；顺序敏感，具体路径先于列表路径匹配）。 */
+const ROUTE_PATTERNS: ReadonlyArray<readonly [RegExp, LoadablePage]> = [
+  [/^\/blogs\/[^/]+\/$/, "blog-post"],
+  [/^\/blogs\/$/, "blogs"],
+  [/^\/projects\/[^/]+\/$/, "project"],
+  [/^\/projects\/$/, "projects"],
+  [/^\/archives\/$/, "archives"],
+  [/^\/support\/$/, "support"],
+  [/^\/$/, "home"],
+];
+
+/** hover/focus 预取：站内链接悬停即热身目标 chunk（pageLoaders 天然去重）。 */
+export function prefetchHref(href: string): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+  let pathname: string;
+  try {
+    pathname = new URL(href, window.location.href).pathname;
+  } catch {
+    return;
+  }
+  for (const [pattern, kind] of ROUTE_PATTERNS) {
+    if (pattern.test(pathname)) {
+      void pageLoaders[kind]();
+      return;
+    }
+  }
+}
+
 export const LazyIndexPage = lazy(async () => ({ default: (await pageLoaders.home()).IndexPage }));
 export const LazyBlogsPage = lazy(async () => ({ default: (await pageLoaders.blogs()).BlogsPage }));
 export const LazyBlogPostPage = lazy(async () => ({ default: (await pageLoaders["blog-post"]()).BlogPostPage }));

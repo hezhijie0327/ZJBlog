@@ -35,7 +35,7 @@ export const BTN_OUTLINE =
 export const CHIP = "inline-flex items-center rounded-full border border-line px-2.5 py-0.5 text-xs text-ink-2";
 
 /** 等宽小号标签胶囊（键盘提示 / 类型标记） */
-export const MONO_CHIP = `${CHIP} font-mono text-[10px]`;
+export const MONO_CHIP = `${CHIP} font-mono text-[11px]`;
 
 /** 等宽元信息文字（日期 / 计数 / 键盘提示） */
 export const META = "font-mono text-xs text-ink-3";
@@ -43,5 +43,5 @@ export const META = "font-mono text-xs text-ink-3";
 /** 页面级 section 外壳（容器 + 统一纵向节奏） */
 export const SECTION = "container mx-auto px-4 py-14 sm:py-20";
 
-/** 隐藏滚动条但保留滚动能力（内滚动容器用） */
-export const SCROLLBAR_NONE = "[scrollbar-width:none] [&::-webkit-scrollbar]:hidden";
+/** 详情页 section 外壳（正文页节奏更紧凑） */
+export const SECTION_DETAIL = "container mx-auto px-4 py-12 sm:py-16";

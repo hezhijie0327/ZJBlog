@@ -29,6 +29,7 @@ export const EN = {
   "nav.github": "GitHub",
   "nav.openMenu": "Open menu",
   "nav.closeMenu": "Close menu",
+  "nav.mobileNav": "Mobile navigation",
 
   // 页头（SectionHeading）
   "page.blogs.title": "All Posts",
@@ -38,7 +39,6 @@ export const EN = {
   "page.projects.title": "Projects",
   "page.projects.en": "Projects",
   "page.support.title": "Support",
-  "page.support.en": "Support",
 
   // 首页章节
   "home.featured.title": "Featured Projects",
@@ -54,7 +54,6 @@ export const EN = {
 
   // 计数
   "count.projects": "{n} in total",
-  "count.nProjects": "{n}",
   "count.posts": "{n} in total",
   "count.nPosts": "{n}",
 
@@ -64,6 +63,11 @@ export const EN = {
   "blog.empty.desc": "Content is being prepared — stay tuned.",
   "blog.notFound": "Post not found",
   "blog.fallbackDesc": "Personal tech blog",
+
+  // 文章页
+  "post.toc": "On this page",
+  "post.copyCode": "Copy",
+  "post.copied": "Copied",
 
   // 归档
   "archives.empty": "Nothing to archive yet.",
@@ -94,6 +98,7 @@ export const EN = {
   "search.emptyIndex": "Nothing to search yet",
   "search.typeBlog": "Blog",
   "search.typeProject": "Project",
+  "search.results": "Search results",
   "search.hintSelect": "select",
   "search.hintOpen": "open",
   "search.hintClose": "close",
@@ -129,6 +134,10 @@ export const EN = {
   "comments.blurbIssues": "Questions or suggestions? Raise them through Issues.",
   "comments.submitIssue": "Submit Issue",
   "comments.createDiscussion": "New Discussion",
+  "comments.issuesCount": "OPEN ISSUES · {n}",
+  "comments.discussionsCount": "DISCUSSIONS · {n}",
+  "comments.fallbackTitle": "Feedback",
+  "comments.fallbackDiscussion": "New discussion",
 
   // 404
   "notFound.blurb": "This page doesn't exist or has moved.",
@@ -136,7 +145,8 @@ export const EN = {
 
   // 杂项
   "misc.backToTop": "Back to top",
-  "markdown.empty": "Content is empty or failed to load.",
+  "misc.skipToContent": "Skip to content",
+  "mermaid.figure": "Mermaid diagram",
   "mermaid.loading": "Rendering diagram…",
   "mermaid.failed": "Mermaid rendering failed",
 } as const;

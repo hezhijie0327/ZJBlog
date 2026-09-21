@@ -2,6 +2,7 @@
 
 import { Heart } from "lucide-react";
 import { useT } from "@/lib/i18n.ts";
+import { SECTION } from "@/lib/styles.ts";
 
 export function SupportPage() {
   const t = useT();
@@ -19,7 +20,7 @@ export function SupportPage() {
   ];
 
   return (
-    <div className="container mx-auto px-4 py-14 sm:py-20">
+    <div className={SECTION}>
       <div className="mx-auto max-w-2xl text-center">
         <div aria-hidden="true" className="mx-auto mb-5 grid size-12 place-items-center rounded-full bg-accent-soft">
           <Heart className="size-5 text-accent-strong" />

@@ -19,7 +19,7 @@ export function PageHeading({ title, en, hint, className }: PageHeadingProps) {
     <div className={cn("mb-10 flex items-end justify-between gap-4", className)}>
       <div className="flex items-baseline gap-4">
         <h1 className="font-serif text-3xl font-black tracking-tight text-ink sm:text-4xl">{title}</h1>
-        <span className="hidden font-mono text-[10px] uppercase tracking-[0.2em] text-ink-3 sm:inline">{en}</span>
+        <span className="hidden font-mono text-[11px] uppercase tracking-[0.2em] text-ink-3 sm:inline">{en}</span>
       </div>
       {hint && <span className="font-mono text-xs text-ink-3">{hint}</span>}
     </div>

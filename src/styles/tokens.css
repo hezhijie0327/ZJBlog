@@ -91,16 +91,18 @@
   inherits: true;
   initial-value: #15803d;
 }
-/* 博客扩展：代码色板（暖黑底代码块），随调色板一起参与交叉淡化 */
+/* 博客扩展：代码色板（浅色态暖奶油底 / 暗色态深暖黑底，随调色板一起
+   参与交叉淡化）。两态底色都只比各自 shiki 高对比主题的基准底更接近
+   极端（浅态更浅、暗态更暗），令语法色的 AA 对比度只会更高 */
 @property --code-bg {
   syntax: "<color>";
   inherits: true;
-  initial-value: #302b20;
+  initial-value: #fbfaf6;
 }
 @property --code-fg {
   syntax: "<color>";
   inherits: true;
-  initial-value: #e8e0cd;
+  initial-value: #24211a;
 }
 
 /* 暖纸调色板：暖中性 + 琥珀强调（ZJSearch 基准值） */
@@ -124,9 +126,9 @@
   --danger: #dc2626;
   --warning: #b45309;
   --ok: #15803d;
-  /* 博客扩展：文章代码块（浅色态用暖深底，编辑排印传统） */
-  --code-bg: #302b20;
-  --code-fg: #e8e0cd;
+  /* 博客扩展：文章代码块（浅色态暖奶油底，配 github-light-high-contrast） */
+  --code-bg: #fbfaf6;
+  --code-fg: #24211a;
   --shadow-card: 0 1px 2px rgb(32 29 23 / 0.05), 0 4px 16px rgb(32 29 23 / 0.05);
   --shadow-pop: 0 4px 6px rgb(32 29 23 / 0.07), 0 12px 32px rgb(32 29 23 / 0.16);
   color-scheme: light;
@@ -150,7 +152,7 @@
   --danger: #f87171;
   --warning: #fbbf24;
   --ok: #4ade80;
-  --code-bg: #14120e;
+  --code-bg: #0d0b08;
   --code-fg: #e0d9c8;
   --shadow-card: 0 1px 2px rgb(0 0 0 / 0.35), 0 4px 16px rgb(0 0 0 / 0.3);
   --shadow-pop: 0 4px 6px rgb(0 0 0 / 0.45), 0 12px 32px rgb(0 0 0 / 0.55);

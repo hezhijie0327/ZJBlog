@@ -26,3 +26,5 @@ pnpm-debug.log*
 
 # Lighthouse audit archives
 .lighthouse-archive/
+
+.tmp-audit/

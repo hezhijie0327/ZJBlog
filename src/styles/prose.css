@@ -69,3 +69,83 @@
 .mermaid-placeholder {
   min-height: 2rem;
 }
+
+/* 代码块卡片（构建期生成）：语言标签 + 复制按钮 + shiki 双主题高亮。
+   shiki 以 defaultColor:false 输出 --shiki-light/dark 变量（无内联色），
+   文字颜色与底色都由站点 token 驱动，明暗切换与整页交叉淡化同步。 */
+.prose .code-card {
+  margin-block: 1.5em;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  background: var(--code-bg);
+}
+
+.prose .code-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.3rem 0.5rem 0.3rem 1rem;
+  border-bottom: 1px solid color-mix(in oklab, var(--line) 55%, transparent);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.prose .code-lang {
+  color: color-mix(in oklab, var(--code-fg) 75%, var(--code-bg));
+  text-transform: lowercase;
+}
+
+.prose .copy-code {
+  cursor: pointer;
+  border-radius: 0.375rem;
+  padding: 0.15rem 0.5rem;
+  color: color-mix(in oklab, var(--code-fg) 75%, var(--code-bg));
+  background: transparent;
+  transition: color 0.15s ease;
+}
+
+.prose .copy-code:hover,
+.prose .copy-code[data-copied] {
+  color: var(--code-fg);
+}
+
+.prose .code-card pre {
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  background: var(--code-bg) !important;
+  color: var(--shiki-light);
+}
+
+.prose .code-card pre code {
+  display: block;
+  padding: 1rem;
+}
+
+.prose .code-card span,
+.prose .code-card pre span {
+  color: var(--shiki-light);
+}
+
+.dark .prose .code-card span,
+.dark .prose .code-card pre span {
+  color: var(--shiki-dark);
+}
+
+/* mermaid 错误文本的 pre 不继承 prose pre 的代码底色 */
+.prose .mermaid-placeholder pre {
+  background: transparent;
+  border: none;
+  padding-inline: 0;
+  color: inherit;
+}
+
+/* 表格：横向滚动容器（构建期包裹），窄屏保持列宽可读而不是挤压换行 */
+.prose .table-scroll {
+  overflow-x: auto;
+}
+
+.prose .table-scroll table {
+  min-width: 36rem;
+}

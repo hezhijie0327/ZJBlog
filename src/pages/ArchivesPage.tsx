@@ -1,11 +1,11 @@
 // 归档页：按年份分组的全部文章。
 
+import { EmptyState } from "@/components/EmptyState.tsx";
 import { PageHeading } from "@/components/PageHeading.tsx";
 import { Link } from "@/components/Shell.tsx";
-import { cn } from "@/lib/cn.ts";
 import { formatDateISO } from "@/lib/format.ts";
 import { useT } from "@/lib/i18n.ts";
-import { CARD, SECTION } from "@/lib/styles.ts";
+import { SECTION } from "@/lib/styles.ts";
 import type { ArchivesData } from "@/lib/types.ts";
 
 export function ArchivesPage({ data }: { data: ArchivesData }) {
@@ -13,7 +13,8 @@ export function ArchivesPage({ data }: { data: ArchivesData }) {
 
   const byYear = new Map<string, ArchivesData["blogs"]>();
   for (const blog of data.blogs) {
-    const year = blog.date ? new Date(blog.date).getFullYear().toString() : t("archives.unknownYear");
+    // frontmatter 日期无时区语义，直接取日历字段（Date UTC 解析会偏移年份）
+    const year = blog.date ? formatDateISO(blog.date).slice(0, 4) : t("archives.unknownYear");
     const list = byYear.get(year) ?? [];
     list.push(blog);
     byYear.set(year, list);
@@ -63,9 +64,7 @@ export function ArchivesPage({ data }: { data: ArchivesData }) {
               </section>
             ))
           ) : (
-            <div className={cn(CARD, "px-6 py-16 text-center")}>
-              <p className="text-sm text-ink-3">{t("archives.empty")}</p>
-            </div>
+            <EmptyState desc={t("archives.empty")} />
           )}
         </div>
       </div>

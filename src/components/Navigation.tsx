@@ -1,7 +1,8 @@
 // 顶部导航：sticky 毛玻璃、桌面链接 + 移动端抽屉、搜索/主题/语言/RSS/GitHub/支持操作区。
+// 窄屏（<sm）时 RSS/支持 收进抽屉（抽屉内本就有第二入口），头部图标行才放得下 320px。
 
 import { Heart, Menu, Rss, Search, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { GithubIcon } from "@/components/icons.tsx";
 import { Link } from "@/components/Shell.tsx";
 import { ThemeToggle } from "@/components/ThemeToggle.tsx";
@@ -11,11 +12,13 @@ import { useLocale, useLocaleSwitch, useT } from "@/lib/i18n.ts";
 import { useRouter } from "@/lib/router.tsx";
 import { ICON_BTN } from "@/lib/styles.ts";
 
+const MOBILE_MENU_ID = "mobile-menu";
+
 export function Navigation() {
   const t = useT();
   const locale = useLocale();
   const switchLocale = useLocaleSwitch();
-  const { data } = useRouter();
+  const { data, href } = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navigation = [
@@ -51,6 +54,26 @@ export function Navigation() {
     window.dispatchEvent(new CustomEvent("open-command-palette"));
   };
 
+  // Escape 关闭抽屉；换页（含前进/后退）后收起，避免遮住新页面
+  useEffect(() => {
+    if (!isMenuOpen) {
+      return;
+    }
+    const onKeydown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsMenuOpen(false);
+      }
+    };
+    window.addEventListener("keydown", onKeydown);
+    return () => {
+      window.removeEventListener("keydown", onKeydown);
+    };
+  }, [isMenuOpen]);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: href 变化即导航信号（含前进/后退），收起抽屉
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, [href]);
+
   return (
     <header className="sticky top-0 z-50 border-b border-line/80 bg-bg/80 backdrop-blur-md">
       <div className="container mx-auto px-4">
@@ -65,7 +88,9 @@ export function Navigation() {
               src="/avatar.jpg"
               width={32}
             />
-            <span className="font-serif text-base font-semibold tracking-tight">{t("site.brand")}</span>
+            <span className="whitespace-nowrap font-serif text-base font-semibold tracking-tight">
+              {t("site.brand")}
+            </span>
           </Link>
 
           {/* 桌面导航 */}
@@ -91,11 +116,11 @@ export function Navigation() {
             })}
           </nav>
 
-          {/* 右侧操作区 */}
+          {/* 右侧操作区（<sm 时 RSS/支持折叠进抽屉，图标缩小以保住 320px） */}
           <div className="flex items-center gap-0.5">
             <button
               aria-label={t("nav.search")}
-              className={ICON_BTN}
+              className={cn(ICON_BTN, "max-sm:size-8")}
               onClick={openSearch}
               title={t("nav.searchTitle")}
               type="button"
@@ -106,7 +131,7 @@ export function Navigation() {
             {/* UI 语言切换：显示目标语言标签（中文界面显示 EN，英文界面显示 中） */}
             <button
               aria-label={t("nav.language")}
-              className={cn(ICON_BTN, "font-mono text-[11px] font-semibold")}
+              className={cn(ICON_BTN, "max-sm:size-8 font-mono text-[11px] font-semibold")}
               onClick={switchLocale}
               title={t("nav.language")}
               type="button"
@@ -123,7 +148,7 @@ export function Navigation() {
             </a>
             <a
               aria-label={t("nav.github")}
-              className={ICON_BTN}
+              className={cn(ICON_BTN, "max-sm:size-8")}
               href={siteConfig.social.github}
               rel="noopener noreferrer"
               target="_blank"
@@ -131,20 +156,22 @@ export function Navigation() {
             >
               <GithubIcon className="size-4" />
             </a>
-            {/* 支持：精简页入口（右上角图标，不再占导航 tab） */}
+            {/* 支持：精简页入口（右上角图标 + 抽屉第二入口）；选中态用填充圆盘
+                表达（仅变色对比度不足 1.5:1，非视觉的 aria-current 已有） */}
             <Link
               aria-current={isSupport ? "page" : undefined}
               aria-label={t("nav.support")}
-              className={cn(ICON_BTN, isSupport && "text-accent-strong")}
+              className={cn(ICON_BTN, "hidden sm:grid", isSupport && "bg-accent-soft text-ink")}
               href="/support/"
               title={t("nav.support")}
             >
               <Heart aria-hidden="true" className="size-4" />
             </Link>
             <button
+              aria-controls={MOBILE_MENU_ID}
               aria-expanded={isMenuOpen}
               aria-label={isMenuOpen ? t("nav.closeMenu") : t("nav.openMenu")}
-              className={cn(ICON_BTN, "md:hidden")}
+              className={cn(ICON_BTN, "max-sm:size-8 md:hidden")}
               onClick={() => {
                 setIsMenuOpen(!isMenuOpen);
               }}
@@ -161,7 +188,7 @@ export function Navigation() {
 
         {/* 移动端导航：页面链接 + 支持 / RSS（顶栏图标之外的第二入口） */}
         {isMenuOpen && (
-          <nav className="border-t border-line/80 py-3 md:hidden">
+          <nav aria-label={t("nav.mobileNav")} className="border-t border-line/80 py-3 md:hidden" id={MOBILE_MENU_ID}>
             <div className="flex flex-col">
               {navigation.map((item) => {
                 const isActive = item.href === activeHref;
