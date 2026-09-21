@@ -88,4 +88,4 @@ npx wrangler deploy    # wrangler.jsonc 指向 ./dist
 
 ## License
 
-MIT
+[Apache License 2.0 with Commons Clause v1.0](LICENSE)
