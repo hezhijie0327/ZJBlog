@@ -5,7 +5,7 @@
 
 export const EN = {
   // 站点（UI 层品牌与作者；构建期元数据在 config/site.ts）
-  "site.brand": "Zhijie Online",
+  "site.brand": "ZJBlog",
   "site.author": "Zhijie He",
 
   // Hero

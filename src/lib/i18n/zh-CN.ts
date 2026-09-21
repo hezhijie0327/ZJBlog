@@ -5,7 +5,7 @@ import type { StringKey } from "@/lib/i18n/en.ts";
 
 export const ZH_CN: Record<StringKey, string> = {
   // 站点（UI 层品牌与作者）
-  "site.brand": "治杰 Online",
+  "site.brand": "ZJBlog",
   "site.author": "贺治杰",
 
   // Hero

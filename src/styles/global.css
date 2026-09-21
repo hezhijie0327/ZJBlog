@@ -1,4 +1,4 @@
-/* 治杰 Online 设计系统 —— 单一 CSS 入口（ZJSearch 同构）。
+/* ZJBlog 设计系统 —— 单一 CSS 入口（ZJSearch 同构）。
    组件样式 = Tailwind utilities（TSX 内）；这里的分件只承载 utilities
    够不到的部分：token、元素默认值、长文排印、文档级行为。
    导入顺序即级联顺序 —— behaviors.css 有意不入层，必须最后。 */
