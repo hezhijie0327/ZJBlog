@@ -7,7 +7,6 @@ import path, { join } from "node:path";
 import matter from "gray-matter";
 import { imageSize } from "image-size";
 import { pandocMarkFromMarkdown } from "mdast-util-mark";
-import { mathFromMarkdown } from "mdast-util-math";
 import { pandocMark } from "micromark-extension-mark";
 import readingTime from "reading-time";
 import rehypeExternalLinks from "rehype-external-links";
@@ -18,6 +17,7 @@ import rehypeStringify from "rehype-stringify";
 import remarkDeflist from "remark-deflist";
 import remarkEmoji from "remark-emoji";
 import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
 import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import { createHighlighter } from "shiki";
@@ -32,7 +32,6 @@ import {
   translateFlowToMermaid,
   translateSequenceToMermaid,
 } from "./diagrams";
-import { mathGfm } from "./math-gfm";
 
 const contentDirectory = path.join(process.cwd(), "content");
 
@@ -98,19 +97,6 @@ function remarkMark(this: Processor) {
   data.fromMarkdownExtensions.push(fromMarkdownExt);
 }
 
-/** GitHub 风格数学语法：tools/math-gfm.js 的打补丁扩展（$数字不开公式、
- *  关闭符后跟数字不闭合、式内 \$ 转义），替换 remark-math 的默认规则。 */
-function remarkMathGfm(this: Processor) {
-  const data = this.data() as {
-    micromarkExtensions?: unknown[];
-    fromMarkdownExtensions?: unknown[];
-  };
-  data.micromarkExtensions ??= [];
-  data.micromarkExtensions.push(mathGfm());
-  data.fromMarkdownExtensions ??= [];
-  data.fromMarkdownExtensions.push(mathFromMarkdown());
-}
-
 /** 站内图片注入固有尺寸（src 以 / 开头 → public/ 下的文件）：正文里的
  *  Markdown 图片与 raw <img> 缺 width/height 会引入 CLS 并挂 a11y 审计
  *  （unsized-images）；外站图无法取尺寸，保持原样。缺 alt 一并兜底为空
@@ -150,7 +136,13 @@ function rehypeLocalImageSize() {
 const processor = unified()
   .use(remarkParse)
   .use(remarkGfm)
-  .use(remarkMathGfm)
+  // 数学公式：标准库 remark-math。已知与 GitHub 渲染的差异（upstream 未实现
+  // cmark-gfm 的 delimiter 规则，属上游边界而非回归，勿往这里加 hack）：
+  //   1. `$` 后紧跟数字仍会开启公式（$100 这类美元金额会被误配对）
+  //   2. 缺「关闭 $ 后紧跟数字不闭合」判定
+  //   3. 公式内 `\$` 转义在 markdown 层即被解掉，KaTeX 收到裸 $ 报错
+  // 若需完全对齐 GitHub，可从提交 0686022 找回打补丁的 tools/math-gfm.js。
+  .use(remarkMath)
   .use(remarkMark)
   .use(remarkEmoji)
   .use(remarkCallouts)
