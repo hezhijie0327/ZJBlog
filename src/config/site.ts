@@ -16,25 +16,22 @@ export interface GiscusConfig {
 
 export const siteConfig = {
   // SEO 基准标题与描述（构建期元数据，语言跟随内容：中文）
-  title: "治杰 Online",
-  description: "贺治杰的个人技术博客与项目展示",
+  title: "ZJBlog",
+  description: "Zhijie He's personal technical blog and project showcase",
   // 站点正式 URL（用于 RSS / sitemap / OpenGraph）
-  // TODO: 绑定自定义域名后修改为正式地址
-  url: "https://hezhijie0327.github.io",
+  url: "https://www.zhijie.online",
   // 作者中文名（llms.txt 等构建期文案用；UI 显示用 i18n 的 site.author）
-  author: "贺治杰",
+  author: "Zhijie He",
   social: {
     github: "https://github.com/hezhijie0327",
   },
   // giscus 评论（GitHub Discussions 驱动，按页面路径映射）。repo / repoId
-  // 已按仓库元数据填好；category / categoryId 需在 https://giscus.app
-  // 生成配置后补齐 —— categoryId 为空时评论区渲染占位卡片
-  // （见 features/comments/GiscusComments.tsx）。
+  // 来自仓库元数据；category / categoryId 取自 giscus.app 生成的配置。
   giscus: {
     repo: "hezhijie0327/blog",
     repoId: "R_kgDOQsmIRg",
-    category: "General",
-    categoryId: "",
+    category: "Announcements",
+    categoryId: "DIC_kwDOQsmIRs4C0EgF",
   } satisfies GiscusConfig,
 };
 
