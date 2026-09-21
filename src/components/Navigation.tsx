@@ -1,12 +1,10 @@
 // 顶部导航：sticky 毛玻璃、桌面链接 + 移动端抽屉、搜索/主题/语言/RSS/GitHub/支持操作区。
 // 窄屏（<sm）时 RSS/支持 收进抽屉（抽屉内本就有第二入口），头部图标行才放得下 320px。
 
-import { Languages, Menu, Rss, Search, X } from "lucide-react";
+import { Languages, Menu, Search, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import { GithubIcon } from "@/components/icons.tsx";
 import { Link } from "@/components/Shell.tsx";
 import { ThemeToggle } from "@/components/ThemeToggle.tsx";
-import { siteConfig } from "@/config/site.ts";
 import { cn } from "@/lib/cn.ts";
 import { useLocaleSwitch, useT } from "@/lib/i18n.ts";
 import { useRouter } from "@/lib/router.tsx";
@@ -87,7 +85,7 @@ export function Navigation() {
               src="/avatar.jpg"
               width={32}
             />
-            <span className="max-[345px]:hidden whitespace-nowrap font-serif text-base font-semibold tracking-tight">
+            <span className="whitespace-nowrap font-serif text-base font-semibold tracking-tight">
               {t("site.brand")}
             </span>
           </Link>
@@ -115,12 +113,12 @@ export function Navigation() {
             })}
           </nav>
 
-          {/* 右侧操作区（搜索/主题/语言/RSS/GitHub + 小屏菜单）；小屏图标缩到
-              size-7，品牌文字 ≤345px 隐藏（size-7 图标行下 360px 起可容纳全名），保证 320px 无水平溢出 */}
+          {/* 右侧操作区（搜索/主题/语言 + 小屏菜单）：GitHub 与 RSS 的入口
+              在首页联系版块，顶栏不再重复 */}
           <div className="flex items-center gap-0.5">
             <button
               aria-label={t("nav.search")}
-              className={cn(ICON_BTN, "max-sm:size-7")}
+              className={ICON_BTN}
               onClick={openSearch}
               title={t("nav.searchTitle")}
               type="button"
@@ -132,31 +130,18 @@ export function Navigation() {
                 播报目标语言（t("nav.language") 随当前语言翻转） */}
             <button
               aria-label={t("nav.language")}
-              className={cn(ICON_BTN, "max-sm:size-7")}
+              className={ICON_BTN}
               onClick={switchLocale}
               title={t("nav.language")}
               type="button"
             >
               <Languages aria-hidden="true" className="size-4" />
             </button>
-            <a aria-label={t("nav.rss")} className={cn(ICON_BTN, "max-sm:size-7")} href="/rss.xml" title={t("nav.rss")}>
-              <Rss aria-hidden="true" className="size-4" />
-            </a>
-            <a
-              aria-label={t("nav.github")}
-              className={cn(ICON_BTN, "max-sm:size-7")}
-              href={siteConfig.social.github}
-              rel="noopener noreferrer"
-              target="_blank"
-              title={t("nav.github")}
-            >
-              <GithubIcon className="size-4" />
-            </a>
             <button
               aria-controls={MOBILE_MENU_ID}
               aria-expanded={isMenuOpen}
               aria-label={isMenuOpen ? t("nav.closeMenu") : t("nav.openMenu")}
-              className={cn(ICON_BTN, "max-sm:size-7 md:hidden")}
+              className={cn(ICON_BTN, "md:hidden")}
               onClick={() => {
                 setIsMenuOpen(!isMenuOpen);
               }}
