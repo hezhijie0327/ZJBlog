@@ -83,8 +83,12 @@ function ProgressBar({ active }: { active: boolean }) {
 
 /** 页面骨架：与迁移前 layout 的结构一致（skip link + sticky 导航 + main + 页脚 + 悬浮返回顶部）。 */
 export function Shell({ children }: { children: ReactNode }) {
-  const { loading } = useRouter();
+  const { href, loading } = useRouter();
   const t = useT();
+  // OG 分享卡页（/og/）：1200×630 截图画布，隐藏全部站点 chrome
+  if (new URL(href, "http://localhost").pathname === "/og/") {
+    return <div className="min-h-dvh bg-bg">{children}</div>;
+  }
   return (
     <div className="flex min-h-dvh flex-col">
       <ProgressBar active={loading} />

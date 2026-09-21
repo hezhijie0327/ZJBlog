@@ -13,6 +13,7 @@ export type PageKind =
   | "project"
   | "archives"
   | "support"
+  | "og"
   | "not-found";
 
 /** 文章目录条目（构建期提取，id = rehype-slug 锚点）。 */
@@ -119,6 +120,13 @@ export interface SupportData {
   globals: PageGlobals & { page: "support" };
 }
 
+/** OG 分享卡页（/og/，noindex 工具页）：1200×630 固定画布，供无头浏览器
+ *  截图生成 public/og-default.png。内容取站点配置与中文文案基线，
+ *  不随 UI 语言切换（截图语言必须稳定）。 */
+export interface OgData {
+  globals: PageGlobals & { page: "og" };
+}
+
 export interface NotFoundData {
   globals: PageGlobals & { page: "not-found" };
 }
@@ -132,6 +140,7 @@ export type AnyPageData =
   | ProjectData
   | ArchivesData
   | SupportData
+  | OgData
   | NotFoundData;
 
 // 类型守卫（ZJSearch 同款分发方式；嵌套判别字段无法直接 switch 收窄）
@@ -159,6 +168,9 @@ export function isArchivesData(data: AnyPageData): data is ArchivesData {
 export function isSupportData(data: AnyPageData): data is SupportData {
   return data.globals.page === "support";
 }
+export function isOgData(data: AnyPageData): data is OgData {
+  return data.globals.page === "og";
+}
 
 /** SSR/预渲染用的同步页面组件表：renderToString 无法等待 React.lazy，
  *  服务端经此表直接渲染真实内容（客户端走 pages/registry.ts 分块 + Suspense）。 */
@@ -171,4 +183,5 @@ export interface SyncPages {
   project: ComponentType<{ data: ProjectData }>;
   archives: ComponentType<{ data: ArchivesData }>;
   support: ComponentType;
+  og: ComponentType;
 }

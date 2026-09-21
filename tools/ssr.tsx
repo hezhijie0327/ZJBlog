@@ -18,6 +18,7 @@ import { BlogPostPage } from "../src/pages/BlogPostPage.tsx";
 import { BlogsPage } from "../src/pages/BlogsPage.tsx";
 import { BlogTagPage } from "../src/pages/BlogTagPage.tsx";
 import { IndexPage } from "../src/pages/IndexPage.tsx";
+import { OgPage } from "../src/pages/OgPage.tsx";
 import { ProjectPage } from "../src/pages/ProjectPage.tsx";
 import { ProjectsPage } from "../src/pages/ProjectsPage.tsx";
 import { SupportPage } from "../src/pages/SupportPage.tsx";
@@ -42,6 +43,7 @@ const SYNC_PAGES: SyncPages = {
   project: ProjectPage,
   archives: ArchivesPage,
   support: SupportPage,
+  og: OgPage,
 };
 
 /** 页面 payload kind → registry 里对应 chunk 的源文件（manifest 键）。 */
@@ -53,6 +55,7 @@ const PAGE_CHUNK_SOURCES: Record<Exclude<PageKind, "not-found">, string> = {
   projects: "src/pages/ProjectsPage.tsx",
   project: "src/pages/ProjectPage.tsx",
   archives: "src/pages/ArchivesPage.tsx",
+  og: "src/pages/OgPage.tsx",
   support: "src/pages/SupportPage.tsx",
 };
 
@@ -117,7 +120,7 @@ function slimForClient(data: AnyPageData): AnyPageData {
   return data;
 }
 
-/** 默认分享卡（public/og-default.png，1200×630；模板 scripts/og-template.html）。 */
+/** 默认分享卡（public/og-default.png，1200×630；源页面 /og/，截图命令见 OgPage.tsx 头注）。 */
 const OG_IMAGE = "/og-default.png";
 
 /** KaTeX 样式按需加载：仅含公式的页面注入（全站 render-blocking 代价过高）。
@@ -210,6 +213,7 @@ export async function renderRoute(rawPath: string, assets?: AssetUrls): Promise<
     g.page === "not-found"
       ? ""
       : `<link rel="canonical" href="${escapeHtml(`${g.siteUrl}${pathname === "/" ? "/" : pathname}`)}">`;
+  const noindexTag = g.page === "og" ? `<meta name="robots" content="noindex">` : "";
   const ogTags = [
     `<meta property="og:type" content="${g.og ? "article" : "website"}">`,
     `<meta property="og:site_name" content="${escapeHtml(g.siteName)}">`,
@@ -218,6 +222,7 @@ export async function renderRoute(rawPath: string, assets?: AssetUrls): Promise<
     `<meta property="og:description" content="${escapeHtml(g.description)}">`,
     `<meta property="og:image" content="${escapeHtml(`${g.siteUrl}${OG_IMAGE}`)}">`,
     `<meta name="twitter:card" content="summary_large_image">`,
+    noindexTag,
     ...(g.og?.publishedTime
       ? [`<meta property="article:published_time" content="${escapeHtml(g.og.publishedTime)}">`]
       : []),
@@ -255,7 +260,7 @@ export async function renderRoute(rawPath: string, assets?: AssetUrls): Promise<
     <link rel="shortcut icon" href="/favicon.png" type="image/png">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     <link rel="alternate" type="application/rss+xml" title="${escapeHtml(g.siteName)}" href="/rss.xml">
-    <script>${THEME_BOOTSTRAP}</script>
+    ${g.page === "og" ? "" : `<script>${THEME_BOOTSTRAP}</script>`}
     ${cssLinks}
     ${pagePreload(g.page, a)}
     ${devClient}

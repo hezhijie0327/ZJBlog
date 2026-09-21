@@ -15,6 +15,7 @@ export const pageLoaders = {
   project: () => import("@/pages/ProjectPage.tsx"),
   archives: () => import("@/pages/ArchivesPage.tsx"),
   support: () => import("@/pages/SupportPage.tsx"),
+  og: () => import("@/pages/OgPage.tsx"),
 } as const;
 
 export type LoadablePage = keyof typeof pageLoaders;
@@ -36,6 +37,7 @@ const ROUTE_PATTERNS: ReadonlyArray<readonly [RegExp, LoadablePage]> = [
   [/^\/projects\/$/, "projects"],
   [/^\/archives\/$/, "archives"],
   [/^\/support\/$/, "support"],
+  [/^\/og\/$/, "og"],
   [/^\/$/, "home"],
 ];
 
@@ -66,3 +68,4 @@ export const LazyProjectsPage = lazy(async () => ({ default: (await pageLoaders.
 export const LazyProjectPage = lazy(async () => ({ default: (await pageLoaders.project()).ProjectPage }));
 export const LazyArchivesPage = lazy(async () => ({ default: (await pageLoaders.archives()).ArchivesPage }));
 export const LazySupportPage = lazy(async () => ({ default: (await pageLoaders.support()).SupportPage }));
+export const LazyOgPage = lazy(async () => ({ default: (await pageLoaders.og()).OgPage }));

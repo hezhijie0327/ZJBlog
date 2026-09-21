@@ -78,6 +78,7 @@ export function allRoutes(): string[] {
     "/projects/",
     ...projects.map((project) => `/projects/${encodeURIComponent(project.slug)}/`),
     "/support/",
+    "/og/",
   ];
 }
 
@@ -111,6 +112,9 @@ export function buildPayload(pathname: string): AnyPageData {
   }
   if (pathname === "/support/") {
     return { globals: globals("support", t("page.support.title"), t("support.metaDesc")) };
+  }
+  if (pathname === "/og/") {
+    return { globals: globals("og", "OG", siteConfig.description) };
   }
 
   const tagMatch = pathname.match(/^\/blogs\/tags\/(.+)\/$/);

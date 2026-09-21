@@ -16,6 +16,7 @@ import {
   isBlogsData,
   isBlogTagData,
   isHomeData,
+  isOgData,
   isProjectData,
   isProjectsData,
   isSupportData,
@@ -27,6 +28,7 @@ import {
   LazyBlogsPage,
   LazyBlogTagPage,
   LazyIndexPage,
+  LazyOgPage,
   LazyProjectPage,
   LazyProjectsPage,
   LazySupportPage,
@@ -99,6 +101,10 @@ function Pages({ syncPages }: { syncPages?: SyncPages }) {
   if (isSupportData(data)) {
     const Sync = syncPages?.support;
     return <Suspense fallback={<PageFallback />}>{Sync ? <Sync /> : <LazySupportPage />}</Suspense>;
+  }
+  if (isOgData(data)) {
+    const Sync = syncPages?.og;
+    return <Suspense fallback={<PageFallback />}>{Sync ? <Sync /> : <LazyOgPage />}</Suspense>;
   }
   return <NotFoundPage />;
 }
