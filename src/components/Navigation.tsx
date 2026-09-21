@@ -87,7 +87,7 @@ export function Navigation() {
               src="/avatar.jpg"
               width={32}
             />
-            <span className="whitespace-nowrap font-serif text-base font-semibold tracking-tight">
+            <span className="max-[345px]:hidden whitespace-nowrap font-serif text-base font-semibold tracking-tight">
               {t("site.brand")}
             </span>
           </Link>
@@ -115,13 +115,12 @@ export function Navigation() {
             })}
           </nav>
 
-          {/* 右侧操作区：只保留高频控制项（搜索/主题/语言/GitHub）；RSS 与支持
-              在页脚和移动端抽屉各有入口（RSS 阅读器也会经 head 的 rel=alternate
-              自动发现订阅源），图标行在 320px 才放得下 */}
+          {/* 右侧操作区（搜索/主题/语言/RSS/GitHub + 小屏菜单）；小屏图标缩到
+              size-7，品牌文字 ≤345px 隐藏（size-7 图标行下 360px 起可容纳全名），保证 320px 无水平溢出 */}
           <div className="flex items-center gap-0.5">
             <button
               aria-label={t("nav.search")}
-              className={cn(ICON_BTN, "max-sm:size-8")}
+              className={cn(ICON_BTN, "max-sm:size-7")}
               onClick={openSearch}
               title={t("nav.searchTitle")}
               type="button"
@@ -133,25 +132,19 @@ export function Navigation() {
                 播报目标语言（t("nav.language") 随当前语言翻转） */}
             <button
               aria-label={t("nav.language")}
-              className={cn(ICON_BTN, "max-sm:size-8")}
+              className={cn(ICON_BTN, "max-sm:size-7")}
               onClick={switchLocale}
               title={t("nav.language")}
               type="button"
             >
               <Languages aria-hidden="true" className="size-4" />
             </button>
-            {/* RSS：桌面顶栏 + 移动端抽屉（<sm 折叠进抽屉，保住 320px） */}
-            <a
-              aria-label={t("nav.rss")}
-              className={cn(ICON_BTN, "hidden sm:grid")}
-              href="/rss.xml"
-              title={t("nav.rss")}
-            >
+            <a aria-label={t("nav.rss")} className={cn(ICON_BTN, "max-sm:size-7")} href="/rss.xml" title={t("nav.rss")}>
               <Rss aria-hidden="true" className="size-4" />
             </a>
             <a
               aria-label={t("nav.github")}
-              className={cn(ICON_BTN, "max-sm:size-8")}
+              className={cn(ICON_BTN, "max-sm:size-7")}
               href={siteConfig.social.github}
               rel="noopener noreferrer"
               target="_blank"
@@ -163,7 +156,7 @@ export function Navigation() {
               aria-controls={MOBILE_MENU_ID}
               aria-expanded={isMenuOpen}
               aria-label={isMenuOpen ? t("nav.closeMenu") : t("nav.openMenu")}
-              className={cn(ICON_BTN, "max-sm:size-8 md:hidden")}
+              className={cn(ICON_BTN, "max-sm:size-7 md:hidden")}
               onClick={() => {
                 setIsMenuOpen(!isMenuOpen);
               }}
@@ -178,7 +171,7 @@ export function Navigation() {
           </div>
         </div>
 
-        {/* 移动端导航：页面链接（含支持 tab）+ RSS（顶栏 <sm 不放 RSS 图标） */}
+        {/* 移动端导航：页面链接（RSS 已常驻顶栏，不进抽屉） */}
         {isMenuOpen && (
           <nav aria-label={t("nav.mobileNav")} className="border-t border-line/80 py-3 md:hidden" id={MOBILE_MENU_ID}>
             <div className="flex flex-col">
@@ -201,18 +194,6 @@ export function Navigation() {
                   </Link>
                 );
               })}
-            </div>
-            <div className="mt-3 border-t border-line/70 pt-3">
-              <a
-                className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink"
-                href="/rss.xml"
-                onClick={() => {
-                  setIsMenuOpen(false);
-                }}
-              >
-                <Rss aria-hidden="true" className="size-3.5" />
-                {t("nav.rss")}
-              </a>
             </div>
           </nav>
         )}
