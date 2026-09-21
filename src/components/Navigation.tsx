@@ -116,7 +116,9 @@ export function Navigation() {
             })}
           </nav>
 
-          {/* 右侧操作区（<sm 时 RSS/支持折叠进抽屉，图标缩小以保住 320px） */}
+          {/* 右侧操作区：只保留高频控制项（搜索/主题/语言/GitHub）；RSS 与支持
+              在页脚和移动端抽屉各有入口（RSS 阅读器也会经 head 的 rel=alternate
+              自动发现订阅源），图标行在 320px 才放得下 */}
           <div className="flex items-center gap-0.5">
             <button
               aria-label={t("nav.search")}
@@ -139,14 +141,6 @@ export function Navigation() {
               {locale === "zh-CN" ? "EN" : "中"}
             </button>
             <a
-              aria-label={t("nav.rss")}
-              className={cn(ICON_BTN, "hidden sm:grid")}
-              href="/rss.xml"
-              title={t("nav.rss")}
-            >
-              <Rss aria-hidden="true" className="size-4" />
-            </a>
-            <a
               aria-label={t("nav.github")}
               className={cn(ICON_BTN, "max-sm:size-8")}
               href={siteConfig.social.github}
@@ -156,17 +150,6 @@ export function Navigation() {
             >
               <GithubIcon className="size-4" />
             </a>
-            {/* 支持：精简页入口（右上角图标 + 抽屉第二入口）；选中态用填充圆盘
-                表达（仅变色对比度不足 1.5:1，非视觉的 aria-current 已有） */}
-            <Link
-              aria-current={isSupport ? "page" : undefined}
-              aria-label={t("nav.support")}
-              className={cn(ICON_BTN, "hidden sm:grid", isSupport && "bg-accent-soft text-ink")}
-              href="/support/"
-              title={t("nav.support")}
-            >
-              <Heart aria-hidden="true" className="size-4" />
-            </Link>
             <button
               aria-controls={MOBILE_MENU_ID}
               aria-expanded={isMenuOpen}
