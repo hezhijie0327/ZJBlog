@@ -120,24 +120,28 @@ export function IndexPage({ data }: { data: HomeData }) {
         {moreProjects.length > 0 && (
           <div className="mt-8">
             <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.2em] text-ink-3">{t("home.moreProjects")}</p>
-            <div className={LIST_CONTAINER}>
+            {/* 开放列表（对标参考站更多项目）：短横标记 + 下划线品名 + 金色 ↗ + 行内描述 */}
+            <ul>
               {moreProjects.map((project) => (
-                <Link className={LIST_ROW} href={`/projects/${project.slug}/`} key={project.slug}>
-                  <div className="flex min-w-0 flex-1 items-baseline gap-3">
-                    <span className="font-medium text-ink transition-colors group-hover:text-accent">
+                <li key={project.slug}>
+                  <Link className="group flex items-baseline gap-3 py-3.5" href={`/projects/${project.slug}/`}>
+                    <span
+                      aria-hidden="true"
+                      className="shrink-0 font-mono text-xs text-ink-3 transition-colors group-hover:text-accent"
+                    >
+                      —
+                    </span>
+                    <span className="shrink-0 text-sm font-medium text-ink underline decoration-line underline-offset-4 transition-colors group-hover:text-accent group-hover:decoration-accent">
                       {project.title}
+                      <ArrowUpRight aria-hidden="true" className="ml-0.5 inline size-3.5 align-[-0.1em] text-accent" />
                     </span>
                     {project.description && (
-                      <span className="hidden truncate text-sm text-ink-3 sm:inline">{project.description}</span>
+                      <span className="min-w-0 flex-1 truncate text-sm text-ink-2">{project.description}</span>
                     )}
-                  </div>
-                  <ArrowUpRight
-                    aria-hidden="true"
-                    className="size-4 shrink-0 text-ink-3 transition-colors group-hover:text-accent"
-                  />
-                </Link>
+                  </Link>
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
         )}
 
