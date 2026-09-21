@@ -31,6 +31,11 @@ export const BTN_PRIMARY =
 export const BTN_OUTLINE =
   "inline-flex h-10 items-center gap-2 rounded-full border border-line bg-surface px-5 text-sm font-medium text-ink transition-colors hover:bg-surface-2";
 
+/** 撕边纸条按钮（借鉴 justin3go 的纸条入口；配合全局 .paper-strip 的撕边底）：
+ * 纸色经 [--strip:…] 注入，轻微歪斜，悬停抬起回正。 */
+export const PAPER_STRIP =
+  "paper-strip inline-flex h-10 items-center gap-2 px-5 text-sm font-medium text-ink transition-all hover:-translate-y-0.5 hover:rotate-0 active:translate-y-0";
+
 /** 标签胶囊 */
 export const CHIP = "inline-flex items-center rounded-full border border-line px-2.5 py-0.5 text-xs text-ink-2";
 

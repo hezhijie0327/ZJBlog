@@ -81,6 +81,11 @@ export const EN = {
   "post.licenseNote": "keep attribution and link when sharing",
   "post.storynav": "Post navigation",
 
+  // 图片灯箱
+  "lightbox.close": "Close",
+  "lightbox.prev": "Previous image",
+  "lightbox.next": "Next image",
+
   // 归档
   "archives.empty": "Nothing to archive yet.",
   "archives.unknownYear": "Unknown",

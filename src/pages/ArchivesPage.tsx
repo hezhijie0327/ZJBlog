@@ -33,8 +33,15 @@ export function ArchivesPage({ data }: { data: ArchivesData }) {
         <div className="space-y-14">
           {years.length > 0 ? (
             years.map(([year, posts]) => (
-              <section key={year}>
-                <div className="mb-5 flex items-baseline gap-4">
+              <section className="relative overflow-x-clip" key={year}>
+                {/* 空心年份水印（装饰）：压在年份行后方，与 PostList 幽灵日期同语言 */}
+                <span
+                  aria-hidden="true"
+                  className="hollow-text pointer-events-none absolute -top-7 right-0 select-none font-serif text-8xl font-black leading-none"
+                >
+                  {year}
+                </span>
+                <div className="relative mb-5 flex items-baseline gap-4">
                   <h2 className="font-serif text-3xl font-bold text-ink">{year}</h2>
                   <span className="font-mono text-xs text-ink-3">{t("count.nPosts", { n: posts.length })}</span>
                   <span aria-hidden="true" className="h-px flex-1 bg-line" />

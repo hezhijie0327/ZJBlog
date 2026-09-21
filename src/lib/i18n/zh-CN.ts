@@ -81,6 +81,11 @@ export const ZH_CN: Record<StringKey, string> = {
   "post.licenseNote": "转载请保留署名与链接",
   "post.storynav": "文章导航",
 
+  // 图片灯箱
+  "lightbox.close": "关闭",
+  "lightbox.prev": "上一张",
+  "lightbox.next": "下一张",
+
   // 归档
   "archives.empty": "暂无可归档的内容。",
   "archives.unknownYear": "未知",

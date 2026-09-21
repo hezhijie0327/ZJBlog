@@ -8,10 +8,11 @@
 // 锚点跳转为浏览器原生行为（reduced-motion 下为瞬时跳转，见 behaviors.css）。
 
 import { Clapperboard } from "lucide-react";
-import { useEffect, useState } from "react";
+import { type MouseEvent, useEffect, useState } from "react";
 import { Link } from "@/components/Shell.tsx";
 import { cn } from "@/lib/cn.ts";
 import { useT } from "@/lib/i18n.ts";
+import { isModifiedClick } from "@/lib/link.ts";
 
 export interface StorySection {
   id: string;
@@ -22,6 +23,27 @@ export interface StorySection {
 export function StoryBar({ sections }: { sections: StorySection[] }) {
   const t = useT();
   const [activeId, setActiveId] = useState<string | null>(null);
+
+  // 章节跳转（借鉴 justin3go 的 jumpTo）：修饰键点击交给浏览器默认行为；
+  // 滚动方式依 reduced-motion 选择；hash 用 replaceState 记录（不产生
+  // 原生锚点的瞬时跳转与历史条目）；焦点跟随内容，键盘/读屏器可感知。
+  const jumpTo = (event: MouseEvent<HTMLAnchorElement>, id: string) => {
+    if (isModifiedClick(event)) {
+      return;
+    }
+    const target = document.getElementById(id);
+    if (!target) {
+      return;
+    }
+    event.preventDefault();
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    target.scrollIntoView({ behavior: reduced ? "instant" : "smooth", block: "start" });
+    window.history.replaceState(null, "", `#${id}`);
+    if (!target.hasAttribute("tabindex")) {
+      target.setAttribute("tabindex", "-1");
+    }
+    target.focus({ preventScroll: true });
+  };
 
   useEffect(() => {
     const visible = sections
@@ -91,13 +113,11 @@ export function StoryBar({ sections }: { sections: StorySection[] }) {
                 )}
                 href={`#${section.id}`}
                 key={section.id}
+                onClick={(event) => jumpTo(event, section.id)}
               >
                 <span
                   aria-hidden="true"
-                  className={cn(
-                    "rounded-sm border border-dashed px-1 font-mono text-[10px]",
-                    active ? "border-accent text-accent" : "border-line",
-                  )}
+                  className={cn("film-number font-mono text-[10px]", active ? "text-accent" : "text-ink-3 opacity-70")}
                 >
                   {section.no}
                 </span>

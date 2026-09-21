@@ -11,7 +11,7 @@ import { featuredProjectCount, moreProjectsCount, siteConfig } from "@/config/si
 import { cn } from "@/lib/cn.ts";
 import { formatDateISO } from "@/lib/format.ts";
 import { useT } from "@/lib/i18n.ts";
-import { BTN_OUTLINE, BTN_PRIMARY, CHIP, LIST_CONTAINER, LIST_ROW, SECTION } from "@/lib/styles.ts";
+import { CHIP, LIST_CONTAINER, LIST_ROW, PAPER_STRIP, SECTION } from "@/lib/styles.ts";
 import type { HomeData } from "@/lib/types.ts";
 
 export function IndexPage({ data }: { data: HomeData }) {
@@ -44,11 +44,18 @@ export function IndexPage({ data }: { data: HomeData }) {
               {t("hero.motto")}
             </p>
             <div className="animate-fade-up mt-10 flex flex-wrap items-center gap-3 [animation-delay:180ms]">
-              <Link className={BTN_PRIMARY} href="/projects/">
+              {/* 撕边纸条入口（对标 justin3go 首屏）：金黄纸条 + 纸面次条，交错歪斜 */}
+              <Link
+                className={cn(
+                  PAPER_STRIP,
+                  "-rotate-1 text-accent-contrast [--strip:var(--accent-strong)] hover:[--strip:var(--accent-strong-hover)]",
+                )}
+                href="/projects/"
+              >
                 {t("home.cta.projects")}
                 <ArrowRight aria-hidden="true" className="size-4" />
               </Link>
-              <Link className={BTN_OUTLINE} href="/blogs/">
+              <Link className={cn(PAPER_STRIP, "rotate-1 [--strip:var(--surface)] hover:text-accent")} href="/blogs/">
                 {t("home.cta.blogs")}
               </Link>
             </div>
@@ -187,12 +194,18 @@ export function IndexPage({ data }: { data: HomeData }) {
         <SectionHeading en={t("home.contact.en")} index="03" title={t("home.contact.title")} />
         <p className="mb-8 max-w-2xl text-sm leading-relaxed text-ink-2 sm:text-[15px]">{t("home.contact.desc")}</p>
         <div className="flex flex-wrap items-center gap-3">
-          <a className={BTN_OUTLINE} href={siteConfig.social.github} rel="noopener noreferrer" target="_blank">
+          {/* 纸条外链（对标参考站 SAY HELLO 的纸片社交入口）：交错歪斜的撕边纸面 */}
+          <a
+            className={cn(PAPER_STRIP, "-rotate-1 [--strip:var(--surface)] hover:text-accent")}
+            href={siteConfig.social.github}
+            rel="noopener noreferrer"
+            target="_blank"
+          >
             <GithubIcon aria-hidden="true" className="size-4" />
             GitHub
             <ArrowUpRight aria-hidden="true" className="size-3.5 text-ink-3" />
           </a>
-          <a className={BTN_OUTLINE} href="/rss.xml">
+          <a className={cn(PAPER_STRIP, "rotate-1 [--strip:var(--surface)] hover:text-accent")} href="/rss.xml">
             <Rss aria-hidden="true" className="size-4" />
             {t("nav.rss")}
             <ArrowUpRight aria-hidden="true" className="size-3.5 text-ink-3" />

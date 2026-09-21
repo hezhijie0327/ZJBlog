@@ -16,11 +16,11 @@ export function PostList({ blogs }: { blogs: BlogListItem[] }) {
     <div className="divide-y divide-line/70">
       {blogs.map((blog) => (
         <article className="group relative overflow-x-clip py-8 first:pt-0" key={blog.slug}>
-          {/* 幽灵日期水印（装饰）：压在标题后方，横向裁切防小屏溢出 */}
+          {/* 幽灵日期水印（装饰）：空心描边压在标题后方，横向裁切防小屏溢出 */}
           {blog.date && (
             <span
               aria-hidden="true"
-              className="pointer-events-none absolute -top-5 right-0 select-none whitespace-nowrap font-mono text-[4.5rem] font-bold leading-none text-accent-soft sm:-top-6 sm:text-[5.5rem]"
+              className="hollow-text pointer-events-none absolute -top-5 right-0 select-none whitespace-nowrap font-mono text-[4.5rem] font-bold leading-none sm:-top-6 sm:text-[5.5rem]"
             >
               {formatDateISO(blog.date)}
             </span>
