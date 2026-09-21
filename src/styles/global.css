@@ -10,3 +10,17 @@
 @plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:where(.dark, .dark *));
+
+/* 项目卡品牌化封面（无 frontmatter.image 时的纸面占位）：横线纸纹 +
+   自左上的暖色微渐变，纯 token 驱动，明暗随整页交叉淡化。 */
+.project-cover {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  text-align: center;
+  background:
+    repeating-linear-gradient(transparent 0 22px, color-mix(in oklab, var(--line) 45%, transparent) 22px 23px),
+    linear-gradient(135deg, color-mix(in oklab, var(--accent-soft) 55%, var(--surface)), var(--surface) 65%);
+}
