@@ -12,12 +12,13 @@
  * LH_FORM_FACTOR=mobile 可切换到更严格的移动端 throttling 档位。
  */
 
-import { existsSync, statSync as fsStatSync, readFileSync } from "node:fs";
+import { existsSync, statSync as fsStatSync, readdirSync, readFileSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
+import { homedir } from "node:os";
 import { dirname, extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { gzipSync } from "node:zlib";
+import { brotliCompressSync, gzipSync } from "node:zlib";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, "..");
@@ -84,16 +85,17 @@ function serveStatic(dir, port) {
       ? "public, max-age=31536000, immutable"
       : "public, max-age=300";
     const type = MIME[extname(filePath)] ?? "application/octet-stream";
-    // 生产 CDN 会对文本类资源做压缩，审计环境保持一致
-    const compressible =
-      /^(text\/|application\/(json|xml|javascript))/.test(type) &&
-      body.length > 1024 &&
-      (req.headers["accept-encoding"] ?? "").includes("gzip");
-    const out = compressible ? gzipSync(body) : body;
+    // 生产 CDN 会对文本类资源做压缩，审计环境保持一致（优先 brotli，回退 gzip）
+    const acceptEncoding = req.headers["accept-encoding"] ?? "";
+    const compressible = /^(text\/|application\/(json|xml|javascript))/.test(type) && body.length > 1024;
+    const br = compressible && acceptEncoding.includes("br");
+    const gz = compressible && !br && acceptEncoding.includes("gzip");
+    const out = br ? brotliCompressSync(body) : gz ? gzipSync(body) : body;
     res.writeHead(200, {
       "Content-Type": type,
       "Cache-Control": cacheControl,
-      ...(compressible ? { "Content-Encoding": "gzip", Vary: "Accept-Encoding" } : {}),
+      ...(br ? { "Content-Encoding": "br", Vary: "Accept-Encoding" } : {}),
+      ...(gz ? { "Content-Encoding": "gzip", Vary: "Accept-Encoding" } : {}),
     });
     res.end(out);
   });
@@ -138,9 +140,39 @@ process.on("unhandledRejection", (reason) => {
   console.log(`  … ignored internal rejection: ${String(reason?.message ?? reason).slice(0, 120)}`);
 });
 
-// chrome-launcher 找不到浏览器时，回退到常见的 Edge 安装位置
-// （普遍装有 Edge；Edge 同为 Chromium，Lighthouse 可直接驱动。
+// chrome-launcher 找不到浏览器时，按 Edge → Playwright Chromium 的顺序回退
+// （Edge/Chromium 同源，Lighthouse 可直接驱动。Playwright 缓存是本机没有
+//  Chrome/Edge 时最常见的 Chromium 来源，取版本号最高的安装。
 //  也可用 CHROME_PATH 指向独立的 Chrome for Testing，避免与日常浏览器互相干扰）
+function playwrightChromiumCandidates() {
+  const base =
+    process.platform === "win32"
+      ? join(homedir(), "AppData", "Local", "ms-playwright")
+      : process.platform === "darwin"
+        ? join(homedir(), "Library", "Caches", "ms-playwright")
+        : join(homedir(), ".cache", "ms-playwright");
+  if (!existsSync(base)) return [];
+  // 版本目录形如 chromium-1208；倒序取最新，兼容新旧两代目录布局
+  const versionDirs = readdirSync(base)
+    .filter((d) => d.startsWith("chromium-"))
+    .sort((a, b) => Number(b.split("-")[1] ?? 0) - Number(a.split("-")[1] ?? 0));
+  const candidates = [];
+  for (const dir of versionDirs) {
+    const rel = join(base, dir);
+    if (process.platform === "darwin") {
+      candidates.push(join(rel, "chrome-mac-arm64", "Chromium.app", "Contents", "MacOS", "Chromium"));
+      candidates.push(join(rel, "chrome-mac", "Chromium.app", "Contents", "MacOS", "Chromium"));
+    } else if (process.platform === "win32") {
+      candidates.push(join(rel, "chrome-win64", "chrome.exe"));
+      candidates.push(join(rel, "chrome-win", "chrome.exe"));
+    } else {
+      candidates.push(join(rel, "chrome-linux64", "chrome"));
+      candidates.push(join(rel, "chrome-linux", "chrome"));
+    }
+  }
+  return candidates;
+}
+
 function resolveBrowserPath() {
   if (process.env.CHROME_PATH) return;
   const candidates =
@@ -152,10 +184,11 @@ function resolveBrowserPath() {
       : process.platform === "darwin"
         ? ["/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge"]
         : ["/usr/bin/microsoft-edge", "/usr/bin/microsoft-edge-stable"];
-  const edge = candidates.find((p) => existsSync(p));
-  if (edge) {
-    process.env.CHROME_PATH = edge;
-    console.log(`using browser: ${edge}`);
+  candidates.push(...playwrightChromiumCandidates());
+  const browser = candidates.find((p) => existsSync(p));
+  if (browser) {
+    process.env.CHROME_PATH = browser;
+    console.log(`using browser: ${browser}`);
   }
 }
 
