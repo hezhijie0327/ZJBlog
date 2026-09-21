@@ -62,12 +62,7 @@
   }
 }
 
-/* 锚点跳转：平滑滚动（reduced-motion 由 behaviors.css 收敛为瞬时）；
-   带锚点的目标预留 sticky 头部高度，避免标题被遮。 */
-html {
-  scroll-behavior: smooth;
-}
-
+/* 带锚点的目标预留 sticky 头部高度，避免标题被遮。 */
 [id] {
   scroll-margin-top: 4.5rem;
 }

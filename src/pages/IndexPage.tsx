@@ -94,8 +94,17 @@ export function IndexPage({ data }: { data: HomeData }) {
         </div>
       </section>
 
+      {/* 故事分镜条：文档流内 sticky，滚过 Hero 后吸附在顶栏下方 */}
+      <StoryBar
+        sections={[
+          { id: "featured", no: "01", label: t("home.featured.title") },
+          { id: "posts", no: "02", label: t("home.recent.title") },
+          { id: "contact", no: "03", label: t("home.contact.title") },
+        ]}
+      />
+
       {/* 01 精选项目 */}
-      <section className={SECTION} id="featured">
+      <section className={cn(SECTION, "scroll-mt-28")} id="featured">
         <SectionHeading
           en={t("home.featured.en")}
           hint={t("count.projects", { n: data.projects.length })}
@@ -136,7 +145,7 @@ export function IndexPage({ data }: { data: HomeData }) {
       </section>
 
       {/* 02 最新博客 */}
-      <section className={SECTION} id="posts">
+      <section className={cn(SECTION, "scroll-mt-28")} id="posts">
         <SectionHeading
           en={t("home.recent.en")}
           hint={t("count.posts", { n: data.blogs.length })}
@@ -170,7 +179,7 @@ export function IndexPage({ data }: { data: HomeData }) {
       </section>
 
       {/* 03 联系：GitHub / RSS（参考 justin3go SAY HELLO 的胶囊链接形态） */}
-      <section className={SECTION} id="contact">
+      <section className={cn(SECTION, "scroll-mt-28")} id="contact">
         <SectionHeading en={t("home.contact.en")} index="03" title={t("home.contact.title")} />
         <p className="mb-8 max-w-2xl text-sm leading-relaxed text-ink-2 sm:text-[15px]">{t("home.contact.desc")}</p>
         <div className="flex flex-wrap items-center gap-3">
@@ -186,15 +195,6 @@ export function IndexPage({ data }: { data: HomeData }) {
           </a>
         </div>
       </section>
-
-      {/* 故事分镜条（lg+ 底部锚点导航，滚动高亮当前区块） */}
-      <StoryBar
-        sections={[
-          { id: "featured", no: "01", label: t("home.featured.title") },
-          { id: "posts", no: "02", label: t("home.recent.title") },
-          { id: "contact", no: "03", label: t("home.contact.title") },
-        ]}
-      />
     </div>
   );
 }
