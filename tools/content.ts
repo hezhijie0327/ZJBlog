@@ -227,6 +227,9 @@ function compileMarkdown(markdown: string): { html: string; toc: TocItem[] } {
     )
     .replace(/<table>/g, '<div class="table-scroll"><table>')
     .replace(/<\/table>/g, "</table></div>")
+    // GFM 对齐列：mdast-util-to-hast 输出的是废弃的 align 属性，现代浏览器
+    // 已不应用 —— 转成内联 text-align 才生效
+    .replace(/<(th|td) align="(left|center|right)"/g, '<$1 style="text-align:$2"')
     .replace(/<input((?:(?!aria-hidden)[^>]*)?type="checkbox"[^>]*)>/g, '<input aria-hidden="true"$1>');
 
   const toc: TocItem[] = [];
