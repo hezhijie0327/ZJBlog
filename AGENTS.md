@@ -17,14 +17,14 @@ pnpm lint
 # 类型检查
 pnpm tsc
 
-# Lighthouse 门禁：对 sitemap 中每个页面审计，全类别必须 100 分
+# Lighthouse 审计：对 sitemap 中每个页面审计，全类别必须 100 分
 pnpm run audit         # 需先 pnpm build；本机需有 Chromium（CHROME_PATH 可指定）
 
 # 完整本地检查（lint + tsc + build）
 pnpm run ci
 ```
 
-无测试框架；质量门禁 = tsc + biome + Lighthouse，全部本地运行（无 CI）。包管理器 **pnpm**（唯一 lockfile）。
+无测试框架；质量门禁 = tsc + biome + build，全部本地运行（无 CI）。包管理器 **pnpm**（唯一 lockfile）。
 
 ## Architecture
 
@@ -81,7 +81,7 @@ scripts/
 1. `pnpm tsc` 零错误
 2. `pnpm lint`（biome）零错误
 3. `pnpm build` 成功（22+ 路由全部预渲染）
-4. `pnpm run audit` 每页全类别 100 分（性能/可访问性/最佳实践/SEO/Agentic Browsing）；改样式、加依赖、动路由后必须跑
+4. `pnpm run audit` 每页全类别 100 分（性能/可访问性/最佳实践/SEO/Agentic Browsing）——**不属于常规门禁，不是每次改动都要跑**：仅在用户明确要求审计时执行
 5. 注意 `pnpm audit`（无 run）是 pnpm 内置安全审计，不是本项目的门禁
 
 ## Deployment
