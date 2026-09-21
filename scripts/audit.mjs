@@ -37,6 +37,7 @@ const THRESHOLDS = {
   "agentic-browsing": 100,
 };
 
+/** @type {Record<string, string>} */
 const MIME = {
   ".html": "text/html; charset=utf-8",
   ".css": "text/css; charset=utf-8",
@@ -57,6 +58,7 @@ const MIME = {
 };
 
 /** 零依赖静态服务器：先按精确文件解析，再按 trailingSlash 目录解析 */
+/** @param {string} dir @param {number} port */
 function serveStatic(dir, port) {
   const server = createServer((req, res) => {
     const url = new URL(req.url ?? "/", BASE);
@@ -107,20 +109,20 @@ function serveStatic(dir, port) {
 /** 从 sitemap.xml 提取本站路径（忽略外站 URL） */
 function pagesFromSitemap() {
   const xml = readFileSync(join(OUT_DIR, "sitemap.xml"), "utf8");
-  const locs = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
-  const paths = locs
-    .map((loc) => {
-      try {
-        return new URL(loc).pathname;
-      } catch {
-        return null;
-      }
-    })
-    .filter((p) => p?.endsWith("/"));
+  const locs = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]).filter((loc) => typeof loc === "string");
+  const paths = [];
+  for (const loc of locs) {
+    try {
+      paths.push(new URL(loc).pathname);
+    } catch {
+      // 非本站 URL，跳过
+    }
+  }
   if (paths.length === 0) throw new Error("sitemap.xml 中没有解析到任何页面");
   return paths;
 }
 
+/** @param {string} url @param {number} [timeoutMs] */
 async function waitFor(url, timeoutMs = 30000) {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
@@ -137,7 +139,8 @@ async function waitFor(url, timeoutMs = 30000) {
 
 // Lighthouse 内部偶发的未处理 rejection 不应打断整个门禁
 process.on("unhandledRejection", (reason) => {
-  console.log(`  … ignored internal rejection: ${String(reason?.message ?? reason).slice(0, 120)}`);
+  const message = reason instanceof Error ? reason.message : String(reason);
+  console.log(`  … ignored internal rejection: ${message.slice(0, 120)}`);
 });
 
 // chrome-launcher 找不到浏览器时，按 Edge → Playwright Chromium 的顺序回退
@@ -205,12 +208,14 @@ async function main() {
   if (paths.length === 0) throw new Error(`LH_ONLY 过滤后没有页面: ${only}`);
 
   const server = await serveStatic(OUT_DIR, PORT);
+  /** @type {import("chrome-launcher").LaunchedChrome | undefined} */
   let chrome;
   let failed = false;
   const runDir = join(
     ARCHIVE_ROOT,
     `${new Date().toISOString().replace(/[:.]/g, "-")}${MOBILE ? "-mobile" : "-desktop"}`,
   );
+  /** @type {{ form_factor: string, pages: Record<string, Record<string, number>> }} */
   const scores = { form_factor: MOBILE ? "mobile" : "desktop", pages: {} };
 
   try {
@@ -234,15 +239,19 @@ async function main() {
     await freshChrome();
 
     /** 单页审计；headless Chrome 偶发 trace 中止时换新实例重试（至多 3 次） */
-    async function runPage(url) {
+    /** @param {string} url @param {number} [port] */
+    async function runPage(url, port = chrome?.port) {
+      if (port === undefined) {
+        throw new Error("browser not launched");
+      }
       let lastError;
       for (let attempt = 1; attempt <= 3; attempt++) {
         try {
-          const result = await lighthouse(url, { port: chrome.port, output: "json" }, config);
-          const lhr = result.lhr;
-          const allZero = Object.values(lhr.categories).every((c) => (c.score ?? 0) === 0);
-          if (!allZero) return lhr;
-          lastError = new Error(lhr.runtimeError?.message ?? "all categories scored 0 (load error)");
+          const result = await lighthouse(url, { port, output: "json" }, config);
+          const lhr = result?.lhr;
+          const allZero = !lhr || Object.values(lhr.categories).every((c) => (c.score ?? 0) === 0);
+          if (lhr && !allZero) return lhr;
+          lastError = new Error(lhr?.runtimeError?.message ?? "all categories scored 0 (load error)");
         } catch (error) {
           lastError = error;
         }
@@ -255,19 +264,21 @@ async function main() {
       throw lastError;
     }
 
+    /** @param {import("lighthouse").Result} lhr */
     const perfOf = (lhr) => Math.round((lhr.categories.performance?.score ?? 0) * 100);
 
     /**
      * 近失重试：本机负载会让 perf 偶发落在 98-99（干净环境实测稳定 100）。
      * perf ∈ [98, 100) 时重跑一次取更优结果；< 98 视为真实回归，重试只会掩盖问题。
      */
+    /** @param {string} url */
     async function runPageStable(url) {
-      const first = await runPage(url);
+      const first = await runPage(url, chrome?.port);
       const perf = perfOf(first);
       if (perf >= 100 || perf < 98) return first;
       console.log("  … perf near-miss, retrying once and keeping the better run");
       await new Promise((r) => setTimeout(r, 2000));
-      const second = await runPage(url);
+      const second = await runPage(url, chrome?.port);
       return perfOf(second) > perf ? second : first;
     }
 
@@ -283,7 +294,8 @@ async function main() {
         lhr = await runPageStable(`${BASE}${path}`);
       } catch (error) {
         failed = true;
-        console.log(`  ERROR: ${String(error.message ?? error).slice(0, 160)}`);
+        const message = error instanceof Error ? error.message : String(error);
+        console.log(`  ERROR: ${message.slice(0, 160)}`);
         continue;
       }
 
@@ -291,6 +303,7 @@ async function main() {
       const slug = path.replace(/^\/+|\/+$/g, "").replaceAll("/", "_") || "home";
       await writeFile(join(runDir, `${slug}.lhr.json`), JSON.stringify(lhr));
 
+      /** @type {Record<string, number>} */
       const pageScores = {};
       for (const [cat, threshold] of Object.entries(THRESHOLDS)) {
         const score = Math.round((lhr.categories[cat]?.score ?? 0) * 100);

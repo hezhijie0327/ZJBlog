@@ -16,18 +16,24 @@ const FAST_LIMIT = 10;
 const CONCURRENCY = 8;
 const fastMode = process.argv.includes("--fast");
 
+/** @param {string} dir */
 function collectHtmlFiles(dir) {
   return readdir(dir, { recursive: true, withFileTypes: true }).then((entries) =>
-    entries.filter((e) => e.isFile() && e.name.endsWith(".html")).map((e) => path.join(e.parentPath ?? e.path, e.name)),
+    entries.filter((e) => e.isFile() && e.name.endsWith(".html")).map((e) => path.join(e.parentPath, e.name)),
   );
 }
 
+/** @param {string} html */
 function extractExternalLinks(html) {
   const links = new Set();
   for (const match of html.matchAll(/href="(https?:\/\/[^"]+)"/g)) {
+    const raw = match[1];
+    if (!raw) {
+      continue;
+    }
     let url;
     try {
-      url = new URL(match[1]);
+      url = new URL(raw);
     } catch {
       continue;
     }
@@ -36,6 +42,7 @@ function extractExternalLinks(html) {
   return [...links];
 }
 
+/** @param {string} url */
 async function checkLink(url) {
   try {
     const resp = await fetch(url, {
@@ -48,7 +55,7 @@ async function checkLink(url) {
     }
     return resp.ok ? { url, status: "ok" } : { url, status: "dead", detail: `HTTP ${resp.status}` };
   } catch (err) {
-    const message = String(err?.cause?.message ?? err?.message ?? err);
+    const message = err instanceof Error ? String(err.message) : String(err);
     return { url, status: "unconfirmed", detail: message.slice(0, 80) };
   }
 }
