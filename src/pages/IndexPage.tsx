@@ -1,11 +1,12 @@
-// 首页：Hero + 精选项目（starred 优先）+ 最新文章。
+// 首页：Hero + 精选项目（starred 优先）+ 最新文章 + 联系（GitHub / RSS）。
 
-import { ArrowRight, ArrowUpRight } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Rss } from "lucide-react";
+import { GithubIcon } from "@/components/icons.tsx";
 import { ProjectCard } from "@/components/ProjectCard.tsx";
 import { SectionHeading } from "@/components/SectionHeading.tsx";
 import { Link } from "@/components/Shell.tsx";
 import { ViewAllLink } from "@/components/ViewAllLink.tsx";
-import { featuredProjectCount } from "@/config/site.ts";
+import { featuredProjectCount, siteConfig } from "@/config/site.ts";
 import { cn } from "@/lib/cn.ts";
 import { formatDateISO } from "@/lib/format.ts";
 import { useT } from "@/lib/i18n.ts";
@@ -121,6 +122,24 @@ export function IndexPage({ data }: { data: HomeData }) {
           )}
         </div>
         <ViewAllLink href="/blogs/" label={t("home.viewAllPosts")} />
+      </section>
+
+      {/* 03 联系：GitHub / RSS（参考 justin3go SAY HELLO 的胶囊链接形态） */}
+      <section className={SECTION}>
+        <SectionHeading en={t("home.contact.en")} index="03" title={t("home.contact.title")} />
+        <p className="mb-8 max-w-2xl text-sm leading-relaxed text-ink-2 sm:text-[15px]">{t("home.contact.desc")}</p>
+        <div className="flex flex-wrap items-center gap-3">
+          <a className={BTN_OUTLINE} href={siteConfig.social.github} rel="noopener noreferrer" target="_blank">
+            <GithubIcon aria-hidden="true" className="size-4" />
+            GitHub
+            <ArrowUpRight aria-hidden="true" className="size-3.5 text-ink-3" />
+          </a>
+          <a className={BTN_OUTLINE} href="/rss.xml">
+            <Rss aria-hidden="true" className="size-4" />
+            {t("nav.rss")}
+            <ArrowUpRight aria-hidden="true" className="size-3.5 text-ink-3" />
+          </a>
+        </div>
       </section>
     </div>
   );

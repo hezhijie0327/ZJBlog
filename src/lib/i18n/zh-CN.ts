@@ -51,6 +51,9 @@ export const ZH_CN: Record<StringKey, string> = {
   "home.viewAllProjects": "查看全部项目",
   "home.viewAllPosts": "查看全部文章",
   "home.emptyPosts": "还没有文章，敬请期待。",
+  "home.contact.title": "打个招呼。",
+  "home.contact.en": "SAY HELLO",
+  "home.contact.desc": "对项目或文章有想法？来 GitHub 找我，或通过 RSS 订阅更新。",
 
   // 计数
   "count.projects": "共 {n} 个",

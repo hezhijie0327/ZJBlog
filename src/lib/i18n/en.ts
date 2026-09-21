@@ -51,6 +51,9 @@ export const EN = {
   "home.viewAllProjects": "View all projects",
   "home.viewAllPosts": "View all posts",
   "home.emptyPosts": "No posts yet — stay tuned.",
+  "home.contact.title": "Say hello.",
+  "home.contact.en": "SAY HELLO",
+  "home.contact.desc": "Ideas about a project or a post? Find me on GitHub, or subscribe via RSS to follow along.",
 
   // 计数
   "count.projects": "{n} in total",
