@@ -49,7 +49,7 @@ src/
 │   ├── types.ts         # payload 判别联合 + 类型守卫（客户端契约）
 │   ├── theme.ts         # 明暗（localStorage + html.dark + pre-paint 内联脚本防闪烁）
 │   ├── i18n.ts + i18n/  # EN 基准词库 + zh-CN；useT/translateFor
-│   ├── styles.ts        # 设计片段单一来源（DESIGN.md §6）
+│   ├── styles.ts        # 设计片段单一来源（DESIGN.md §8）
 │   └── cn / format / link
 ├── styles/              # global.css 入口 → tokens → base → prose → behaviors
 │                        # （KaTeX 样式不在入口：仅 needsKatex 页面按 /katex.min.css 注入）
@@ -78,7 +78,7 @@ scripts/
 - **仅命名导出**（零 default export）；组件 PascalCase.tsx；lib 辅助模块小写 topic 命名；hook 就近领域文件。
 - 导入：`@/` 别名 + 显式扩展名（`@/lib/i18n.ts`）；`verbatimModuleSyntax`，type-only 导入必须 `import type`。
 - TypeScript strict（含 `noUncheckedIndexedAccess`），禁 `any`（外部响应用 `Raw*` 接口收窄）。
-- 颜色一律 token（DESIGN.md §2）；重复类名一律 `lib/styles.ts` 片段；零 webfont；`dark:` 只用于图标显隐。
+- 颜色一律 token（DESIGN.md §3）；重复类名一律 `lib/styles.ts` 片段；零 webfont；`dark:` 只用于图标显隐。
 - **禁止 `localeCompare` 排序任何参与 SSR 的数据**：Node 与浏览器 ICU collation 不一致会导致水合文本不匹配（React #418，曾挂 best-practices 门禁）。排序用 codepoint 比较（`a < b ? -1 : …`）。
 - 重依赖必须惰性：进视口才加载（先例：Mermaid ~2.7MB、three.js、KaTeX 样式按页、giscus iframe）。**持续动画（如 STL 自转）必须随视口启停**（离屏 `setAnimationLoop(null)`），否则长文页持续吃 CPU。
 - 懒组件的关闭路径若依赖 `animationend`（如 CommandPalette 退出动画），必须加超时兜底 —— 渲染管线冻结/事件丢失时 UI 会滞留。

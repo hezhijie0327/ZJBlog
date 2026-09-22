@@ -1,8 +1,6 @@
 # DESIGN.md — ZJ 设计系统（品牌基座）
 
-> ZJ 产品家族的统一设计语言与工程规范。已发布产品：**ZJSearch**、**ZJBlog**，后续衍生产品一律以本文档为设计/工程契约，保证「一眼同源」。
->
-> 基准源：`~/searxng/client/zjsearch`（产品实现）；本仓库是第二实现，二者 token 与命名保持同步。
+> ZJ 产品家族的统一设计语言与工程规范。后续衍生产品一律以本文档为设计/工程契约，保证「一眼同源」。
 
 ---
 
@@ -10,11 +8,41 @@
 
 1. **暖纸墨金**：暖纸底 × 墨字 × 琥珀金强调 —— 纸感、低刺眼、高辨识度。
 2. **内容优先**：界面退后，正文站前；装饰只用「编号 + 细线 + 留白」表达。
-3. **零 webfont**：全部系统字体栈。无字体下载、无布局抖动、无性能税。
-4. **快**：预渲染 + 惰性取数，任何交互不等待任何大依赖。
-5. **克制**：动效只出现在首屏入场与状态切换，从不为装饰而动。
+3. **纸感物理**：凡引用纸张的装饰（撕边、胶带、微倾斜、高亮纸带）必须遵守真实世界的物理规则 —— 胶带要搭在纸边上、纸面微微歪斜、装饰只落在留白处（详见 §6）。
+4. **零 webfont**：全部系统字体栈。无字体下载、无布局抖动、无性能税。
+5. **快**：预渲染 + 惰性取数，任何交互不等待任何大依赖。
+6. **克制**：动效只出现在首屏入场与状态切换，从不为装饰而动。
 
-## 2. 色彩体系
+## 2. 品牌资产（Branding）
+
+品牌是家族资产：各产品按本节产出与复用，禁止各造各的。
+
+### 2.1 命名
+
+- 家族前缀 **ZJ** + 领域名：`ZJSearch` / `ZJBlog` / `ZJDNS` / `ZJDDNS`；一名一产品，不重不占。
+- 界面品牌区直接用产品名（serif 字体呈现），不另设图形 logo。
+
+### 2.2 品牌标（favicon / 字母标）
+
+单笔画首字母 + 品牌句号，参考 `public/favicon.svg`：
+
+| 原则 | 说明 |
+|---|---|
+| 一个字形基元 | 产品名首字母做单笔画字母标（Z）：圆头描边，viewBox 100 下 stroke-width 14 —— 16px 下轮廓仍清晰 |
+| 品牌句号 | 右下角一枚实心圆点收尾，全家族统一记忆点 |
+| 色 | 金渐变 `#f5c84c → #e09f0a`（`--accent-strong` 族），**透明底** —— 明暗背景直接可用，无需双版本 |
+| 资产矩阵 | `favicon.svg`（主）→ `favicon.png`（兜底）→ `apple-touch-icon.png`（180，实底 + 安全边距） |
+
+### 2.3 OG 分享卡
+
+- 1200×630，**固定浅色基准**：分享卡不随 UI 主题切换，截图页锁定中文基准词库。
+- 构图：kicker → 品牌名（大号衬线）→ 格言 → 底部作者 + 域名；配色与字体全部走设计 token，与站点同源。
+
+### 2.4 个人内容资产
+
+个人产品的头像用真实形象或手绘（`avatar`），置于纸面语境中呈现；收款码等联系资产直接放 `public/` 根。
+
+## 3. 色彩体系
 
 全部颜色走 CSS 变量（`src/styles/tokens.css`），以 `<color> @property` 注册 —— 明暗切换时变量本身插值，整页交叉淡化。
 
@@ -30,6 +58,7 @@
 | `--accent` | `#8c6800` | `#fec843` | **文字强调**（链接/chips，AA 达标） |
 | `--accent-hover` | `#7a5c00` | `#ffd76b` | 文字强调悬停 |
 | `--accent-strong` | `#f5c84c` | `#fec843` | **填充强调**（主按钮底/进度条） |
+| `--accent-strong-hover` | `#eebd35` | `#ffd76b` | 填充强调悬停 |
 | `--accent-soft` | `#faf0cf` | `#3a3320` | 强调浅底（图标圆盘） |
 | `--accent-contrast` | `#241d0e` | `#241d0e` | 填充强调上的文字（必须） |
 | `--highlight-bg` | `#fde68a` | `#4a4020` | 高亮/选区 |
@@ -37,16 +66,22 @@
 | `--shadow-card / --shadow-pop` | 暖色阴影 | 加深 | 卡片 / 弹层 |
 
 **硬性规则**
+
 - 禁止裸写 hex / Tailwind 调色板（`text-gray-*` 等），一切走 token；Tailwind 映射见 `@theme inline`（`bg-surface`、`text-ink-2`、`border-line`、`bg-accent-strong`、`text-accent`、`text-ok`、`shadow-card`…）。
 - `--accent` 是**文字**强调色；`--accent-strong` 只做**填充**，其上文字必须是 `--accent-contrast`。
 - `--ink-3` 及以上弱化文字对一切表面保持 ≥ 4.5:1（AA）。
 - 暗色仅允许通过 token 生效（`.dark` class 策略，`@custom-variant dark`）；禁止 `dark:` 下散落硬编码色值（图标显隐 `dark:hidden/dark:block` 除外）。
 
-**产品级扩展**（博客）：`--code-bg/--code-fg`（暖黑代码块）与 `--font-serif`，已注册进同一 @property/主题体系，属文档化的合法扩展；新扩展照此办理。
+**产品级扩展**：产品特有 token（如暖黑代码块 `--code-bg/--code-fg`、衬线正文 `--font-serif`）注册进同一 @property/主题体系，属文档化的合法扩展；新扩展照此办理 —— 先在本文档登记，再落码。
 
-**依赖样式按需加载**（博客先例）：KaTeX 样式（25KB raw）不做全站 render-blocking —— 构建期标记含公式页（`needsKatex`），SSR 仅对这些页注入 `/katex.min.css`（含 fonts/ 拷贝），客户端 SPA 换页由 `Prose.ensureKatexStyles` 幂等补注。同类「大而少用」的样式资产照此办理。
+**已登记扩展**
 
-## 3. 字体（零 webfont）
+- **OLED `.black` 档**：叠在 `.dark` 之上的第三调色板（`dark`+`black` 双 class），仅再压深表面档（`--bg/--surface/--surface-2/--line/--ink*/--accent-soft/--highlight-bg/--shadow-card`），强调色沿用 `.dark` 值。
+- **固定暗色媒体 chrome 豁免**：图片灯箱、缩略图角标（`TILE_BADGE`）与媒体浮层在**所有调色板下都渲染在同一暗色底上**，主题 token 不适用 —— 允许固定色值（灯箱的 zinc 系文字、`bg-black/70` 角标 scrim）；canvas 画布内的 JS 颜色字面量同豁免（CSS 变量到不了 canvas）。豁免面仅限媒体浮层/角标/画布，页面 UI 一律走 token。
+
+**依赖样式按需加载**：大而少用的样式资产（如 KaTeX，25KB raw）不做全站 render-blocking —— 构建期标记需要的页面，仅对这些页注入对应样式（含字体资产），客户端 SPA 换页再幂等补注。
+
+## 4. 字体（零 webfont）
 
 | 栈 | 变量 | 用途 |
 |---|---|---|
@@ -56,13 +91,27 @@
 
 引入 webfont 前必须先过 Lighthouse 门禁评估（历史教训：webfont 曾致 CSS 276KB + perf 91）。
 
-## 4. 形状与节奏
+## 5. 形状与节奏
 
 - **圆角**：按钮/图标钮 `rounded-full`；卡片 `rounded-2xl`；小件 `rounded-lg/xl`。
 - **阴影**：卡片 `shadow-card`，弹层/悬停 `shadow-pop`（都是暖色调）。
 - **节奏**：页面级 section 统一用 `SECTION` 片段（`container mx-auto px-4 py-14 sm:py-20`）；长文容器 `max-w-3xl`。
 
-## 5. 动效
+## 6. 纸感语言（折纸 / 贴纸）
+
+纸感是家族的视觉签名：数字界面引用真实纸张的物理规则。所有纸感元素只落在留白处、一律 `aria-hidden` + `pointer-events-none`，绝不与可交互内容抢位。
+
+| 元素 | 实现 | 物理规则 |
+|---|---|---|
+| 撕边纸面 `.paper-note` | clip-path 撕边 + 横线纸纹 + 随轮廓 drop-shadow | 平贴会假 —— 微倾斜 ±0.5° 级，方向按位置轮换 |
+| 撕边纸条 `.paper-strip` | 按钮形态的撕边纸，纸色经 `--strip` 注入 | 主纸条金底（`--accent-strong`），次纸条纸面色；交错 ±1° 歪斜 |
+| 胶带 | 半透明 `bg-accent-soft` 矩形，压在纸边之上 | **必须是被裁剪元素（clip-path）的兄弟节点** —— 放在其内部会被撕边裁掉角；两角对压优于单条居中 |
+| 马克笔高亮 `.marker-strip` | 文字下半截的撕边金条 | 只扫过关键字，微歪斜 |
+| 手绘分隔线 `.paper-chapter` | 章节顶部的 1px 细线，rotate -0.4° | 模拟纸页间手账分隔 |
+
+变化必须是**确定性**的（按序号轮换），禁止随机数 —— SSR 与客户端水合必须一致。
+
+## 7. 动效
 
 | 场景 | 动效 |
 |---|---|
@@ -74,23 +123,27 @@
 | 灯箱进入 | `dialog[open]` 播 `fade-up`，背板 `fade-in`（behaviors.css） |
 | 命令面板开/关 | 背板 `animate-fade-in` / `animate-fade-out`；关闭经 `animationend` 卸载 + 240ms 超时兜底 |
 | 移动抽屉开/合 | 常驻 DOM + `grid-template-rows 0fr↔1fr` 过渡 + `invisible` 管可聚焦性 |
+| 条件渲染面的退出 | `useExitPresence`：`closing` 期播 `-out` 动画 + `inert`，**定时器卸载即超时兜底**，焦点在关闭发起即归还（`useDialogFocus` 传 `!closing`）；reduced-motion 直切卸载 |
 
-原则：**每个可交互面都要有进入/退出动画**（模块级条件渲染直切视为缺陷）；退出卸载依赖动画事件时必须有超时兜底。全局尊重 `prefers-reduced-motion`（behaviors.css 一律 0.01ms 收掉）。
+原则：**每个可交互面都要有进入/退出动画**（模块级条件渲染直切视为缺陷）；退出卸载依赖动画事件时必须有超时兜底。全局尊重 `prefers-reduced-motion`（behaviors.css 一律 0.01ms 收掉）。内容翻页/换 Tab 属内容替换，以进入动画覆盖。
 
-## 6. 组件片段（`lib/styles.ts`）
+## 8. 组件片段（`lib/styles.ts`）
 
 重复组合一律收拢为 SCREAMING_SNAKE 常量，`className={FRAGMENT}` 消费，覆盖用 `cn(FRAGMENT, "覆盖类")`：
 
 `ICON_BTN`（36px 圆形图标钮）· `CARD` / `CARD_HOVER` · `LIST_CONTAINER` · `BTN_PRIMARY` / `BTN_OUTLINE` · `CHIP` / `MONO_CHIP` · `META`（等宽元信息）· `SECTION` · `SCROLLBAR_NONE`
 
+各产品可增自有片段；**同语义在同产品内必须同名**，禁止同语义双别名并存。
+
 新 UI **先找片段，没有再新增**，禁止在组件里裸写长串类名。
 
-## 7. 页面骨架
+## 9. 页面骨架
 
 ```
 Shell（min-h-dvh 纵向 flex）
 ├── ProgressBar        # 换页顶部进度条（loading 时）
 ├── Navigation         # sticky 毛玻璃 h-14：品牌区 / 链接组(active 下划线+aria-current) / 搜索·主题·语言 / 移动端抽屉（grid-rows 过渡）
+│                      # （产品变体允许：非粘性导航、结果型页面自带 header；品牌/进度条/页脚/BackToTop 保持同构）
 ├── <main>             # 页面内容（每页一个语义区块）
 ├── Footer             # 版权一行
 └── BackToTop          # 右下角悬浮返回顶部（滚动超过 400px 出现）
@@ -99,12 +152,13 @@ Shell（min-h-dvh 纵向 flex）
 - 图标按钮必须有 `aria-label`；当前导航项 `aria-current="page"`；全局 `:focus-visible` 焦点环在 base.css。
 - 404 与空状态同构：图标圆盘（`accent-soft` 底）+ 标题 + 灰字说明 + 一个胶囊动作。
 
-## 8. 工程规范（命名法）
+## 10. 工程规范（命名法）
 
 ```
 src/
 ├── main.tsx / app.tsx      # 启动引导 + Provider 树 + payload 分发
 ├── pages/                  # *Page.tsx（PascalCase）+ registry.ts 每页一 chunk
+│                           # （或 manualChunks 等价方案，同一契约：每页一 chunk）
 ├── features/<域>/          # 领域特性（组件 + 就近 api/hook，kebab-case 辅助模块）
 ├── components/             # 通用组件，PascalCase.tsx
 ├── lib/                    # 领域无关：router / theme / i18n / styles / format / link / cn …
@@ -118,42 +172,42 @@ src/
 - TypeScript 全严格（含 `noUncheckedIndexedAccess`）；Lint 用 **Biome**（含 sorted-attributes、2 空格、120 列）。
 - TypeScript strict 下禁 `any`；外部宽松响应用 `Raw*` 接口 + 显式收窄。
 - 文案边界：界面词汇 → i18n 词库；个人内容（姓名/格言）→ `config/site.ts`；产品内容 → content/。
-- 包管理器：**pnpm**（唯一 lockfile：pnpm-lock.yaml）。
+- 包管理器：各产品**单一 lockfile**（pnpm 或 npm）并在产品文档中记录；同一产品内不得混用、不得双 lockfile 并存。
 
-## 9. SPA 契约（fetch-and-swap 路由）
+## 11. SPA 契约（fetch-and-swap 路由）
 
 - 每条路由都预渲染完整 HTML（SEO/首屏），内嵌 `<script id="page-data">` JSON payload。
-- 首帧水合契约：SSR 经 `SyncPages`（tools/ssr.tsx）同步渲染真实内容（renderToString 等不了 lazy）；客户端在 `main.tsx` 里先取好当前页 chunk 再 hydrateRoot，首帧即真实内容、零 CLS。Suspense 骨架（PageFallback）只在站内换页 chunk 未就绪时兜底。
-- payload 是判别联合（`globals.page` 判别），类型守卫分发页面；换页 = `fetch(URL)` → DOMParser 提取 payload → `pushState`，popstate 按 URL 重取；payload 携带 `title/description` 同步文档头。
+- 首帧水合契约（SSR 产品）：SSR 经 `SyncPages`（tools/ssr.tsx）同步渲染真实内容（renderToString 等不了 lazy）；客户端在 `main.tsx` 里先取好当前页 chunk 再 hydrateRoot，首帧即真实内容、零 CLS。Suspense 骨架（PageFallback）只在站内换页 chunk 未就绪时兜底。（无 SSR 的产品可以流式首屏 + 骨架镜像达成同一「首帧即内容」目标，属「证明更优方案」路径。）
+- payload 是判别联合（`globals.page` 判别），类型守卫分发页面；换页 = `fetch(URL)` → DOMParser 提取 payload → `pushState`，popstate 按 URL 重取；payload 携带元数据同步文档头（`title` 必同步；`description` 有则同步）。
 - 重依赖一律进视口惰性加载（先例：Mermaid ~2.7MB、GitHub 评论取数）。
 
-## 10. i18n 规范
+## 12. i18n 规范
 
 - **EN（`i18n/en.ts`）是基准**：`StringKey` 从 EN 推导；其他语言 `Record<StringKey, string>`（Partial 可回退），缺 key/拼错 key 编译报错。
 - 新语言 = 新建 `i18n/<tag>.ts` + CATALOGS 注册 + `themeLocaleTag()` 归一。
 - 占位符 `{name}`，`t(key, params)` 替换；非 React 场景用 `translateFor(locale)`。
 
-## 11. 质量要求（每个产品必须满足）
+## 13. 质量要求（每个产品必须满足）
 
 1. `tsc --noEmit` 零错误（strict + noUncheckedIndexedAccess）
 2. `biome check` 零错误
 3. 生产构建成功
-4. **Lighthouse 门禁**：全站每页，**桌面端与移动端** Performance / Accessibility / Best Practices / SEO 全类别满分基准（ZJSearch 定义的 Agentic Browsing 类别一并保留）；门禁脚本模式见 `scripts/audit.mjs`（本地静态服务器镜像生产 CDN：**brotli 优先**、缓存、/cdn-cgi/trace、404 语义；headless Chrome 连跑多页不稳，脚本每 4 页自动重启浏览器）
+4. **Lighthouse 门禁**：全站每页，**桌面端与移动端**都跑；Accessibility / Best Practices 以 **100 为基准**；鼓励登记自定义 Lighthouse 类别（如 Agentic Browsing）并以 100 为基准；Performance 与 SEO 的阈值由各产品在门禁脚本中**记录并维持**（豁免页 —— 如 robots.txt disallow 的路径 —— 在脚本中显式置空并注明理由）。门禁脚本两种已知形态：本地静态服务器镜像生产 CDN（**brotli 优先**、缓存、/cdn-cgi/trace、404 语义；headless Chrome 连跑多页不稳，每 4 页自动重启浏览器），或驱动自身 dev 实例离线跑分（夹具引擎）
 5. 浏览器目标 `baseline 2022, not dead`
 6. 可访问性硬规则：焦点环、aria-label、aria-current、reduced-motion、装饰元素 aria-hidden；**正文半透明前景色（color-mix 带 alpha）会让对比度无法判定而挂审计** —— 关键文字显式 token 实色；内容页固定色值（`<font color>`/`bgcolor`）物理上无法在亮暗两套调色板同时达标，演示场景一律以代码块展示
 7. **水合一致性**：凡参与 SSR 的排序/文案禁止依赖运行时 locale（`localeCompare` 的 collation 在 Node 与浏览器 ICU 不同 → React #418 水合不匹配），用 codepoint 比较
 
-## 12. 衍生产品接入 Checklist
+## 14. 衍生产品接入 Checklist
 
-- [ ] 复制 `styles/`（tokens/base/behaviors + 入口），token 不得改值，只允许按第 2 节规则登记扩展
+- [ ] 复制 `styles/`（tokens/base/behaviors + 入口），token 不得改值，只允许按第 3 节规则登记扩展
 - [ ] 引入 `lib/styles.ts` 片段集（可增不可改语义）
 - [ ] 采用 `lib/cn.ts / format.ts / link.ts / theme.ts / i18n`（i18n 按 EN 基准建词库）
-- [ ] 页面骨架对齐第 7 节（Shell/导航/页脚），组件命名对齐第 8 节
-- [ ] 路由按第 9 节契约（预渲染 + fetch-and-swap）或证明更优方案
-- [ ] 接入 Lighthouse 门禁脚本并设阈值；包管理器用 pnpm
-- [ ] README/AGENTS 注明「遵循 DESIGN.md」与 token 基准版本
+- [ ] 页面骨架对齐第 9 节（Shell/导航/页脚），组件命名对齐第 10 节
+- [ ] 路由按第 11 节契约（预渲染 + fetch-and-swap）或证明更优方案
+- [ ] 品牌资产按第 2 节产出：品牌标 favicon 矩阵（SVG 主 + PNG 兜底 + apple-touch）与 OG 分享卡
+- [ ] 接入 Lighthouse 门禁脚本并设阈值（§13 实况）；包管理器单一 lockfile 并在 §10 记录
+- [ ] README/AGENTS 注明「遵循 DESIGN.md」
 
-## 13. 治理
+## 15. 治理
 
-- Token 变更以 **ZJSearch 实现为基准源**：改 token 先改 zjsearch，再同步本仓库与本文档（PR 中附两边截图对比）。
 - 新片段/新 token 必须先更新本文档再落码；文档与实现不一致按 bug 处理。
