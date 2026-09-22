@@ -15,7 +15,9 @@
   --tw-prose-quotes: color-mix(in oklab, var(--ink) 90%, transparent);
   --tw-prose-quote-borders: var(--accent-strong);
   --tw-prose-captions: var(--ink-2);
-  --tw-prose-code: var(--accent);
+  /* 行内代码主色用 hover 档（#7a5c00）：--accent(#8c6800) 在 --surface-2
+     底上对比度 4.46:1，过不了 4.5 门禁 */
+  --tw-prose-code: var(--accent-hover);
   --tw-prose-pre-code: var(--code-fg);
   --tw-prose-pre-bg: var(--code-bg);
   --tw-prose-th-borders: var(--line);
@@ -53,6 +55,14 @@
   background: var(--surface-2);
   border-radius: 4px;
   padding: 0.1em 0.35em;
+}
+
+/* 脚注返回符 ↩ 字形极小：padding 撑大命中区（≥24px），负 margin 抵消
+   保持版面不变 */
+.prose :where(a.data-footnote-backref):not(:where([class~="not-prose"] *)) {
+  display: inline-block;
+  padding: 0.45em 0.55em;
+  margin: -0.45em -0.55em;
 }
 
 /* GFM 任务清单：复选框为装饰（构建期已 aria-hidden），去掉列表符号 */
@@ -370,7 +380,9 @@
 .prose .callout-title {
   margin: 0 0 0.35rem;
   font-weight: 600;
-  color: var(--callout-color);
+  /* 装饰色直接当标题色对比度不足（amber note 在自着色底上仅 1.53:1）：
+     往墨色收 55% 保住色相，明暗两态全部类型 ≥ 4.5:1（最差 light note 5.56） */
+  color: color-mix(in oklab, var(--callout-color) 45%, var(--ink));
 }
 
 .prose details.callout > .callout-title {

@@ -229,8 +229,14 @@ async function main() {
     const RESTART_EVERY = 4;
     async function freshChrome() {
       if (chrome) {
-        // chrome-launcher 的 kill() 在不同版本可能返回 void,统一包成 Promise
-        await Promise.resolve(chrome.kill()).catch(() => {});
+        // Windows 上 Edge 退出瞬间仍锁着临时目录，kill() 内部的 rmSync 会以
+        // EPERM **同步**抛出（不是 promise rejection，.catch 拦不住）——必须
+        // try/catch 吞掉：残留临时目录交给系统清理，实例已死即达到目的
+        try {
+          await Promise.resolve(chrome.kill()).catch(() => {});
+        } catch {
+          // 清理失败不影响审计
+        }
         chrome = undefined;
       }
       chrome = await launch({ chromeFlags: ["--headless=new"] });

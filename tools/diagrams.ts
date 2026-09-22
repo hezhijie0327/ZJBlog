@@ -267,5 +267,8 @@ export function plantumlFigure(code: string): string {
     .replace(/@enduml\s*$/i, "")
     .trim();
   const src = `https://www.plantuml.com/plantuml/svg/${encoder.encode(body || code.trim())}`;
-  return `<img alt="PlantUML diagram" class="plantuml-img" decoding="async" loading="lazy" src="${src}"/>`;
+  // width/height 是占位比例（真实尺寸由服务端 SVG 自带，CSS width:100% +
+  // height:auto 收口）：无尺寸的 lazy <img> 过不了 Lighthouse unsized-images，
+  // 且加载前完全不预留版面。
+  return `<img alt="PlantUML diagram" class="plantuml-img" decoding="async" height="720" loading="lazy" src="${src}" width="1280"/>`;
 }
