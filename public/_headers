@@ -4,5 +4,8 @@
 # 渲染退化为无主题样式。dev 侧由 vite.config server.cors 提供同一头。
 # 文件内容是公开色板，通配放行即可。
 
-/giscus-theme.css
+/giscus-light.css
+  Access-Control-Allow-Origin: *
+
+/giscus-dark.css
   Access-Control-Allow-Origin: *
