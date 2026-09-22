@@ -41,8 +41,8 @@ export function ProjectsPage({ data }: { data: ProjectsData }) {
         <EmptyState className="mx-auto max-w-md" desc={t("projects.empty.desc")} title={t("projects.empty.title")} />
       )}
 
-      {/* GitHub 入口 */}
-      <div className="text-center">
+      {/* GitHub 入口（mt-10 与上方 section 的 mb-16 折叠，只在空状态下提供间隔） */}
+      <div className="mt-10 text-center">
         <a className={BTN_OUTLINE} href={siteConfig.social.github} rel="noopener noreferrer" target="_blank">
           <GithubIcon aria-hidden="true" className="size-4" />
           {t("projects.githubMore")}
