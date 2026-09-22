@@ -7,7 +7,7 @@ import { cn } from "@/lib/cn.ts";
 interface PageHeadingProps {
   /** 中文标题（h1） */
   title: string;
-  /** 小标签（等宽字体；英文界面为英文，中文界面为空隐藏） */
+  /** 小标签（等宽字体；中文界面作英文点缀，英文界面与标题重复，传空隐藏） */
   en?: string;
   /** 右侧补充说明（如数量） */
   hint?: string;

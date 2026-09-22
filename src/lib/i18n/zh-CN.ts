@@ -32,11 +32,11 @@ export const ZH_CN: Record<StringKey, string> = {
 
   // 页头（SectionHeading）
   "page.blogs.title": "全部文章",
-  "page.blogs.en": "",
+  "page.blogs.en": "Blog",
   "page.archives.title": "归档",
-  "page.archives.en": "",
+  "page.archives.en": "Archive",
   "page.projects.title": "项目",
-  "page.projects.en": "",
+  "page.projects.en": "Projects",
   "page.support.title": "支持",
 
   // 首页章节

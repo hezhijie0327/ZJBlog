@@ -32,11 +32,11 @@ export const EN = {
 
   // 页头（SectionHeading）
   "page.blogs.title": "All Posts",
-  "page.blogs.en": "Blog",
+  "page.blogs.en": "",
   "page.archives.title": "Archives",
-  "page.archives.en": "Archive",
+  "page.archives.en": "",
   "page.projects.title": "Projects",
-  "page.projects.en": "Projects",
+  "page.projects.en": "",
   "page.support.title": "Support",
 
   // 首页章节
