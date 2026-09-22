@@ -44,13 +44,19 @@ export function ProjectCard({ project, index, heading: Heading }: ProjectCardPro
   const domain = domainOf(project);
   // 封面上的短名：取「 - 」前的主名，避免长标题在封面里换行
   const shortName = project.title.split(/\s+[-—]\s+/)[0] ?? project.title;
+  // 物理感：钉在板上的卡片各有微小歪斜、胶带位置角度不重样。
+  // 按序号确定性轮换（不能用随机数，SSR 与客户端水合必须一致）。
+  const tilt = index % 2 === 0 ? "-rotate-[0.35deg]" : "rotate-[0.45deg]";
+  const tape =
+    index % 3 === 0
+      ? "left-1/2 -translate-x-1/2 -rotate-2"
+      : index % 3 === 1
+        ? "left-10 -rotate-6"
+        : "right-10 rotate-[5deg]";
   return (
-    <Link className={cn(CARD_HOVER, "group relative flex flex-col pt-5")} href={`/projects/${project.slug}/`}>
-      {/* 胶带（纯装饰） */}
-      <span
-        aria-hidden="true"
-        className="absolute -top-2.5 left-1/2 z-10 h-6 w-28 -translate-x-1/2 -rotate-2 bg-accent-soft/80"
-      />
+    <Link className={cn(CARD_HOVER, "group relative flex flex-col pt-5", tilt)} href={`/projects/${project.slug}/`}>
+      {/* 胶带（纯装饰）：压在卡片上缘，位置角度随序号变化 */}
+      <span aria-hidden="true" className={cn("absolute -top-2.5 z-10 h-6 w-24 bg-accent-soft/80", tape)} />
       {/* 封面：frontmatter.image 优先，缺省为品牌化纸面封面（首字母 + 域名） */}
       <div className="relative overflow-hidden border-b border-line">
         {project.image ? (

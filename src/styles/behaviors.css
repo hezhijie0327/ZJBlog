@@ -31,6 +31,20 @@ html {
   animation: fade-in 0.2s ease-out both;
 }
 
+/* Hero 滚动提示箭头：轻微上下浮动引导下滑；上面的 reduced-motion 闸会把它收成静止。 */
+@keyframes hint-bob {
+  from {
+    transform: translateY(-2px);
+  }
+  to {
+    transform: translateY(3px);
+  }
+}
+
+.animate-hint-bob {
+  animation: hint-bob 1.6s ease-in-out infinite alternate;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

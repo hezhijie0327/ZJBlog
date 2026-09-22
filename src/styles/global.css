@@ -96,6 +96,52 @@
   filter: drop-shadow(2px 4px 0 color-mix(in oklab, var(--ink) 14%, transparent));
 }
 
+/* 首页章节手绘分隔线（对标 justin3go 的 home-section + home-section:before）：
+   细线轻微旋转，模拟纸页之间的手账分隔。 */
+.paper-chapter {
+  position: relative;
+}
+
+.paper-chapter + .paper-chapter::before {
+  content: "";
+  position: absolute;
+  inset-inline: 1rem;
+  top: 0;
+  height: 1px;
+  background: var(--line);
+  transform: rotate(-0.4deg);
+  opacity: 0.7;
+}
+
+/* Hero 标题的马克笔高亮：撕边纸条代替直线矩形 + 轻微歪斜 ——
+   物理世界里手贴的纸带不会与文字基线严格平行，边缘也不会是直线。 */
+.marker-strip {
+  clip-path: polygon(
+    0 14%,
+    6% 4%,
+    15% 10%,
+    28% 2%,
+    42% 11%,
+    57% 5%,
+    72% 11%,
+    88% 3%,
+    100% 9%,
+    97% 36%,
+    100% 61%,
+    98% 83%,
+    93% 100%,
+    79% 92%,
+    63% 100%,
+    46% 93%,
+    30% 100%,
+    14% 93%,
+    2% 100%,
+    0 70%,
+    3% 40%
+  );
+  transform: rotate(-0.5deg);
+}
+
 /* 正文图片灯箱背板（dialog::backdrop 无法用 utilities 命中） */
 .lightbox::backdrop {
   background: rgb(0 0 0 / 0.6);

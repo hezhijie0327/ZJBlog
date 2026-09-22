@@ -9,9 +9,14 @@ export const ZH_CN: Record<StringKey, string> = {
   "site.author": "贺治杰",
 
   // Hero
-  "hero.kicker": "技术 · 开源 · 生活",
-  "hero.greeting": "Hi, 我是",
+  "hero.kicker": "欢迎来到我的自留地",
+  "hero.headline": "折腾技术，",
+  "hero.headlineAccent": "记录生活。",
   "hero.motto": "求知若渴，虚心若愚。",
+  "hero.noteTagline": "工作 / 生活 / 笔记",
+  "hero.noteBirthday": "2000.03.27",
+  "hero.noteHello": "你好，世界。",
+  "hero.scrollHint": "向下滚动，故事继续",
 
   // 导航
   "nav.home": "首页",
@@ -41,9 +46,9 @@ export const ZH_CN: Record<StringKey, string> = {
 
   // 首页章节
   "home.featured.title": "精选项目",
-  "home.featured.en": "",
+  "home.featured.en": "Selected Work",
   "home.recent.title": "最新思考",
-  "home.recent.en": "",
+  "home.recent.en": "Recent Posts",
   "home.cta.projects": "查看项目",
   "home.cta.blogs": "阅读博客",
   "home.moreProjects": "更多项目",
@@ -51,7 +56,7 @@ export const ZH_CN: Record<StringKey, string> = {
   "home.viewAllPosts": "查看全部文章",
   "home.emptyPosts": "还没有文章，敬请期待。",
   "home.contact.title": "打个招呼。",
-  "home.contact.en": "",
+  "home.contact.en": "SAY HELLO",
   "home.contact.desc": "对项目或文章有想法？来 GitHub 找我，或通过 RSS 订阅更新。",
   "home.storybar": "页面章节",
 

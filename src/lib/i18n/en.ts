@@ -9,9 +9,14 @@ export const EN = {
   "site.author": "Zhijie He",
 
   // Hero
-  "hero.kicker": "Tech · Open Source · Life",
-  "hero.greeting": "Hi, I'm ",
+  "hero.kicker": "Welcome to my corner of the web",
+  "hero.headline": "Tinkering with tech,",
+  "hero.headlineAccent": "recording life.",
   "hero.motto": "Stay Hungry, Stay Foolish.",
+  "hero.noteTagline": "Work / Life / Notes",
+  "hero.noteBirthday": "2000.03.27",
+  "hero.noteHello": "hello, world.",
+  "hero.scrollHint": "Scroll down, the story continues",
 
   // 导航
   "nav.home": "Home",
@@ -41,9 +46,9 @@ export const EN = {
 
   // 首页章节
   "home.featured.title": "Featured Projects",
-  "home.featured.en": "Selected Work",
+  "home.featured.en": "",
   "home.recent.title": "Latest Writing",
-  "home.recent.en": "Recent Posts",
+  "home.recent.en": "",
   "home.cta.projects": "View Projects",
   "home.cta.blogs": "Read the Blog",
   "home.moreProjects": "MORE PROJECTS",
@@ -51,7 +56,7 @@ export const EN = {
   "home.viewAllPosts": "View all posts",
   "home.emptyPosts": "No posts yet — stay tuned.",
   "home.contact.title": "Say hello.",
-  "home.contact.en": "SAY HELLO",
+  "home.contact.en": "",
   "home.contact.desc": "Ideas about a project or a post? Find me on GitHub, or subscribe via RSS to follow along.",
   "home.storybar": "Page sections",
 
