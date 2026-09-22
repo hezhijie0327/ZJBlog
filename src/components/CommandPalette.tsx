@@ -20,12 +20,78 @@ interface SearchItem {
 const LIST_ID = "command-palette-list";
 const OPTION_PREFIX = "command-palette-option";
 
-function matches(item: SearchItem, q: string): boolean {
+/** 命中位置 → 相关度（title > tags > description）；null = 不匹配。 */
+function matchRank(item: SearchItem, q: string): number | null {
   const needle = q.toLowerCase();
+  if (item.title.toLowerCase().includes(needle)) {
+    return 0;
+  }
+  if (item.tags.some((tag) => tag.toLowerCase().includes(needle))) {
+    return 1;
+  }
+  if (item.description?.toLowerCase().includes(needle)) {
+    return 2;
+  }
+  return null;
+}
+
+/** 把 text 按 q（大小写不敏感）切分成命中/未命中片段，供 <mark> 高亮。 */
+function highlightParts(text: string, q: string): { text: string; hit: boolean }[] {
+  const lower = text.toLowerCase();
+  const needle = q.toLowerCase();
+  const parts: { text: string; hit: boolean }[] = [];
+  let from = 0;
+  while (needle && from <= text.length) {
+    const at = lower.indexOf(needle, from);
+    if (at === -1) {
+      break;
+    }
+    if (at > from) {
+      parts.push({ text: text.slice(from, at), hit: false });
+    }
+    parts.push({ text: text.slice(at, at + needle.length), hit: true });
+    from = at + needle.length;
+  }
+  if (from < text.length) {
+    parts.push({ text: text.slice(from), hit: false });
+  }
+  return parts;
+}
+
+/** 描述里命中词附近的摘录（前 48 / 后 64 字符），供结果第二行展示。 */
+function excerptAround(text: string, q: string): string {
+  const at = text.toLowerCase().indexOf(q.toLowerCase());
+  const start = Math.max(0, at - 48);
+  const end = Math.min(text.length, at + q.length + 64);
+  return `${start > 0 ? "…" : ""}${text.slice(start, end)}${end < text.length ? "…" : ""}`;
+}
+
+/** 结果第二行的命中上下文：优先描述摘录；仅标签命中时列出命中标签。 */
+function buildContext(item: SearchItem, q: string): string | null {
+  if (!q) {
+    return null;
+  }
+  if (item.description?.toLowerCase().includes(q.toLowerCase())) {
+    return excerptAround(item.description, q);
+  }
+  const tags = item.tags.filter((tag) => tag.toLowerCase().includes(q.toLowerCase()));
+  return tags.length > 0 ? tags.map((tag) => `#${tag}`).join("  ") : null;
+}
+
+/** 命中词 <mark> 高亮（bg-highlight 即选区/高亮 token）。 */
+function Highlight({ text, q }: { text: string; q: string }) {
   return (
-    item.title.toLowerCase().includes(needle) ||
-    (item.description?.toLowerCase().includes(needle) ?? false) ||
-    item.tags.some((tag) => tag.toLowerCase().includes(needle))
+    <>
+      {highlightParts(text, q.trim()).map((part, i) =>
+        part.hit ? (
+          <mark className="rounded-xs bg-highlight px-0.5 text-ink" key={i}>
+            {part.text}
+          </mark>
+        ) : (
+          <span key={i}>{part.text}</span>
+        ),
+      )}
+    </>
   );
 }
 
@@ -140,7 +206,13 @@ export function CommandPalette() {
     if (!q) {
       return index.slice(0, 8);
     }
-    return index.filter((item) => matches(item, q)).slice(0, 12);
+    // 相关度排序：标题命中 > 标签命中 > 描述命中（同 rank 保持索引顺序）
+    return index
+      .map((item) => ({ item, rank: matchRank(item, q) }))
+      .filter((entry): entry is { item: SearchItem; rank: number } => entry.rank !== null)
+      .sort((a, b) => a.rank - b.rank)
+      .slice(0, 12)
+      .map((entry) => entry.item);
   }, [index, query]);
 
   // 渲染期收敛激活下标，避免结果变短时越界
@@ -234,41 +306,54 @@ export function CommandPalette() {
               {query.trim() ? t("search.noResults") : t("search.emptyIndex")}
             </p>
           ) : (
-            results.map((item, i) => (
-              <button
-                aria-selected={i === active}
-                className={cn(
-                  "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors",
-                  i === active ? "bg-surface-2" : "bg-transparent",
-                )}
-                id={`${OPTION_PREFIX}-${i}`}
-                key={item.href}
-                onClick={() => {
-                  go(item);
-                }}
-                onMouseEnter={() => {
-                  setActiveIndex(i);
-                }}
-                ref={(el) => {
-                  // 键盘导航时保证激活项滚动到可见区域
-                  if (i === active && el) {
-                    el.scrollIntoView({ block: "nearest" });
-                  }
-                }}
-                role="option"
-                tabIndex={-1}
-                type="button"
-              >
-                {item.type === "blog" ? (
-                  <FileText aria-hidden="true" className="size-4 shrink-0 text-ink-3" />
-                ) : (
-                  <FolderGit2 aria-hidden="true" className="size-4 shrink-0 text-ink-3" />
-                )}
-                <span className="min-w-0 flex-1 truncate text-sm font-medium text-ink">{item.title}</span>
-                <span className={cn(CHIP, "shrink-0 font-mono text-[11px]")}>{typeLabel[item.type]}</span>
-                <ArrowUpRight aria-hidden="true" className="size-3.5 shrink-0 text-ink-3" />
-              </button>
-            ))
+            results.map((item, i) => {
+              const q = query.trim();
+              const context = buildContext(item, q);
+              return (
+                <button
+                  aria-selected={i === active}
+                  className={cn(
+                    "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors",
+                    i === active ? "bg-surface-2" : "bg-transparent",
+                  )}
+                  id={`${OPTION_PREFIX}-${i}`}
+                  key={item.href}
+                  onClick={() => {
+                    go(item);
+                  }}
+                  onMouseEnter={() => {
+                    setActiveIndex(i);
+                  }}
+                  ref={(el) => {
+                    // 键盘导航时保证激活项滚动到可见区域
+                    if (i === active && el) {
+                      el.scrollIntoView({ block: "nearest" });
+                    }
+                  }}
+                  role="option"
+                  tabIndex={-1}
+                  type="button"
+                >
+                  {item.type === "blog" ? (
+                    <FileText aria-hidden="true" className="size-4 shrink-0 text-ink-3" />
+                  ) : (
+                    <FolderGit2 aria-hidden="true" className="size-4 shrink-0 text-ink-3" />
+                  )}
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-medium text-ink">
+                      <Highlight q={q} text={item.title} />
+                    </span>
+                    {context && (
+                      <span className="mt-0.5 block truncate text-xs leading-4 text-ink-3">
+                        <Highlight q={q} text={context} />
+                      </span>
+                    )}
+                  </span>
+                  <span className={cn(CHIP, "shrink-0 font-mono text-[11px]")}>{typeLabel[item.type]}</span>
+                  <ArrowUpRight aria-hidden="true" className="size-3.5 shrink-0 text-ink-3" />
+                </button>
+              );
+            })
           )}
         </div>
 
