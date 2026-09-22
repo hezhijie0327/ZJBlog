@@ -1,0 +1,11 @@
+# Cloudflare Workers Static Assets 响应头（构建时位于 dist/ 根，随 Vite 从
+# public/ 拷入）。giscus iframe 以 <link crossorigin="anonymous"> 加载自托管
+# 主题 CSS，跨域（giscus.app）必须回 ACAO，否则主题被浏览器拦截，评论区
+# 渲染退化为无主题样式。dev 侧由 vite.config server.cors 提供同一头。
+# 文件内容是公开色板，通配放行即可。
+
+/giscus-light.css
+  Access-Control-Allow-Origin: *
+
+/giscus-dark.css
+  Access-Control-Allow-Origin: *

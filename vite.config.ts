@@ -82,6 +82,13 @@ export default defineConfig(({ isSsrBuild }) => ({
   publicDir: "public/",
   server: {
     port: 5175,
+    // giscus iframe 以 <link crossorigin="anonymous"> 加载自托管主题
+    // public/giscus-*.css，跨域（giscus.app）必须回 ACAO，否则主题样式表
+    // 被浏览器拦截、评论区只剩 currentColor 黑框（生产侧由 public/_headers
+    // 提供同一头）。Vite 默认 origin 白名单只含 localhost。
+    cors: {
+      origin: [/^https?:\/\/(?:(?:[^:]+\.)?localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/, "https://giscus.app"],
+    },
   },
   build: {
     target: browserslistToEsbuild(manifest.browserslist),

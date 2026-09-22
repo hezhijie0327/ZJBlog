@@ -1,13 +1,105 @@
-/*! 基于 giscus 官方主题（MIT，giscus/giscus styles/themes）覆盖 ZJBlog 设计
- *  token 色板。站点明暗由 html.dark 翻转，本文件经 GiscusComments 以
- *  postMessage 切换 light/dark 两份。手工维护：改站点色板后同步覆盖段。 */
-
-/*! MIT License
- * Copyright (c) 2018 GitHub Inc.
- * https://github.com/primer/primitives/blob/main/LICENSE
- */
+/*! ZJBlog giscus 主题（light）。基于 giscus 现行样式表消费的全部变量
+ *  （104 个，新旧两套 primer 命名并存）给出完整定义，取值映射 ZJBlog
+ *  设计 token（DESIGN.md §2）。注意 giscus 官方主题文件尚未覆盖新版变量
+ *  （--color-text-* / --color-bg-* / --color-border-primary 等），未定义时
+ *  border-color 回退 currentColor、背景回退透明，评论区会破相 —— 本文件
+ *  是唯一覆盖源，升级 giscus 后需对照其样式表的变量消费清单核补。
+ *  站点明暗由 html.dark 翻转，light/dark 两份经 GiscusComments 切换。 */
 
 main {
+  /* 前景 */
+  --color-fg-default: #201d17;
+  --color-fg-muted: #6b675c;
+  --color-fg-subtle: #716c61;
+  --color-text-primary: #201d17;
+  --color-text-secondary: #6b675c;
+  --color-text-tertiary: #716c61;
+  --color-text-link: #8c6800;
+  --color-text-success: #1a7f37;
+  --color-text-danger: #d1242f;
+
+  /* 背景（paper 白到暖纸灰的三级面层） */
+  --color-canvas-default: #ffffff;
+  --color-canvas-subtle: #f1efe8;
+  --color-canvas-inset: #f4f2eb;
+  --color-canvas-overlay: #ffffff;
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f1efe8;
+  --color-bg-tertiary: #eae6da;
+  --color-bg-canvas: #ffffff;
+  --color-bg-canvas-inset: #f4f2eb;
+  --color-bg-overlay: #ffffff;
+  --color-bg-info: rgb(140 104 0 / 10%);
+  --color-neutral-muted: rgb(32 29 23 / 8%);
+  --color-hidden-text-expander-bg: #f1efe8;
+
+  /* 边框 */
+  --color-border-default: #ddd6c6;
+  --color-border-muted: #e8e3d8;
+  --color-border-primary: #ddd6c6;
+  --color-border-secondary: #e8e3d8;
+  --color-border-tertiary: #e3ded2;
+  --color-label-border: #e8e3d8;
+
+  /* 按钮（普通态为白底暖边） */
+  --color-btn-text: #201d17;
+  --color-btn-bg: #ffffff;
+  --color-btn-border: #e3ded2;
+  --color-btn-hover-bg: #f1efe8;
+  --color-btn-hover-border: #d6cfbe;
+  --color-btn-active-bg: #eae6da;
+  --color-btn-active-border: #d6cfbe;
+  --color-btn-shadow: 0 1px 0 rgb(32 29 23 / 4%);
+  --color-btn-inset-shadow: inset 0 1px 0 rgb(255 255 255 / 25%);
+
+  /* 主按钮（站点琥珀黄） */
+  --color-btn-primary-text: #241d0e;
+  --color-btn-primary-bg: #f5c84c;
+  --color-btn-primary-border: #f5c84c;
+  --color-btn-primary-hover-bg: #eebd35;
+  --color-btn-primary-hover-border: #eebd35;
+  --color-btn-primary-selected-bg: #eebd35;
+  --color-btn-primary-selected-shadow: inset 0 1px 0 rgb(0 45 17 / 15%);
+  --color-btn-primary-shadow: 0 1px 0 rgb(32 29 23 / 8%);
+  --color-btn-primary-inset-shadow: inset 0 1px 0 rgb(255 255 255 / 20%);
+  --color-btn-primary-disabled-text: rgb(36 29 14 / 55%);
+  --color-btn-primary-disabled-bg: #f3dda0;
+  --color-btn-primary-disabled-border: #f5c84c;
+
+  /* 强调与状态 */
+  --color-accent-fg: #8c6800;
+  --color-accent-emphasis: #8c6800;
+  --color-accent-muted: rgb(140 104 0 / 40%);
+  --color-accent-subtle: rgb(140 104 0 / 10%);
+  --color-success-fg: #1a7f37;
+  --color-attention-fg: #9a6700;
+  --color-attention-muted: rgb(212 167 44 / 40%);
+  --color-attention-subtle: #fff8c5;
+  --color-danger-fg: #d1242f;
+  --color-danger-muted: rgb(255 129 130 / 40%);
+  --color-danger-subtle: #ffebe9;
+
+  /* 分段控件（最早/最新排序）与表情回应 */
+  --color-segmented-control-bg: #f1efe8;
+  --color-segmented-control-button-bg: #ffffff;
+  --color-segmented-control-button-selected-border: #d6cfbe;
+  --color-action-list-item-default-hover-bg: rgb(32 29 23 / 5%);
+  --color-social-reaction-bg-hover: #eae6da;
+  --color-social-reaction-bg-reacted-hover: rgb(140 104 0 / 18%);
+
+  /* 输入框 */
+  --color-input-bg: #ffffff;
+  --color-input-border: #ddd6c6;
+  --color-input-contrast-bg: #f1efe8;
+
+  /* 杂项 */
+  --color-auto-gray-7: #44403a;
+  --color-diff-blob-num-text: #716c61;
+  --color-diff-blob-num-hover-text: #201d17;
+  --color-box-border-info: rgb(140 104 0 / 40%);
+  --color-border-info: rgb(140 104 0 / 40%);
+
+  /* 评论内代码高亮（GitHub prettylights 语义色，保持官方取值） */
   --color-prettylights-syntax-comment: #6e7781;
   --color-prettylights-syntax-constant: #0550ae;
   --color-prettylights-syntax-entity: #8250df;
@@ -38,97 +130,24 @@ main {
   --color-prettylights-syntax-brackethighlighter-angle: #57606a;
   --color-prettylights-syntax-sublimelinter-gutter-mark: #8c959f;
   --color-prettylights-syntax-constant-other-reference-link: #0a3069;
-  --color-btn-text: #24292f;
-  --color-btn-bg: #f6f8fa;
-  --color-btn-border: rgb(31 35 40 / 15%);
-  --color-btn-shadow: 0 1px 0 rgb(31 35 40 / 4%);
-  --color-btn-inset-shadow: inset 0 1px 0 rgb(255 255 255 / 25%);
-  --color-btn-hover-bg: #f3f4f6;
-  --color-btn-hover-border: rgb(31 35 40 / 15%);
-  --color-btn-active-bg: hsl(220deg 14% 93% / 100%);
-  --color-btn-active-border: rgb(31 35 40 / 15%);
-  --color-btn-selected-bg: hsl(220deg 14% 94% / 100%);
-  --color-btn-primary-text: #fff;
-  --color-btn-primary-bg: #1f883d;
-  --color-btn-primary-border: rgb(31 35 40 / 15%);
-  --color-btn-primary-shadow: 0 1px 0 rgb(31 35 40 / 10%);
-  --color-btn-primary-inset-shadow: inset 0 1px 0 rgb(255 255 255 / 3%);
-  --color-btn-primary-hover-bg: #1a7f37;
-  --color-btn-primary-hover-border: rgb(31 35 40 / 15%);
-  --color-btn-primary-selected-bg: hsl(137deg 66% 28% / 100%);
-  --color-btn-primary-selected-shadow: inset 0 1px 0 rgb(0 45 17 / 20%);
-  --color-btn-primary-disabled-text: rgb(255 255 255 / 80%);
-  --color-btn-primary-disabled-bg: #94d3a2;
-  --color-btn-primary-disabled-border: rgb(31 35 40 / 15%);
-  --color-action-list-item-default-hover-bg: rgb(208 215 222 / 32%);
-  --color-segmented-control-bg: #eaeef2;
-  --color-segmented-control-button-bg: #fff;
-  --color-segmented-control-button-selected-border: #8c959f;
-  --color-fg-default: #1F2328;
-  --color-fg-muted: #656d76;
-  --color-fg-subtle: #6e7781;
-  --color-canvas-default: #fff;
-  --color-canvas-overlay: #fff;
-  --color-canvas-inset: #f6f8fa;
-  --color-canvas-subtle: #f6f8fa;
-  --color-border-default: #d0d7de;
-  --color-border-muted: hsl(210deg 18% 87% / 100%);
-  --color-neutral-muted: rgb(175 184 193 / 20%);
-  --color-accent-fg: #0969da;
-  --color-accent-emphasis: #0969da;
-  --color-accent-muted: rgb(84 174 255 / 40%);
-  --color-accent-subtle: #ddf4ff;
-  --color-success-fg: #1a7f37;
-  --color-attention-fg: #9a6700;
-  --color-attention-muted: rgb(212 167 44 / 40%);
-  --color-attention-subtle: #fff8c5;
-  --color-danger-fg: #d1242f;
-  --color-danger-muted: rgb(255 129 130 / 40%);
-  --color-danger-subtle: #ffebe9;
-  --color-primer-shadow-inset: inset 0 1px 0 rgb(208 215 222 / 20%);
-  --color-scale-gray-1: #eaeef2;
-  --color-scale-blue-1: #b6e3ff;
-
-  /*! Extensions from @primer/css/alerts/flash.scss */
-  --color-social-reaction-bg-hover: var(--color-scale-gray-1);
-  --color-social-reaction-bg-reacted-hover: var(--color-scale-blue-1);
 }
 
+/* 分页加载占位线：官方是 GitHub 网纹图，站点不需要 */
 main .pagination-loader-container {
-  background-image: url("https://github.com/images/modules/pulls/progressive-disclosure-line.svg");
+  background-image: none;
 }
 
 main .gsc-loading-image {
   background-image: url("https://github.githubassets.com/images/mona-loading-default.gif");
 }
 
-/* ---- ZJBlog token 覆盖（浅色基准）---- */
-main {
-  --color-btn-text: #201d17;
-  --color-btn-bg: #ffffff;
-  --color-btn-border: #e3ded2;
-  --color-btn-hover-bg: #f1efe8;
-  --color-btn-hover-border: #d6cfbe;
-  --color-btn-primary-text: #241d0e;
-  --color-btn-primary-bg: #f5c84c;
-  --color-btn-primary-border: #f5c84c;
-  --color-btn-primary-hover-bg: #eebd35;
-  --color-btn-primary-hover-border: #eebd35;
-  --color-btn-primary-selected-bg: #eebd35;
-  --color-fg-default: #201d17;
-  --color-fg-muted: #6b675c;
-  --color-fg-subtle: #716c61;
-  --color-canvas-default: #ffffff;
-  --color-canvas-overlay: #ffffff;
-  --color-canvas-subtle: #f1efe8;
-  --color-border-default: #ddd6c6;
-  --color-border-muted: #e8e3d8;
-  --color-accent-fg: #8c6800;
-  --color-accent-emphasis: #8c6800;
-  --color-accent-muted: rgb(140 104 0 / 40%);
-  --color-accent-subtle: rgb(140 104 0 / 10%);
+/* 输入框的 Branding 接管：giscus 未写 textarea 背景（落到浏览器默认值，
+ * 禁用态变灰），placeholder 硬编码为冷灰 #9ca3af —— 均与站点色板不符。 */
+main .gsc-comment-box-textarea {
+  background-color: var(--color-input-bg);
 }
 
-main .pagination-loader-container {
-  background-image: none;
+main .gsc-comment-box-textarea::placeholder {
+  color: var(--color-fg-subtle);
+  opacity: 1;
 }
