@@ -1,9 +1,18 @@
 // 正文图片灯箱：原生 <dialog> 顶层弹层 —— Esc 原生关闭、模态期焦点困在
-// 弹层内；50%–200% 缩放（步进 25%，按钮 / +− 键 / 点击百分比复位），
-// 缩放后可在弹层内滚动平移；点击背板关闭。零依赖实现。
+// 弹层内。固定尺寸舞台（不随图片与缩放变化），图片 object-contain 居中；
+// 0.5×–5× 缩放（滚轮 / +− 键 / 按钮，双击或 0 复位），放大后拖拽平移；
+// 点击背板关闭。零依赖实现（舞台模型与 ZJSearch 的图片查看器同构）。
 
 import { ChevronLeft, ChevronRight, Minus, Plus, X } from "lucide-react";
-import { type KeyboardEvent, type MouseEvent, useEffect, useRef, useState } from "react";
+import {
+  type KeyboardEvent,
+  type MouseEvent,
+  type PointerEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { cn } from "@/lib/cn.ts";
 import { useT } from "@/lib/i18n.ts";
 import { CARD, ICON_BTN } from "@/lib/styles.ts";
@@ -14,8 +23,8 @@ export interface LightboxImage {
 }
 
 const ZOOM_MIN = 0.5;
-const ZOOM_MAX = 2;
-const ZOOM_STEP = 0.25;
+const ZOOM_MAX = 5;
+const ZOOM_FACTOR = 1.15;
 
 const clampZoom = (value: number): number => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Math.round(value * 100) / 100));
 
@@ -29,12 +38,12 @@ export function Lightbox({
   onClose: () => void;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(initialIndex);
   const [zoom, setZoom] = useState(1);
-  /** 缩放基准：图片按视口约束适配后的尺寸（px），onLoad 时测量。
-   *  滚动容器钉死在适配尺寸上 —— 缩放只放大图片、在容器内滚动平移，
-   *  否则 dialog 随内容自适应会把整个框一起撑大。 */
-  const [fitSize, setFitSize] = useState<{ w: number; h: number } | null>(null);
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const [dragging, setDragging] = useState(false);
+  const dragStart = useRef<{ x: number; y: number; ox: number; oy: number } | null>(null);
   const t = useT();
   const image = images[index];
 
@@ -58,17 +67,33 @@ export function Lightbox({
     return () => dialog.removeEventListener("close", onClose);
   }, [onClose]);
 
-  /** 关闭面板（背板/关闭按钮）：交给原生 close()，close 事件驱动父级卸载。 */
-  const close = () => dialogRef.current?.close();
+  const resetZoom = useCallback(() => {
+    setZoom(1);
+    setOffset({ x: 0, y: 0 });
+  }, []);
 
   const step = (delta: number) => {
     setIndex((current) => (current + delta + images.length) % images.length);
-    setZoom(1);
+    resetZoom();
   };
 
-  // 点击背板关闭：事件坐标落在 dialog 矩形外即背板（面板内点击不受影响）。
-  // 键盘触发的 click（Enter/Space）坐标是 (0,0)，永远落在矩形外，先排除，
-  // 否则键盘激活按钮会被误判成背板点击而关闭整个灯箱。
+  // 滚轮缩放（React 合成事件是 passive 的，preventDefault 需手动挂非被动监听）
+  useEffect(() => {
+    const stage = stageRef.current;
+    if (!stage) {
+      return;
+    }
+    const onWheel = (event: WheelEvent) => {
+      event.preventDefault();
+      setZoom((current) => clampZoom(current * (event.deltaY < 0 ? ZOOM_FACTOR : 1 / ZOOM_FACTOR)));
+    };
+    stage.addEventListener("wheel", onWheel, { passive: false });
+    return () => stage.removeEventListener("wheel", onWheel);
+  }, []);
+
+  /** 关闭面板（背板/关闭按钮）：交给原生 close()，close 事件驱动父级卸载。 */
+  const close = () => dialogRef.current?.close();
+
   const onDialogClick = (event: MouseEvent<HTMLDialogElement>) => {
     if (event.clientX === 0 && event.clientY === 0) {
       return;
@@ -93,7 +118,7 @@ export function Lightbox({
       if (event.key === "ArrowLeft" && images.length > 1) {
         step(-1);
       } else if (event.key === "-") {
-        setZoom((current) => clampZoom(current - ZOOM_STEP));
+        setZoom((current) => clampZoom(current / ZOOM_FACTOR));
       }
       return;
     }
@@ -102,12 +127,12 @@ export function Lightbox({
       if (event.key === "ArrowRight" && images.length > 1) {
         step(1);
       } else {
-        setZoom((current) => clampZoom(current + ZOOM_STEP));
+        setZoom((current) => clampZoom(current * ZOOM_FACTOR));
       }
       return;
     }
     if (event.key === "0") {
-      setZoom(1);
+      resetZoom();
     }
   };
 
@@ -118,11 +143,15 @@ export function Lightbox({
   return (
     <dialog
       {...(image.alt ? { "aria-label": image.alt } : {})}
-      className={cn(CARD, "lightbox fixed inset-0 m-auto max-h-[92dvh] max-w-[94vw] p-4 sm:p-5")}
+      className={cn(
+        CARD,
+        "lightbox fixed inset-0 m-auto flex h-[min(92dvh,44rem)] w-[min(94vw,56rem)] flex-col p-4 sm:p-5",
+      )}
       onClick={onDialogClick}
       onKeyDown={onKeyDown}
       ref={dialogRef}
     >
+      {/* 工具条：计数 + 缩放档位 + 关闭 */}
       <div className="flex min-h-9 items-center justify-end gap-2 pb-2">
         {images.length > 1 && (
           <span className="mr-auto font-mono text-xs text-ink-3">
@@ -133,7 +162,7 @@ export function Lightbox({
           aria-label={t("lightbox.zoomOut")}
           className={ICON_BTN}
           disabled={zoom <= ZOOM_MIN}
-          onClick={() => setZoom((current) => clampZoom(current - ZOOM_STEP))}
+          onClick={() => setZoom((current) => clampZoom(current / ZOOM_FACTOR))}
           type="button"
         >
           <Minus aria-hidden="true" className="size-4" />
@@ -141,7 +170,7 @@ export function Lightbox({
         {/* 点击百分比复位 100% */}
         <button
           className="min-w-12 rounded px-1 font-mono text-xs text-ink-2 transition-colors hover:text-ink"
-          onClick={() => setZoom(1)}
+          onClick={resetZoom}
           type="button"
         >
           {Math.round(zoom * 100)}%
@@ -150,7 +179,7 @@ export function Lightbox({
           aria-label={t("lightbox.zoomIn")}
           className={ICON_BTN}
           disabled={zoom >= ZOOM_MAX}
-          onClick={() => setZoom((current) => clampZoom(current + ZOOM_STEP))}
+          onClick={() => setZoom((current) => clampZoom(current * ZOOM_FACTOR))}
           type="button"
         >
           <Plus aria-hidden="true" className="size-4" />
@@ -159,47 +188,71 @@ export function Lightbox({
           <X aria-hidden="true" className="size-4" />
         </button>
       </div>
-      {/* 滚动容器钉死在适配尺寸：缩放后超出部分在容器内滚动平移 */}
-      <div
-        className="flex max-h-[calc(92dvh-7rem)] justify-center overflow-auto"
-        style={fitSize ? { width: fitSize.w, height: fitSize.h } : undefined}
-      >
-        <img
-          alt={image.alt}
-          className="m-auto max-w-none shrink-0 rounded-lg"
-          onLoad={(event) => {
-            const img = event.currentTarget;
-            const maxW = dialogRef.current?.clientWidth ?? img.naturalWidth;
-            // 与滚动容器的 CSS 上限（92dvh − 7rem 工具条）保持一致
-            const maxH = window.innerHeight * 0.92 - 112;
-            // 缩放基准 = 图片按弹层约束适配后的尺寸（不超过原尺寸）
-            const fit = Math.min(1, maxW / img.naturalWidth, maxH / img.naturalHeight);
-            setFitSize({ w: img.naturalWidth * fit, h: img.naturalHeight * fit });
+
+      {/* 舞台：固定尺寸，图片 object-contain 居中；缩放/平移走 transform，
+          不改变布局 —— 框永远不因图片大小或缩放档位变化 */}
+      <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden" ref={stageRef}>
+        <div
+          className={cn("flex items-center justify-center", zoom > 1 && "touch-none")}
+          onDoubleClick={resetZoom}
+          onPointerDown={(event: PointerEvent<HTMLDivElement>) => {
+            if (zoom <= 1) {
+              return;
+            }
+            dragStart.current = { x: event.clientX, y: event.clientY, ox: offset.x, oy: offset.y };
+            setDragging(true);
+            event.currentTarget.setPointerCapture(event.pointerId);
           }}
-          src={image.src}
-          style={fitSize ? { width: fitSize.w * zoom } : undefined}
-        />
+          onPointerMove={(event: PointerEvent<HTMLDivElement>) => {
+            const start = dragStart.current;
+            if (!start) {
+              return;
+            }
+            setOffset({ x: start.ox + (event.clientX - start.x), y: start.oy + (event.clientY - start.y) });
+          }}
+          onPointerUp={(event: PointerEvent<HTMLDivElement>) => {
+            dragStart.current = null;
+            setDragging(false);
+            event.currentTarget.releasePointerCapture(event.pointerId);
+          }}
+          style={{
+            cursor: zoom > 1 ? (dragging ? "grabbing" : "grab") : "zoom-in",
+            transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom})`,
+            transition: dragging ? "none" : "transform 150ms ease-out",
+          }}
+        >
+          <img
+            alt={image.alt}
+            className="max-h-[64dvh] max-w-[min(86vw,52rem)] select-none object-contain"
+            draggable={false}
+            src={image.src}
+          />
+        </div>
+        {images.length > 1 && (
+          <>
+            <button
+              aria-label={t("lightbox.prev")}
+              className={cn(ICON_BTN, "absolute left-2 top-1/2 size-10 -translate-y-1/2 bg-bg/90 shadow-card")}
+              onClick={() => {
+                step(-1);
+              }}
+              type="button"
+            >
+              <ChevronLeft aria-hidden="true" className="size-5" />
+            </button>
+            <button
+              aria-label={t("lightbox.next")}
+              className={cn(ICON_BTN, "absolute right-2 top-1/2 size-10 -translate-y-1/2 bg-bg/90 shadow-card")}
+              onClick={() => {
+                step(1);
+              }}
+              type="button"
+            >
+              <ChevronRight aria-hidden="true" className="size-5" />
+            </button>
+          </>
+        )}
       </div>
-      {images.length > 1 && (
-        <>
-          <button
-            aria-label={t("lightbox.prev")}
-            className={cn(ICON_BTN, "absolute left-2 top-1/2 size-10 -translate-y-1/2 bg-bg/90 shadow-card")}
-            onClick={() => step(-1)}
-            type="button"
-          >
-            <ChevronLeft aria-hidden="true" className="size-5" />
-          </button>
-          <button
-            aria-label={t("lightbox.next")}
-            className={cn(ICON_BTN, "absolute right-2 top-1/2 size-10 -translate-y-1/2 bg-bg/90 shadow-card")}
-            onClick={() => step(1)}
-            type="button"
-          >
-            <ChevronRight aria-hidden="true" className="size-5" />
-          </button>
-        </>
-      )}
     </dialog>
   );
 }
