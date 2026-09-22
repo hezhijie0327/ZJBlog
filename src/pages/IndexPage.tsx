@@ -82,8 +82,9 @@ export function IndexPage({ data }: { data: HomeData }) {
             </svg>
           </div>
 
-          {/* 纸片拼贴（纯装饰，lg+ 屏显示）：撕边便签 + 胶带 + 头像 + 域名便签 */}
-          <div aria-hidden="true" className="relative hidden shrink-0 select-none lg:block">
+          {/* 纸片拼贴（纯装饰）：撕边便签 + 胶带 + 头像 + 姓名便签。
+              全端可见；max-w-full 防窄屏横向溢出 */}
+          <div aria-hidden="true" className="relative shrink-0 select-none">
             <div className="absolute -top-9 right-3 rotate-[7deg] rounded-sm border border-line bg-bg px-4 py-2.5 font-mono text-[10px] uppercase leading-relaxed tracking-[0.18em] text-ink-3 shadow-card">
               {t("site.author")} · {t("hero.noteBirthday")}
               <br />
@@ -91,7 +92,7 @@ export function IndexPage({ data }: { data: HomeData }) {
             </div>
             {/* 胶带放在 .paper-note 外层：撕边 clip-path 会裁掉子元素，
                 贴纸悬在纸外的角会被剪没；旋转由外层统一承载 */}
-            <div className="relative mt-4 w-[340px] rotate-2">
+            <div className="relative mt-4 w-[340px] max-w-full rotate-2">
               <span className="absolute -top-3 left-9 z-10 h-6 w-24 -rotate-6 bg-accent-soft/80" />
               <span className="absolute -top-2 right-8 z-10 h-6 w-20 rotate-[5deg] bg-accent-soft/60" />
               <div className="paper-note p-10">
