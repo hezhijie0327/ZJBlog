@@ -31,8 +31,10 @@ export function Lightbox({
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [index, setIndex] = useState(initialIndex);
   const [zoom, setZoom] = useState(1);
-  /** 缩放基准：图片按视口约束适配后的宽度（px），onLoad 时测量 */
-  const [fitWidth, setFitWidth] = useState<number | null>(null);
+  /** 缩放基准：图片按视口约束适配后的尺寸（px），onLoad 时测量。
+   *  滚动容器钉死在适配尺寸上 —— 缩放只放大图片、在容器内滚动平移，
+   *  否则 dialog 随内容自适应会把整个框一起撑大。 */
+  const [fitSize, setFitSize] = useState<{ w: number; h: number } | null>(null);
   const t = useT();
   const image = images[index];
 
@@ -157,21 +159,25 @@ export function Lightbox({
           <X aria-hidden="true" className="size-4" />
         </button>
       </div>
-      {/* 缩放后超出弹层时借助原生滚动平移；fit 宽度按视口约束测量 */}
-      <div className="flex max-h-[calc(92dvh-7rem)] justify-center overflow-auto">
+      {/* 滚动容器钉死在适配尺寸：缩放后超出部分在容器内滚动平移 */}
+      <div
+        className="flex max-h-[calc(92dvh-7rem)] justify-center overflow-auto"
+        style={fitSize ? { width: fitSize.w, height: fitSize.h } : undefined}
+      >
         <img
           alt={image.alt}
-          className="m-auto rounded-lg"
+          className="m-auto max-w-none shrink-0 rounded-lg"
           onLoad={(event) => {
             const img = event.currentTarget;
             const maxW = dialogRef.current?.clientWidth ?? img.naturalWidth;
-            const maxH = window.innerHeight * 0.8;
-            // 缩放基准 = 图片按弹层约束适配后的宽度（不超过原尺寸）
+            // 与滚动容器的 CSS 上限（92dvh − 7rem 工具条）保持一致
+            const maxH = window.innerHeight * 0.92 - 112;
+            // 缩放基准 = 图片按弹层约束适配后的尺寸（不超过原尺寸）
             const fit = Math.min(1, maxW / img.naturalWidth, maxH / img.naturalHeight);
-            setFitWidth(img.naturalWidth * fit);
+            setFitSize({ w: img.naturalWidth * fit, h: img.naturalHeight * fit });
           }}
           src={image.src}
-          style={{ width: fitWidth === null ? undefined : `${fitWidth * zoom}px` }}
+          style={fitSize ? { width: fitSize.w * zoom } : undefined}
         />
       </div>
       {images.length > 1 && (
