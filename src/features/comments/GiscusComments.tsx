@@ -62,9 +62,11 @@ export function GiscusComments() {
   }, [visible, configured]);
 
   // 自托管主题 CSS（映射站点 token 色板，见 public/giscus-*.css）：
-  // giscus 以完整 URL 加载自定义主题，跨域 iframe 必须用绝对地址
-  const origin = window.location.origin;
-  const theme = `${origin}/giscus-${dark ? "dark" : "light"}.css`;
+  // giscus 以完整 URL 加载自定义主题，跨域 iframe 必须用绝对地址。
+  // window 仅浏览器可用 —— 渲染期触碰会让 SSR 整树崩溃转客户端渲染
+  // （.prose 不落盘，正文注入断链，文章页全空），SSR 下取空串即可，
+  // iframe 本就只在 visible（仅浏览器可为 true）后挂载。
+  const theme = typeof window === "undefined" ? "" : `${window.location.origin}/giscus-${dark ? "dark" : "light"}.css`;
 
   return (
     <section className="mt-14 border-t border-line pt-8" ref={containerRef}>
