@@ -230,10 +230,15 @@ export async function renderRoute(rawPath: string, assets?: AssetUrls): Promise<
   ].join("\n    ");
   const jsonLd = jsonLdFor(payload, pathname);
   const jsonLdTag = jsonLd ? `<script type="application/ld+json">${jsonLd.replaceAll("<", "\\u003c")}</script>` : "";
-  // dev 模式 KaTeX 样式直连 node_modules（/@fs/），生产指向拷贝到 dist 的文件
-  const katexLink = needsKatex(payload)
-    ? `<link rel="stylesheet" crossorigin href="${a.js.startsWith("/src/") ? `/@fs${katexAssetPath()}` : KATEX_HREF}">`
-    : "";
+  // dev 模式 KaTeX 样式直连 node_modules（/@fs/），生产指向拷贝到 dist 的文件。
+  // /@fs/ 需要 URL 形态路径：POSIX 去掉开头一根斜杠（与前缀拼回），Windows
+  // 盘符路径 C:\… 反斜杠转正斜杠（/ @fsC:\… 会 404，公式页 dev 无样式）。
+  const katexHref = a.js.startsWith("/src/")
+    ? `/@fs/${katexAssetPath()
+        .replace(/^[/\\]/, "")
+        .replaceAll("\\", "/")}`
+    : KATEX_HREF;
+  const katexLink = needsKatex(payload) ? `<link rel="stylesheet" crossorigin href="${katexHref}">` : "";
   // 生产：入口 CSS 以 <link> 送达（单一 CSS 入口=请求合并的既有设计；对比
   // 实验显示内联与 <link> 的 simulated FCP 相同，首帧由关键链之外的因素
   // 主导，保留 <link> 换取浏览器 CSS 缓存复用）。dev：CSS 经 vite JS 模块
