@@ -64,7 +64,7 @@ main {
   --color-btn-primary-inset-shadow: inset 0 1px 0 rgb(255 255 255 / 20%);
   --color-btn-primary-disabled-text: rgb(36 29 14 / 55%);
   --color-btn-primary-disabled-bg: #f3dda0;
-  --color-btn-primary-disabled-border: #f5c84c;
+  --color-btn-primary-disabled-border: #f3dda0;
 
   /* 强调与状态 */
   --color-accent-fg: #8c6800;

@@ -123,9 +123,9 @@
   stroke-width: 1.5;
 }
 
-/* 点位标注：描边光环保证在地图底色上可读 */
+/* 点位标注：描边光环保证在地图底色上可读（--ink 随调色板，暗色下才可读） */
 .prose .geo-label {
-  fill: var(--text);
+  fill: var(--ink);
   font-size: 13px;
   font-weight: 600;
   paint-order: stroke;

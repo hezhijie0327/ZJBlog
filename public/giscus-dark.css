@@ -63,8 +63,10 @@ main {
   --color-btn-primary-shadow: 0 0 transparent;
   --color-btn-primary-inset-shadow: 0 0 transparent;
   --color-btn-primary-disabled-text: rgb(36 29 14 / 55%);
-  --color-btn-primary-disabled-bg: rgb(254 200 67 / 40%);
-  --color-btn-primary-disabled-border: #fec843;
+  /* 禁用态 = accent-strong 朝表面色实心混合（暗色 50%）——不用 alpha：
+     半透明金叠在深纸底上会浑成脏橄榄色 */
+  --color-btn-primary-disabled-bg: #917531;
+  --color-btn-primary-disabled-border: #917531;
 
   /* 强调与状态 */
   --color-accent-fg: #fec843;
