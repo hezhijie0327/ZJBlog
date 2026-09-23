@@ -123,7 +123,7 @@
 
 - 标题一律衬线 + `tracking-tight`；界面正文一律 sans —— 两套排印轨道不混用。
 - 引入 webfont 前必须先过 Lighthouse 门禁评估（历史教训：webfont 曾致 CSS 276KB + perf 91）。
-- 产品变体（ZJSearch，已登记）：品牌区/词标与知识面板（infobox）标题走衬线；结果条目标题（16px 链接）与界面区块标题保持 sans —— 结果页密度优先。词标句点是交互件（hover 出 「Powered by SearXNG」并打开 About）。
+- 产品变体（ZJSearch，已登记）：品牌区/词标与知识面板（infobox）标题走衬线；结果条目标题（16px 链接）与界面区块标题保持 sans —— 结果页密度优先。词标句号是实心金点图形（呼应 §2.2 favicon 句号）；hero 处句点为交互件（hover 出「Powered by SearXNG」并打开 About）。
 
 ## 5. 组件片段（Component Stylings）
 
