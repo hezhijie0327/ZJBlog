@@ -5,14 +5,15 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && vite build --ssr tools/ssr.tsx && node scripts/prerender.mjs",
+    "build": "vite build && vite build --ssr tools/ssr.tsx && node scripts/compress-images.mjs && node scripts/prerender.mjs",
     "lint": "biome check",
     "lint:fix": "biome check --write",
     "tsc": "tsc --noEmit",
     "audit": "node scripts/audit.mjs",
     "linkcheck": "node scripts/linkcheck.mjs",
     "ci": "pnpm run lint && pnpm run tsc && pnpm run build",
-    "clean": "rm -rf dist .vite-ssr node_modules"
+    "clean": "rm -rf dist .vite-ssr node_modules",
+    "img": "node scripts/compress-images.mjs"
   },
   "browserslist": [
     "baseline 2022",
@@ -60,6 +61,7 @@
     "remark-math": "^6.0.0",
     "remark-parse": "^11.0.0",
     "remark-rehype": "^11.1.2",
+    "sharp": "^0.35.4",
     "shiki": "^4.4.3",
     "tailwindcss": "^4.3.3",
     "topojson-client": "^3.1.0",
