@@ -16,6 +16,9 @@ interface MermaidRendererProps {
 
 let mermaidPromise: Promise<Mermaid> | null = null;
 
+/** 渲染 id 序列（模块级递增，禁随机 —— DESIGN.md §7 确定性要求）。 */
+let mermaidSeq = 0;
+
 /** 懒加载 mermaid（模块级缓存，全站只加载一次）。 */
 function loadMermaid(): Promise<Mermaid> {
   mermaidPromise ??= import("mermaid").then((mermaid) => mermaid.default);
@@ -94,7 +97,7 @@ export function MermaidRenderer({ chart }: MermaidRendererProps) {
           theme: theme ? "dark" : "default",
         });
 
-        const id = `mermaid-${Math.random().toString(36).slice(2, 10)}`;
+        const id = `mermaid-${++mermaidSeq}`;
         const { svg: renderedSvg } = await mermaid.render(id, chart);
 
         if (mounted) {

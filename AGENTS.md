@@ -49,7 +49,7 @@ src/
 │   ├── types.ts         # payload 判别联合 + 类型守卫（客户端契约）
 │   ├── theme.ts         # 明暗（localStorage + html.dark + pre-paint 内联脚本防闪烁）
 │   ├── i18n.ts + i18n/  # EN 基准词库 + zh-CN；useT/translateFor
-│   ├── styles.ts        # 设计片段单一来源（DESIGN.md §8）
+│   ├── styles.ts        # 设计片段单一来源（DESIGN.md §5）
 │   └── cn / format / link
 ├── styles/              # global.css 入口 → tokens → base → prose → behaviors
 │                        # （KaTeX 样式不在入口：仅 needsKatex 页面按 /katex.min.css 注入）

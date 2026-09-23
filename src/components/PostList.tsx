@@ -6,14 +6,14 @@ import { Link } from "@/components/Shell.tsx";
 import { TagList } from "@/components/TagList.tsx";
 import { formatDateISO } from "@/lib/format.ts";
 import { useT } from "@/lib/i18n.ts";
-import { CHIP } from "@/lib/styles.ts";
+import { CHIP, DIVIDE_LIST } from "@/lib/styles.ts";
 import type { BlogListItem } from "@/lib/types.ts";
 
 export function PostList({ blogs }: { blogs: BlogListItem[] }) {
   const t = useT();
 
   return (
-    <div className="divide-y divide-line/70">
+    <div className={DIVIDE_LIST}>
       {blogs.map((blog) => (
         <article className="group relative overflow-x-clip py-8 first:pt-0" key={blog.slug}>
           {/* 幽灵日期水印（装饰）：空心描边压在标题后方，横向裁切防小屏溢出 */}

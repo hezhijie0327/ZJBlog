@@ -244,14 +244,19 @@ async function main() {
     }
     await freshChrome();
 
-    /** 单页审计；headless Chrome 偶发 trace 中止时换新实例重试（至多 3 次） */
-    /** @param {string} url @param {number} [port] */
-    async function runPage(url, port = chrome?.port) {
-      if (port === undefined) {
-        throw new Error("browser not launched");
-      }
+    /**
+     * 单页审计；headless Chrome 偶发 trace 中止时换新实例重试（至多 3 次）。
+     * 每次尝试现取 chrome?.port —— freshChrome() 换实例后调试端口会变，
+     * 旧端口上的重试必然失败（曾致全量跑在最重一页上必然 ERROR）。
+     */
+    /** @param {string} url */
+    async function runPage(url) {
       let lastError;
       for (let attempt = 1; attempt <= 3; attempt++) {
+        const port = chrome?.port;
+        if (port === undefined) {
+          throw new Error("browser not launched");
+        }
         try {
           const result = await lighthouse(url, { port, output: "json" }, config);
           const lhr = result?.lhr;
@@ -279,12 +284,12 @@ async function main() {
      */
     /** @param {string} url */
     async function runPageStable(url) {
-      const first = await runPage(url, chrome?.port);
+      const first = await runPage(url);
       const perf = perfOf(first);
       if (perf >= 100 || perf < 98) return first;
       console.log("  … perf near-miss, retrying once and keeping the better run");
       await new Promise((r) => setTimeout(r, 2000));
-      const second = await runPage(url, chrome?.port);
+      const second = await runPage(url);
       return perfOf(second) > perf ? second : first;
     }
 

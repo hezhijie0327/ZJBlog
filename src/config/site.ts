@@ -22,6 +22,8 @@ export const siteConfig = {
   url: "https://www.zhijie.online",
   // 作者中文名（llms.txt 等构建期文案用；UI 显示用 i18n 的 site.author）
   author: "Zhijie He",
+  // 页脚版权持有者（© {year} <copyright>；个人字标，不随产品名变动、不随 UI 语言翻译）
+  copyright: "Zhijie Online",
   social: {
     github: "https://github.com/hezhijie0327",
   },

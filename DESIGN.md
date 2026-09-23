@@ -55,6 +55,7 @@
 
 - 1200×630，**固定浅色基准**：分享卡不随 UI 主题切换，截图页锁定中文基准词库。
 - 构图：kicker → 品牌名（大号衬线）→ 格言 → 底部作者 + 域名；配色与字体全部走设计 token，与站点同源。
+- 产品豁免（ZJSearch，已登记）：搜索工具无社交分享场景，不设 OG 分享卡。
 
 ### 2.4 个人内容资产
 
@@ -95,7 +96,7 @@
 **已登记扩展**
 
 - **OLED `.black` 档**：叠在 `.dark` 之上的第三调色板（`dark`+`black` 双 class），仅再压深表面档（`--bg/--surface/--surface-2/--line/--ink*/--accent-soft/--highlight-bg/--shadow-card`），强调色沿用 `.dark` 值。
-- **固定暗色媒体 chrome 豁免**：图片灯箱、缩略图角标（`TILE_BADGE`）与媒体浮层在**所有调色板下都渲染在同一暗色底上**，主题 token 不适用 —— 允许固定色值（灯箱的 zinc 系文字、`bg-black/70` 角标 scrim）；canvas 画布内的 JS 颜色字面量同豁免（CSS 变量到不了 canvas）。豁免面仅限媒体浮层/角标/画布，页面 UI 一律走 token。
+- **固定暗色媒体 chrome 豁免**：图片灯箱、缩略图角标（`TILE_BADGE`）与媒体浮层在**所有调色板下都渲染在同一暗色底上**，主题 token 不适用 —— 允许固定色值（灯箱的 zinc 系文字、`bg-black/70` 角标 scrim、`.lightbox::backdrop` 的 `rgb(0 0 0/0.6)` 背板）；canvas 画布内的 JS 颜色字面量同豁免（CSS 变量到不了 canvas）。豁免面仅限媒体浮层/角标/画布，页面 UI 一律走 token。
 
 **依赖样式按需加载**：大而少用的样式资产（如 KaTeX，25KB raw）不做全站 render-blocking —— 构建期标记需要的页面，仅对这些页注入对应样式（含字体资产），客户端 SPA 换页再幂等补注。
 
@@ -121,6 +122,7 @@
 
 - 标题一律衬线 + `tracking-tight`；界面正文一律 sans —— 两套排印轨道不混用。
 - 引入 webfont 前必须先过 Lighthouse 门禁评估（历史教训：webfont 曾致 CSS 276KB + perf 91）。
+- 产品变体（ZJSearch，已登记）：品牌区/词标与知识面板（infobox）标题走衬线；结果条目标题（16px 链接）与界面区块标题保持 sans —— 结果页密度优先。词标句点是交互件（hover 出 「Powered by SearXNG」并打开 About）。
 
 ## 5. 组件片段（Component Stylings）
 
@@ -131,7 +133,8 @@
 | `ICON_BTN` | 36px 圆形图标钮（导航/页脚/操作区） | hover：`surface-2` 底 + 字色提亮 |
 | `CARD` | 卡片容器：`rounded-2xl` + `border-line` + `surface` + `shadow-card` | — |
 | `CARD_HOVER` | `CARD` + 可悬停卡 | hover：阴影升 `shadow-pop` |
-| `LIST_CONTAINER` / `LIST_ROW` | 分隔行式列表容器 / 行（`px-5 py-4 sm:px-6`） | row hover：`surface-2` 底 |
+| `LIST_CONTAINER` / `DIVIDE_LIST` | 分隔行式列表容器：卡片壳 / 无壳变体 | — |
+| `LIST_ROW` | 分隔列表行（`px-5 py-4 sm:px-6`），两种容器通用 | row hover：`surface-2` 底 |
 | `BTN_PRIMARY` | 金底胶囊主操作（`h-10 px-5`，文字 `accent-contrast`） | hover：底色加深 + 阴影升 |
 | `BTN_OUTLINE` | 描边胶囊次操作 | hover：`surface-2` 底 |
 | `PAPER_STRIP` | 撕边纸条入口（纸色经 `--strip` 注入） | hover：抬起 `-translate-y-0.5` 回正 |
@@ -170,14 +173,14 @@
 | 场景 | 动效 |
 |---|---|
 | 首屏入场 | `animate-fade-up` + `[animation-delay:Nms]` 阶梯 |
-| 悬停 | 仅 `transition-colors` / `transition-shadow` |
+| 悬停 | 颜色/阴影走 `transition-colors` / `transition-shadow`；轻微位移悬停（按钮抬起、箭头微移）用 `transition-all` |
 | 明暗切换 | 整页交叉淡化（@property 插值）+ 350ms stand-down 窗口（`zjs-palette-anim`） |
 | 换页 | 顶部 2px `animate-progress` 进度条 |
 | 折叠块展开/收起（`<details>`） | `interpolate-size: allow-keywords` + `::details-content` 高度过渡（Chrome 131+ 渐进增强，behaviors.css） |
 | 灯箱进入 | `dialog[open]` 播 `fade-up`，背板 `fade-in`（behaviors.css） |
 | 命令面板开/关 | 背板 `animate-fade-in` / `animate-fade-out`；关闭经 `animationend` 卸载 + 240ms 超时兜底 |
 | 移动抽屉开/合 | 常驻 DOM + `grid-template-rows 0fr↔1fr` 过渡 + `invisible` 管可聚焦性 |
-| 条件渲染面的退出 | `useExitPresence`：`closing` 期播 `-out` 动画 + `inert`，**定时器卸载即超时兜底**，焦点在关闭发起即归还（`useDialogFocus` 传 `!closing`）；reduced-motion 直切卸载 |
+| 条件渲染面的退出 | `closing` 期播 `-out` 动画 + `inert`，**定时器卸载即超时兜底**（ZJBlog 在 CommandPalette 内联实现该模式，家族产品可沉淀为 `useExitPresence` 等钩子），焦点在关闭发起即归还；reduced-motion 直切卸载 |
 
 原则：**每个可交互面都要有进入/退出动画**（模块级条件渲染直切视为缺陷）；退出卸载依赖动画事件时必须有超时兜底。全局尊重 `prefers-reduced-motion`（behaviors.css 一律 0.01ms 收掉）。内容翻页/换 Tab 属内容替换，以进入动画覆盖。
 
@@ -239,7 +242,7 @@ Shell（min-h-dvh 纵向 flex）
   2. 新 UI 先查 lib/styles.ts 片段，没有再新增；新增须先在本文档登记
   3. 深色只经 .dark token 生效；所有动画尊重 prefers-reduced-motion
 
-片段清单  ICON_BTN · CARD(+_HOVER) · LIST_CONTAINER/LIST_ROW · BTN_PRIMARY/BTN_OUTLINE ·
+片段清单  ICON_BTN · CARD(+_HOVER) · LIST_CONTAINER/DIVIDE_LIST/LIST_ROW · BTN_PRIMARY/BTN_OUTLINE ·
           PAPER_STRIP · CHIP/MONO_CHIP · META · SECTION/SECTION_DETAIL
 ```
 

@@ -7,7 +7,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/cn.ts";
 import { useT } from "@/lib/i18n.ts";
 import { useRouter } from "@/lib/router.tsx";
-import { CHIP, META, MONO_CHIP } from "@/lib/styles.ts";
+import { CARD, CHIP, META, MONO_CHIP } from "@/lib/styles.ts";
 
 interface SearchItem {
   title: string;
@@ -267,7 +267,7 @@ export function CommandPalette() {
       role="dialog"
     >
       <div
-        className="w-full max-w-xl overflow-hidden rounded-2xl border border-line bg-surface shadow-pop"
+        className={cn("w-full max-w-xl overflow-hidden", CARD, "shadow-pop")}
         onClick={(e) => {
           e.stopPropagation();
         }}

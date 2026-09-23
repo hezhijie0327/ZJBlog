@@ -1,11 +1,13 @@
 // 文末署名卡：作者 + 授权协议（内容升级不换 branding 的小卡）。
 
+import { cn } from "@/lib/cn.ts";
 import { useT } from "@/lib/i18n.ts";
+import { CARD } from "@/lib/styles.ts";
 
 export function AuthorCard() {
   const t = useT();
   return (
-    <div className="mt-12 flex items-center gap-4 rounded-2xl border border-line bg-surface p-5">
+    <div className={cn("mt-12 flex items-center gap-4", CARD, "p-5")}>
       <img
         alt={t("site.author")}
         className="size-12 rounded-full object-cover ring-1 ring-line"

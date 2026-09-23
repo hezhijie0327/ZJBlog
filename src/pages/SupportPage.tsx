@@ -1,8 +1,9 @@
 // 支持页：微信 / 支付宝二维码。入口是导航右上角的心形图标，页面保持精简。
 
 import { Heart } from "lucide-react";
+import { cn } from "@/lib/cn.ts";
 import { useT } from "@/lib/i18n.ts";
-import { SECTION } from "@/lib/styles.ts";
+import { CARD, SECTION } from "@/lib/styles.ts";
 
 export function SupportPage() {
   const t = useT();
@@ -38,10 +39,7 @@ export function SupportPage() {
 
       <div className="mx-auto mt-10 grid max-w-xl grid-cols-1 gap-4 sm:grid-cols-2">
         {channels.map((item) => (
-          <div
-            className="flex flex-col items-center rounded-2xl border border-line bg-surface p-6 shadow-card"
-            key={item.name}
-          >
+          <div className={cn("flex flex-col items-center", CARD, "p-6")} key={item.name}>
             <div className="mb-5 size-48 rounded-xl border border-line bg-white p-3">
               <img
                 alt={item.image.alt}

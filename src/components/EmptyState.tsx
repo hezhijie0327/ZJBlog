@@ -1,4 +1,4 @@
-// 空状态：DESIGN.md §7 的共享构成（卡片 + 居中标题 + 灰字说明）。
+// 空状态：DESIGN.md §9 的共享构成（卡片 + 居中标题 + 灰字说明）。
 
 import { cn } from "@/lib/cn.ts";
 import { CARD } from "@/lib/styles.ts";

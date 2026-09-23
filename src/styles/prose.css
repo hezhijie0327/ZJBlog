@@ -299,9 +299,11 @@
   line-height: 1.4;
 }
 
-/* KaTeX 渲染失败的原文本（零宽字符等场景）：danger 色提示作者修复 */
+/* KaTeX 渲染失败的原文本（零宽字符等场景）：danger 色提示作者修复。
+   KaTeX 给错误片段注入行内 style="#cc0000"，必须 !important 压过 ——
+   否则暗色底对比度 2.95:1，挂 Lighthouse color-contrast 门禁。 */
 .prose :where(.katex-error):not(:where([class~="not-prose"] *)) {
-  color: var(--danger);
+  color: var(--danger) !important;
 }
 
 /* <details> 折叠块 */

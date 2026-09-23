@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Link } from "@/components/Shell.tsx";
 import { cn } from "@/lib/cn.ts";
 import { useT } from "@/lib/i18n.ts";
+import { CARD } from "@/lib/styles.ts";
 import type { PostNavLink } from "@/lib/types.ts";
 
 export function PostNav({ prev, next }: { prev?: PostNavLink; next?: PostNavLink }) {
@@ -12,8 +13,7 @@ export function PostNav({ prev, next }: { prev?: PostNavLink; next?: PostNavLink
     return null;
   }
 
-  const cardClass =
-    "rounded-2xl border border-line bg-surface p-4 transition-all hover:-translate-y-0.5 hover:border-accent hover:shadow-pop";
+  const cardClass = cn(CARD, "p-4 transition-all hover:-translate-y-0.5 hover:border-accent hover:shadow-pop");
 
   return (
     <nav

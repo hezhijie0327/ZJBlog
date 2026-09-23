@@ -1,6 +1,6 @@
 /*! ZJBlog giscus 主题（light）。基于 giscus 现行样式表消费的全部变量
  *  （104 个，新旧两套 primer 命名并存）给出完整定义，取值映射 ZJBlog
- *  设计 token（DESIGN.md §2）。注意 giscus 官方主题文件尚未覆盖新版变量
+ *  设计 token（DESIGN.md §3）。注意 giscus 官方主题文件尚未覆盖新版变量
  *  （--color-text-* / --color-bg-* / --color-border-primary 等），未定义时
  *  border-color 回退 currentColor、背景回退透明，评论区会破相 —— 本文件
  *  是唯一覆盖源，升级 giscus 后需对照其样式表的变量消费清单核补。

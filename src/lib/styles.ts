@@ -16,8 +16,11 @@ export const CARD = "rounded-2xl border border-line bg-surface shadow-card";
 /** 卡片容器 + 悬停加深阴影 */
 export const CARD_HOVER = `${CARD} transition-shadow hover:shadow-pop`;
 
-/** 紧凑列表容器（分隔行式） */
-export const LIST_CONTAINER = "divide-y divide-line/70 rounded-2xl border border-line bg-surface";
+/** 分隔行式列表（无边框壳变体；卡片壳版本见 LIST_CONTAINER） */
+export const DIVIDE_LIST = "divide-y divide-line/70";
+
+/** 紧凑列表容器（分隔行式，卡片壳） */
+export const LIST_CONTAINER = `rounded-2xl border border-line bg-surface ${DIVIDE_LIST}`;
 
 /** 紧凑列表行（LIST_CONTAINER 内；首页项目行与文章行共用同一节奏） */
 export const LIST_ROW =

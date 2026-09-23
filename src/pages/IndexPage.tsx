@@ -12,7 +12,7 @@ import { featuredProjectCount, moreProjectsCount, siteConfig } from "@/config/si
 import { cn } from "@/lib/cn.ts";
 import { formatDateISO } from "@/lib/format.ts";
 import { useT } from "@/lib/i18n.ts";
-import { CHIP, LIST_ROW, PAPER_STRIP, SECTION } from "@/lib/styles.ts";
+import { CHIP, DIVIDE_LIST, LIST_ROW, PAPER_STRIP, SECTION } from "@/lib/styles.ts";
 import type { HomeData } from "@/lib/types.ts";
 
 export function IndexPage({ data }: { data: HomeData }) {
@@ -40,7 +40,7 @@ export function IndexPage({ data }: { data: HomeData }) {
                 {/* 马克笔高亮：撕边纸条微歪斜，只扫过后半句下半截（纯装饰） */}
                 <span
                   aria-hidden="true"
-                  className="marker-strip absolute -inset-x-1.5 bottom-[0.1em] top-[0.45em] bg-accent-soft"
+                  className="marker-strip pointer-events-none absolute -inset-x-1.5 bottom-[0.1em] top-[0.45em] bg-accent-soft"
                 />
                 <span className="relative">{t("hero.headlineAccent")}</span>
               </span>
@@ -93,12 +93,19 @@ export function IndexPage({ data }: { data: HomeData }) {
             {/* 胶带放在 .paper-note 外层：撕边 clip-path 会裁掉子元素，
                 贴纸悬在纸外的角会被剪没；旋转由外层统一承载 */}
             <div className="relative mt-4 w-[340px] max-w-full rotate-2">
-              <span className="absolute -top-3 left-9 z-10 h-6 w-24 -rotate-6 bg-accent-soft/80" />
-              <span className="absolute -top-2 right-8 z-10 h-6 w-20 rotate-[5deg] bg-accent-soft/60" />
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute -top-3 left-9 z-10 h-6 w-24 -rotate-6 bg-accent-soft/80"
+              />
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute -top-2 right-8 z-10 h-6 w-20 rotate-[5deg] bg-accent-soft/60"
+              />
               <div className="paper-note p-10">
                 <img
                   alt=""
                   className="mx-auto size-44 rounded-full object-cover ring-1 ring-line"
+                  fetchPriority="high"
                   height={176}
                   loading="eager"
                   src="/avatar.jpg"
@@ -191,9 +198,15 @@ export function IndexPage({ data }: { data: HomeData }) {
         />
         {/* 纸面微倾斜 + 两角胶带压住纸边（胶带在 .paper-note 外层，避免被撕边裁剪） */}
         <div className="relative -rotate-[0.35deg]">
-          <span aria-hidden="true" className="absolute -top-3 left-12 z-10 h-6 w-24 -rotate-6 bg-accent-soft/80" />
-          <span aria-hidden="true" className="absolute -top-2 right-14 z-10 h-6 w-20 rotate-[5deg] bg-accent-soft/60" />
-          <div className="paper-note divide-y divide-line/70">
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute -top-3 left-12 z-10 h-6 w-24 -rotate-6 bg-accent-soft/80"
+          />
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute -top-2 right-14 z-10 h-6 w-20 rotate-[5deg] bg-accent-soft/60"
+          />
+          <div className={cn("paper-note", DIVIDE_LIST)}>
             {latestBlogs.length > 0 ? (
               latestBlogs.map((blog) => (
                 <Link className={LIST_ROW} href={`/blogs/${blog.slug}/`} key={blog.slug}>
@@ -225,8 +238,14 @@ export function IndexPage({ data }: { data: HomeData }) {
         <SectionHeading en={t("home.contact.en")} index="03" title={t("home.contact.title")} />
         {/* 纸面便签承载联系入口（标题靠左，便签在剩余空间垂直居中）：轻微反向外倾 + 两角胶带 */}
         <div className="relative mx-auto max-w-2xl rotate-[0.4deg]">
-          <span aria-hidden="true" className="absolute -top-3 left-10 z-10 h-6 w-24 -rotate-3 bg-accent-soft/80" />
-          <span aria-hidden="true" className="absolute -top-3 right-10 z-10 h-6 w-20 rotate-[4deg] bg-accent-soft/60" />
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute -top-3 left-10 z-10 h-6 w-24 -rotate-3 bg-accent-soft/80"
+          />
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute -top-3 right-10 z-10 h-6 w-20 rotate-[4deg] bg-accent-soft/60"
+          />
           <div className="paper-note px-6 py-8 sm:px-10 sm:py-10">
             <p className="mx-auto max-w-xl text-sm leading-relaxed text-ink-2 sm:text-[15px]">
               {t("home.contact.desc")}

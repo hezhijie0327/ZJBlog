@@ -42,7 +42,7 @@ export function ArchivesPage({ data }: { data: ArchivesData }) {
                   {year}
                 </span>
                 <div className="relative mb-5 flex items-baseline gap-4">
-                  <h2 className="font-serif text-3xl font-bold text-ink">{year}</h2>
+                  <h2 className="font-serif text-3xl font-bold tracking-tight text-ink">{year}</h2>
                   <span className="font-mono text-xs text-ink-3">{t("count.nPosts", { n: posts.length })}</span>
                   <span aria-hidden="true" className="h-px flex-1 bg-line" />
                 </div>
