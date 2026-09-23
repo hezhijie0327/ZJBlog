@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && vite build --ssr tools/ssr.tsx && node scripts/compress-images.mjs && node scripts/prerender.mjs",
+    "build": "vite build && vite build --ssr tools/ssr.tsx && node scripts/prerender.mjs && node scripts/compress-images.mjs",
     "lint": "biome check",
     "lint:fix": "biome check --write",
     "tsc": "tsc --noEmit",

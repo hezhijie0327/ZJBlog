@@ -83,7 +83,7 @@ scripts/
 - 重依赖必须惰性：进视口才加载（先例：Mermaid ~2.7MB、three.js、KaTeX 样式按页、giscus iframe）。**持续动画（如 STL 自转）必须随视口启停**（离屏 `setAnimationLoop(null)`），否则长文页持续吃 CPU。
 - 懒组件的关闭路径若依赖 `animationend`（如 CommandPalette 退出动画），必须加超时兜底 —— 渲染管线冻结/事件丢失时 UI 会滞留。
 - 图标：lucide-react；品牌图标（GitHub）用 `components/icons.tsx` 内联 SVG。
-- 图片：`public/images/` 存**原始** PNG/JPG（不做本地预压缩）；`pnpm build` 在 dist 阶段用 `scripts/compress-images.mjs`（sharp）对 `dist/images` 就地压缩 —— 限宽 1920、JPEG q78 mozjpeg / PNG palette、变小才替换，原图始终留在仓库；`pnpm run img` 可单独执行（需先 build）。
+- 图片：`public/images/` 存**原始** PNG/JPG（不做本地预压缩）；最终产物一律 **webp**（对齐 Lab/Web）——`pnpm build` 在 prerender 后用 `scripts/compress-images.mjs`（sharp）把 `dist/images` 的 jpg/png 转为同名 webp（限宽 1920、q80），并改写 dist 内 `.html/.xml/.txt` 的引用；`pnpm run img` 可单独执行。正文引用原始扩展名 `/images/x.jpg` 即可（dev 服务原图）。
 - 可访问性：图标按钮必须 `aria-label`；当前导航项 `aria-current="page"`；装饰元素 `aria-hidden`；正文半透明前景色（color-mix 带 alpha）会导致对比度无法判定而挂审计 —— 关键文字显式用 token 实色。
 
 ## Quality Gates

@@ -1,64 +1,72 @@
-// 构建期图片压缩：仓库 public/images/ 存原始 PNG/JPG，
-// vite build 把 public 原样拷进 dist 后，这里对 dist/images 就地压缩
-// （限宽 resize + 同格式重编码，仅当结果更小才替换，原图不动）。
-// 参考实现：Lab/Web/scripts/compress-images.mjs
-
-import { readdirSync, statSync } from "node:fs";
-import { join } from "node:path";
+// 构建期图片管线：仓库 public/images/ 存原始 PNG/JPG，
+// 最终产物一律为 webp（对齐 Lab/Web 的 Astro 图片管线）。
+// 在 prerender 之后执行：
+//   1) dist/images 内 jpg/png → 同名 .webp（限宽 1920、q80、永不放大），原文件删除
+//   2) 扫描 dist 下 .html/.xml/.txt，把已转换文件的引用改写为 .webp
+// 正文里始终引用原始扩展名（/images/x.jpg），dev 直接服务原图。
+import { readdirSync, readFileSync, statSync, unlinkSync, writeFileSync } from "node:fs";
+import { join, relative } from "node:path";
 import sharp from "sharp";
 
-const root = process.argv[2] ?? "dist/images";
+const dist = process.argv[2] ?? "dist";
+const imagesDir = join(dist, "images");
 const MAX_WIDTH = 1920; // 超过则等比缩小，永不放大
 
-if (!statSync(root, { throwIfNoEntry: false })) {
-  console.log(`compress-images: ${root} 不存在，跳过`);
+if (!statSync(imagesDir, { throwIfNoEntry: false })) {
+  console.log(`compress-images: ${imagesDir} 不存在，跳过`);
   process.exit(0);
 }
 
-let before = 0;
-let after = 0;
-let count = 0;
-
-async function walk(dir) {
+function* walk(dir, pattern) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const p = join(dir, entry.name);
-    if (entry.isDirectory()) {
-      await walk(p);
-      continue;
-    }
-    if (entry.isSymbolicLink() && statSync(p).isDirectory()) {
-      await walk(p);
-      continue;
-    }
-    if (!/\.(jpe?g|png)$/i.test(entry.name)) continue;
-
-    const src = statSync(p).size;
-    before += src;
-    const img = sharp(p, { failOn: "none" });
-    const meta = await img.metadata();
-    const out = meta.width > MAX_WIDTH ? img.resize({ width: MAX_WIDTH }) : img;
-    const tmp = `${p}.tmp`;
-    if (/\.png$/i.test(entry.name)) {
-      await out.png({ quality: 82, compressionLevel: 9, palette: true }).toFile(tmp);
-    } else {
-      await out.jpeg({ quality: 78, mozjpeg: true }).toFile(tmp);
-    }
-    const dst = statSync(tmp).size;
-    if (dst < src) {
-      (await import("node:fs")).renameSync(tmp, p);
-      after += dst;
-      count += 1;
-      const shrunk = meta.width > MAX_WIDTH ? ` (${meta.width}->${MAX_WIDTH}px)` : "";
-      console.log(`${p.replace(/\\/g, "/")}: ${(src / 1024) | 0}kB -> ${(dst / 1024) | 0}kB${shrunk}`);
-    } else {
-      (await import("node:fs")).unlinkSync(tmp);
-      after += src;
-      console.log(`${p.replace(/\\/g, "/")}: keep (${(src / 1024) | 0}kB)`);
-    }
+    if (entry.isDirectory()) yield* walk(p, pattern);
+    else if (entry.isFile() && pattern.test(entry.name)) yield p;
   }
 }
 
-await walk(root);
+const refMap = new Map(); // "/images/a/b.jpg" -> "/images/a/b.webp"
+let count = 0;
+let srcBytes = 0;
+let webpBytes = 0;
+
+for (const p of walk(imagesDir, /\.(jpe?g|png)$/i)) {
+  const webpPath = p.replace(/\.(jpe?g|png)$/i, ".webp");
+  const meta = await sharp(p, { failOn: "none" }).metadata();
+  const pipeline = meta.width > MAX_WIDTH ? sharp(p).resize({ width: MAX_WIDTH }) : sharp(p);
+  await pipeline.webp({ quality: 80 }).toFile(webpPath);
+
+  const srcSize = statSync(p).size;
+  const webpSize = statSync(webpPath).size;
+  srcBytes += srcSize;
+  webpBytes += webpSize;
+  unlinkSync(p);
+  count += 1;
+
+  const rel = relative(imagesDir, p).replace(/\\/g, "/");
+  const from = `/images/${rel}`;
+  const to = `/images/${rel.replace(/\.(jpe?g|png)$/i, ".webp")}`;
+  refMap.set(from, to);
+  const shrunk = meta.width > MAX_WIDTH ? ` (${meta.width}->${MAX_WIDTH}px)` : "";
+  console.log(`${from}: ${(srcSize / 1024) | 0}kB -> ${(webpSize / 1024) | 0}kB webp${shrunk}`);
+}
+
+let files = 0;
+for (const p of walk(dist, /\.(html|xml|txt)$/i)) {
+  let html = readFileSync(p, "utf8");
+  let changed = false;
+  for (const [from, to] of refMap) {
+    if (html.includes(from)) {
+      html = html.split(from).join(to);
+      changed = true;
+    }
+  }
+  if (changed) {
+    writeFileSync(p, html);
+    files += 1;
+  }
+}
+
 console.log(
-  `compress-images: 压缩 ${count} 个文件，${(before / 1024 / 1024).toFixed(2)}MB -> ${(after / 1024 / 1024).toFixed(2)}MB（省 ${((before - after) / 1024).toFixed(0)}kB）`,
+  `compress-images: ${count} 张图转 webp（${(srcBytes / 1024).toFixed(0)}kB -> ${(webpBytes / 1024).toFixed(0)}kB），引用改写 ${files} 个文件`,
 );
