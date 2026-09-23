@@ -76,10 +76,12 @@ export function Navigation() {
     <header className="sticky top-0 z-50 border-b border-line/80 bg-bg/80 backdrop-blur-md">
       <div className="container mx-auto px-4">
         <div className="flex h-14 items-center justify-between gap-3">
-          {/* Logo（纯文字字标，头像只在 Hero 纸片与署名卡出现） */}
+          {/* Logo（纯文字字标 + 品牌句号，头像只在 Hero 纸片与署名卡出现） */}
           <Link className="group flex items-center" href="/">
-            <span className="whitespace-nowrap font-serif text-base font-semibold tracking-tight">
+            <span className="whitespace-nowrap font-serif text-2xl font-semibold tracking-tight">
               {t("site.brand")}
+              {/* 品牌句号（DESIGN.md §2.1）：实心金点收尾，与品牌标句号同色系 */}
+              <span aria-hidden="true" className="ms-0.5 inline-block size-[0.25em] rounded-full bg-accent-strong" />
             </span>
           </Link>
 
