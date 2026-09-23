@@ -2,9 +2,9 @@
 // 新增语言只需两步：
 //   1. 新建 ./i18n/<tag>.ts，导出 Record<StringKey, string>（Partial 亦可）
 //   2. 在下方 CATALOGS 注册
-// UI 语言可切换：默认 zh-CN（与预渲染一致），偏好存 localStorage，由
-// app.tsx 挂载后校正并在导航栏切换。内容（frontmatter/正文）不随 UI 语言
-// 翻译，保持作者原文。
+// UI 语言可切换：无本地偏好时首访按浏览器主语言归一（简中 → zh-CN，其余
+// 一律 → en），SSR/预渲染基准为 zh-CN；偏好存 localStorage，由 app.tsx 挂载
+// 后校正并在导航栏切换。内容（frontmatter/正文）不随 UI 语言翻译，保持作者原文。
 
 import { createContext, useContext, useMemo } from "react";
 import { EN, type StringKey } from "@/lib/i18n/en.ts";
@@ -18,8 +18,8 @@ export type UiLocale = "zh-CN" | "en";
 
 const LOCALE_STORAGE_KEY = "zj-locale";
 
-/** 读取用户语言偏好；无存储时首访按浏览器语言（英文浏览器 → en，其余 →
- *  zh-CN），仍无法判定回退 zh-CN（与预渲染一致）。 */
+/** 读取用户语言偏好；无存储时首访按浏览器主语言归一（简中浏览器 → zh-CN，
+ *  其余一律 → en），无法判定回退 zh-CN（与预渲染一致）。 */
 export function readLocalePreference(): UiLocale {
   if (typeof window === "undefined") {
     return "zh-CN";
@@ -32,7 +32,8 @@ export function readLocalePreference(): UiLocale {
   } catch {
     // 隐私模式等存储不可用时按浏览器语言判定
   }
-  return typeof navigator !== "undefined" && navigator.language?.toLowerCase().startsWith("en") ? "en" : "zh-CN";
+  const primary = navigator.language ?? navigator.languages?.[0];
+  return primary ? themeLocaleTag(primary) : "zh-CN";
 }
 
 export function storeLocalePreference(locale: UiLocale): void {
@@ -49,15 +50,10 @@ const CATALOGS: Record<string, Partial<Record<StringKey, string>>> = {
   "zh-CN": ZH_CN,
 };
 
-type CatalogTag = keyof typeof CATALOGS;
-
-/** 把任意 BCP-47 tag 归一到我们发布的词库（zh* 简中 → zh-CN，其余 → en）。 */
-function themeLocaleTag(locale: string): CatalogTag {
-  const tag = locale.toLowerCase();
-  if (tag.startsWith("zh") && !tag.includes("hant")) {
-    return "zh-CN";
-  }
-  return "en";
+/** 把任意 BCP-47 tag 归一到我们发布的词库：zh* 一律 → zh-CN（繁中暂用简中
+ *  词库，不应让繁中用户落到英文），其余 → en。 */
+function themeLocaleTag(locale: string): UiLocale {
+  return locale.toLowerCase().startsWith("zh") ? "zh-CN" : "en";
 }
 
 export interface I18nContextValue {
