@@ -16,7 +16,7 @@ export const EN = {
   "hero.noteTagline": "Work / Life / Notes",
   "hero.noteBirthday": "2000.03.27",
   "hero.noteHello": "hello, world.",
-  "hero.scrollHint": "Scroll down, the story continues",
+  "hero.scrollHint": "Scroll down",
 
   // 导航
   "nav.home": "Home",
@@ -49,7 +49,7 @@ export const EN = {
   "home.featured.en": "",
   "home.recent.title": "Latest Writing",
   "home.recent.en": "",
-  "home.cta.projects": "View Projects",
+  "home.cta.projects": "See My Work",
   "home.cta.blogs": "Read the Blog",
   "home.moreProjects": "MORE PROJECTS",
   "home.viewAllProjects": "View all projects",

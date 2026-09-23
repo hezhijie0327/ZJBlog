@@ -5,14 +5,14 @@
 // 不用 IntersectionObserver：最后一项（联系）紧挨页尾，contact + footer
 // 撑不满视口剩余空间，滚到底也进不了判定带 —— IO 只在跨越时触发，
 // 永远等不到那次回调；滚动重算才能加「到底部点亮最后一项」的兜底。
-// 锚点跳转为浏览器原生行为（reduced-motion 下为瞬时跳转，见 behaviors.css）。
+// 锚点跳转经 lib/scroll.ts 的 jumpToSection（平滑滚动 + 焦点跟随）。
 
 import { Clapperboard } from "lucide-react";
-import { type MouseEvent, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "@/components/Shell.tsx";
 import { cn } from "@/lib/cn.ts";
 import { useT } from "@/lib/i18n.ts";
-import { isModifiedClick } from "@/lib/link.ts";
+import { jumpToSection } from "@/lib/scroll.ts";
 
 export interface StorySection {
   id: string;
@@ -24,26 +24,7 @@ export function StoryBar({ sections }: { sections: StorySection[] }) {
   const t = useT();
   const [activeId, setActiveId] = useState<string | null>(null);
 
-  // 章节跳转（借鉴 justin3go 的 jumpTo）：修饰键点击交给浏览器默认行为；
-  // 滚动方式依 reduced-motion 选择；hash 用 replaceState 记录（不产生
-  // 原生锚点的瞬时跳转与历史条目）；焦点跟随内容，键盘/读屏器可感知。
-  const jumpTo = (event: MouseEvent<HTMLAnchorElement>, id: string) => {
-    if (isModifiedClick(event)) {
-      return;
-    }
-    const target = document.getElementById(id);
-    if (!target) {
-      return;
-    }
-    event.preventDefault();
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    target.scrollIntoView({ behavior: reduced ? "instant" : "smooth", block: "start" });
-    window.history.replaceState(null, "", `#${id}`);
-    if (!target.hasAttribute("tabindex")) {
-      target.setAttribute("tabindex", "-1");
-    }
-    target.focus({ preventScroll: true });
-  };
+  // 章节跳转走 lib/scroll.ts 的 jumpToSection（与 Hero CTA 同一语义）。
 
   useEffect(() => {
     const visible = sections
@@ -113,7 +94,7 @@ export function StoryBar({ sections }: { sections: StorySection[] }) {
                 )}
                 href={`#${section.id}`}
                 key={section.id}
-                onClick={(event) => jumpTo(event, section.id)}
+                onClick={(event) => jumpToSection(event, section.id)}
               >
                 <span
                   aria-hidden="true"

@@ -12,6 +12,7 @@ import { featuredProjectCount, moreProjectsCount, siteConfig } from "@/config/si
 import { cn } from "@/lib/cn.ts";
 import { formatDateISO } from "@/lib/format.ts";
 import { useT } from "@/lib/i18n.ts";
+import { jumpToSection } from "@/lib/scroll.ts";
 import { CHIP, DIVIDE_LIST, LIST_ROW, PAPER_STRIP, SECTION } from "@/lib/styles.ts";
 import type { HomeData } from "@/lib/types.ts";
 
@@ -49,20 +50,31 @@ export function IndexPage({ data }: { data: HomeData }) {
               {t("hero.motto")}
             </p>
             <div className="animate-fade-up mt-10 flex flex-wrap items-center gap-3 [animation-delay:180ms]">
-              {/* 撕边纸条入口（对标 justin3go 首屏）：金黄纸条 + 纸面次条，交错歪斜 */}
-              <Link
+              {/* 撕边纸条入口：金黄纸条 + 纸面次条，交错歪斜；锚点滚到本页对应 section */}
+              {/* biome-ignore lint/a11y/useValidAnchor: 页内 section 导航，保留 hash 深链，滚动由 jumpToSection 接管 */}
+              <a
                 className={cn(
                   PAPER_STRIP,
                   "-rotate-1 text-accent-contrast [--strip:var(--accent-strong)] hover:[--strip:var(--accent-strong-hover)]",
                 )}
-                href="/projects/"
+                href="#projects"
+                onClick={(event) => {
+                  jumpToSection(event, "projects");
+                }}
               >
                 {t("home.cta.projects")}
                 <ArrowRight aria-hidden="true" className="size-4" />
-              </Link>
-              <Link className={cn(PAPER_STRIP, "rotate-1 [--strip:var(--surface)] hover:text-accent")} href="/blogs/">
+              </a>
+              {/* biome-ignore lint/a11y/useValidAnchor: 同上，页内 section 导航 */}
+              <a
+                className={cn(PAPER_STRIP, "rotate-1 [--strip:var(--surface)] hover:text-accent")}
+                href="#blogs"
+                onClick={(event) => {
+                  jumpToSection(event, "blogs");
+                }}
+              >
                 {t("home.cta.blogs")}
-              </Link>
+              </a>
             </div>
             {/* 手绘箭头（纯装饰） */}
             <svg
@@ -116,7 +128,7 @@ export function IndexPage({ data }: { data: HomeData }) {
             </div>
           </div>
         </div>
-        {/* 底部滚动提示（对标 justin3go「向下滚动，故事继续」）：纯装饰，锚点跳转交给分镜条 */}
+        {/* 底部滚动提示（对标 justin3go「向下滚动」）：纯装饰，锚点跳转交给分镜条 */}
         <p className="absolute inset-x-0 bottom-5 flex items-center justify-center gap-2 font-mono text-[11px] tracking-[0.2em] text-ink-3">
           {t("hero.scrollHint")}
           <ArrowDown aria-hidden="true" className="size-3.5 animate-hint-bob" />
@@ -126,14 +138,14 @@ export function IndexPage({ data }: { data: HomeData }) {
       {/* 故事分镜条：文档流内 sticky，滚过 Hero 后吸附在顶栏下方 */}
       <StoryBar
         sections={[
-          { id: "featured", no: "01", label: t("home.featured.title") },
-          { id: "posts", no: "02", label: t("home.recent.title") },
+          { id: "projects", no: "01", label: t("home.featured.title") },
+          { id: "blogs", no: "02", label: t("home.recent.title") },
           { id: "contact", no: "03", label: t("home.contact.title") },
         ]}
       />
 
       {/* 01 精选项目 */}
-      <section className={cn(SECTION, "paper-chapter scroll-mt-28")} id="featured">
+      <section className={cn(SECTION, "paper-chapter scroll-mt-28")} id="projects">
         <SectionHeading
           en={t("home.featured.en")}
           hint={t("count.projects", { n: data.projects.length })}
@@ -189,7 +201,7 @@ export function IndexPage({ data }: { data: HomeData }) {
       </section>
 
       {/* 02 最新博客 */}
-      <section className={cn(SECTION, "paper-chapter scroll-mt-28")} id="posts">
+      <section className={cn(SECTION, "paper-chapter scroll-mt-28")} id="blogs">
         <SectionHeading
           en={t("home.recent.en")}
           hint={t("count.posts", { n: data.blogs.length })}

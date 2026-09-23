@@ -16,7 +16,7 @@ export const ZH_CN: Record<StringKey, string> = {
   "hero.noteTagline": "工作 / 生活 / 笔记",
   "hero.noteBirthday": "2000.03.27",
   "hero.noteHello": "你好，世界。",
-  "hero.scrollHint": "向下滚动，故事继续",
+  "hero.scrollHint": "向下滚动",
 
   // 导航
   "nav.home": "首页",
@@ -49,7 +49,7 @@ export const ZH_CN: Record<StringKey, string> = {
   "home.featured.en": "Selected Work",
   "home.recent.title": "最新思考",
   "home.recent.en": "Recent Posts",
-  "home.cta.projects": "查看项目",
+  "home.cta.projects": "看看我的作品",
   "home.cta.blogs": "阅读博客",
   "home.moreProjects": "更多项目",
   "home.viewAllProjects": "查看全部项目",
