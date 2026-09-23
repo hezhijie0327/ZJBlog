@@ -3,9 +3,23 @@
 # 主题 CSS，跨域（giscus.app）必须回 ACAO，否则主题被浏览器拦截，评论区
 # 渲染退化为无主题样式。dev 侧由 vite.config server.cors 提供同一头。
 # 文件内容是公开色板，通配放行即可。
+#
+# 纯文本端点必须显式 charset=utf-8：Workers 静态资产对 .txt 只发
+# text/plain，无 charset 时 Chrome 按系统区域编码猜（中文系统猜 GBK），
+# llms.txt 中文全部乱码。_headers 的头会覆盖默认值；llms*.txt 无文件内
+# 声明编码的手段（不像 XML 有 encoding=），robots.txt 一并显式声明。
 
 /giscus-light.css
   Access-Control-Allow-Origin: *
 
 /giscus-dark.css
   Access-Control-Allow-Origin: *
+
+/llms.txt
+  Content-Type: text/plain; charset=utf-8
+
+/llms-full.txt
+  Content-Type: text/plain; charset=utf-8
+
+/robots.txt
+  Content-Type: text/plain; charset=utf-8
