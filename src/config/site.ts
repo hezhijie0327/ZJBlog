@@ -28,7 +28,7 @@ export const siteConfig = {
   // giscus 评论（GitHub Discussions 驱动，按页面路径映射）。repo / repoId
   // 来自仓库元数据；category / categoryId 取自 giscus.app 生成的配置。
   giscus: {
-    repo: "hezhijie0327/blog",
+    repo: "hezhijie0327/ZJBlog",
     repoId: "R_kgDOQsmIRg",
     category: "Announcements",
     categoryId: "DIC_kwDOQsmIRs4C0EgF",
