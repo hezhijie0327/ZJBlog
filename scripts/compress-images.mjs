@@ -17,6 +17,7 @@ if (!statSync(imagesDir, { throwIfNoEntry: false })) {
   process.exit(0);
 }
 
+/** @param {string} dir @param {RegExp} pattern @returns {Generator<string, void, void>} */
 function* walk(dir, pattern) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const p = join(dir, entry.name);

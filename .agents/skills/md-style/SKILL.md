@@ -16,7 +16,7 @@ description: Use when writing or editing any article in this blog (content/blogs
 | 表格 | GFM 表格，支持对齐、行内格式 | 自动滚动容器；单元格内放短句 |
 | 任务清单 | `- [ ]` / `- [x]` | 出发前清单、检查项 |
 | Mermaid | ```mermaid（flowchart / sequence / gantt） | 进视口惰性渲染；中文标签可用 |
-| 地图 | ```geojson / ```topojson | 构建期交互地图 |
+| 地图 | ```geojson / ```topojson | 构建期交互地图；Point 型 Feature 的 `properties.name` 渲染为点位标注，`label-dx` / `label-dy`（数字，默认 7 / -7）可调偏移避让 |
 | 3D | ```stl | 进视口惰性加载 three.js |
 | 数学 | `$…$`、`$$…$$`、```math | KaTeX 按需注入该页 |
 | 脚注 | `[^1]` | 自动聚到文末 |

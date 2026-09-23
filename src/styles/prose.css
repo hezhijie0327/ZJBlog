@@ -123,6 +123,17 @@
   stroke-width: 1.5;
 }
 
+/* 点位标注：描边光环保证在地图底色上可读 */
+.prose .geo-label {
+  fill: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  paint-order: stroke;
+  stroke: var(--surface);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+
 /* STL 3D 查看器占位：渲染前的最小高度防布局跳动 */
 .prose .stl-placeholder {
   min-height: 280px;

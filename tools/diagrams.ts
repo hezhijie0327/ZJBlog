@@ -119,19 +119,32 @@ const GEO_DEPTH: Record<string, number> = {
   MultiPolygon: 3,
 };
 
-function collectGeometries(node: Json, out: Json[]): void {
+function collectGeometries(
+  node: Json,
+  out: Json[],
+  labels: { coords: Coord; name: string; dx: number; dy: number }[],
+): void {
   if (node.type === "FeatureCollection") {
     for (const f of (node.features as Json[] | undefined) ?? []) {
-      collectGeometries(f, out);
+      collectGeometries(f, out, labels);
     }
   } else if (node.type === "Feature") {
     const geometry = node.geometry as Json | null;
-    if (geometry) {
-      collectGeometries(geometry, out);
+    const props = node.properties as Record<string, unknown> | null;
+    if (geometry && typeof props?.name === "string") {
+      if (geometry.type === "Point") {
+        labels.push({
+          coords: geometry.coordinates as Coord,
+          name: props.name,
+          dx: typeof props["label-dx"] === "number" ? props["label-dx"] : 7,
+          dy: typeof props["label-dy"] === "number" ? props["label-dy"] : -7,
+        });
+      }
+      collectGeometries(geometry, out, labels);
     }
   } else if (node.type === "GeometryCollection") {
     for (const g of (node.geometries as Json[] | undefined) ?? []) {
-      collectGeometries(g, out);
+      collectGeometries(g, out, labels);
     }
   } else {
     out.push(node);
@@ -186,10 +199,12 @@ function ringToPath(ring: unknown, depth: number, project: (c: Coord) => Coord, 
   return close ? `${d.join(" ")}Z` : d.join(" ");
 }
 
-/** GeoJSON → 等比投影的静态 SVG（等距圆柱投影 + 自适应包围盒，token 配色） */
+/** GeoJSON → 等比投影的静态 SVG（等距圆柱投影 + 自适应包围盒，token 配色；
+ *  Point 型 Feature 的 properties.name 会渲染为点位标注） */
 export function renderGeoSvg(geo: Json): string {
   const geometries: Json[] = [];
-  collectGeometries(geo, geometries);
+  const labels: { coords: Coord; name: string; dx: number; dy: number }[] = [];
+  collectGeometries(geo, geometries, labels);
   const coords: Coord[] = [];
   for (const g of geometries) {
     forEachCoord(g, (c) => coords.push(c));
@@ -226,7 +241,8 @@ export function renderGeoSvg(geo: Json): string {
         parts.push(`<circle class="geo-point" cx="${x}" cy="${y}" r="4"/>`);
       }
     } else if (type === "LineString") {
-      parts.push(`<path class="geo-line" d="${ringToPath(coordsValue, 0, project, false)}"/>`);
+      // LineString 坐标与环同构（[[x,y],...]），深度必须为 1
+      parts.push(`<path class="geo-line" d="${ringToPath(coordsValue, 1, project, false)}"/>`);
     } else if (type === "MultiLineString") {
       for (const line of (coordsValue as unknown[]) ?? []) {
         parts.push(`<path class="geo-line" d="${ringToPath(line, 1, project, false)}"/>`);
@@ -241,7 +257,16 @@ export function renderGeoSvg(geo: Json): string {
       }
     }
   }
-  return `<svg class="geo-map" viewBox="0 0 ${GEO_W} ${GEO_H}" role="img" aria-label="GeoJSON 地图示意"><rect class="geo-map-bg" width="${GEO_W}" height="${GEO_H}"/>${parts.join("")}</svg>`;
+  const labelEls = labels
+    .map(({ coords, name, dx, dy }) => {
+      const [px, py] = project(coords);
+      const x = Math.round((px + dx) * 10) / 10;
+      const y = Math.round((py + dy) * 10) / 10;
+      const text = name.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+      return `<text class="geo-label" x="${x}" y="${y}">${text}</text>`;
+    })
+    .join("");
+  return `<svg class="geo-map" viewBox="0 0 ${GEO_W} ${GEO_H}" role="img" aria-label="GeoJSON 地图示意"><rect class="geo-map-bg" width="${GEO_W}" height="${GEO_H}"/>${parts.join("")}${labelEls}</svg>`;
 }
 
 /** TopoJSON → GeoJSON（多 objects 合并为单个 FeatureCollection） */

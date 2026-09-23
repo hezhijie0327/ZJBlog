@@ -40,7 +40,7 @@ tags: ["旅游攻略", "横店", "义乌", "国庆出行", "情侣游"]
 {
   "type": "FeatureCollection",
   "features": [
-    { "type": "Feature", "properties": { "name": "上海南站" }, "geometry": { "type": "Point", "coordinates": [121.4344, 31.1558] } },
+    { "type": "Feature", "properties": { "name": "上海南站", "label-dy": 18 }, "geometry": { "type": "Point", "coordinates": [121.4344, 31.1558] } },
     { "type": "Feature", "properties": { "name": "上海虹桥站" }, "geometry": { "type": "Point", "coordinates": [121.3186, 31.1946] } },
     { "type": "Feature", "properties": { "name": "横店影视城" }, "geometry": { "type": "Point", "coordinates": [120.2887, 29.1558] } },
     { "type": "Feature", "properties": { "name": "义乌站" }, "geometry": { "type": "Point", "coordinates": [120.0887, 29.3385] } },
