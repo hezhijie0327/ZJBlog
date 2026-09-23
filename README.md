@@ -83,7 +83,7 @@ image: "/images/cover.jpg" # 封面图，站点根路径；缺省不渲染封面
 
 ```bash
 pnpm build
-npx wrangler deploy    # wrangler.jsonc 指向 ./dist
+pnpm deploy           # = wrangler deploy（锁在 devDependencies；wrangler.jsonc 指向 ./dist）
 ```
 
 ## License

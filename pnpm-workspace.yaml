@@ -2,8 +2,11 @@
 packages: []
 
 # 仅允许这些依赖运行安装脚本
-onlyBuiltDependencies:
-  - esbuild
+allowBuilds:
+  # esbuild 的 postinstall 兜底装平台二进制（vite/wrangler 依赖）
+  esbuild: true
+  # workerd 仅 wrangler dev（本地 Workers 运行时）需要；本仓库纯静态资产部署，用不到
+  workerd: false
 
 # 依赖版本覆盖：强制 mermaid 的解析链使用已修复 lodash-es 漏洞（GHSA-f23m-r3pf-42rh）的版本
 overrides:

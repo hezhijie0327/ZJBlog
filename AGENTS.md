@@ -96,4 +96,4 @@ scripts/
 
 ## Deployment
 
-`pnpm build` → `wrangler deploy`（wrangler.jsonc 指向 ./dist；未知路径服用 404.html）。robots.txt / sitemap.xml / rss.xml / search-index.json / llms.txt / katex.min.css(+fonts/) 由预渲染阶段生成到 dist/；根目录不要放静态文件（走 `public/`）。
+`pnpm build` → `pnpm deploy`（= `wrangler deploy`，锁在 devDependencies；wrangler.jsonc 指向 ./dist；未知路径服用 404.html）。robots.txt / sitemap.xml / rss.xml / search-index.json / llms.txt / katex.min.css(+fonts/) 由预渲染阶段生成到 dist/；根目录不要放静态文件（走 `public/`）。
