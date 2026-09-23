@@ -1,4 +1,4 @@
-// 轻量 SPA 路由（ZJSearch 同款 fetch-and-swap）：每条路由都是完整预渲染
+// 轻量 SPA 路由（fetch-and-swap）：每条路由都是完整预渲染
 // HTML；站内导航 fetch 目标 URL，从返回的 HTML 提取 page-data payload，
 // pushState 换页。网络级失败回退整页加载。
 //

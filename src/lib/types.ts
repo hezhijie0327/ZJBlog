@@ -1,6 +1,6 @@
 // 页面 payload（判别联合）：构建期由 tools/payloads.ts 生成，嵌入每页 HTML 的
 // <script id="page-data" type="application/json">；站内换页时从目标页 HTML 中
-// 提取同名脚本（ZJSearch 同款契约）。globals.page 是判别标签，分发见 src/app.tsx。
+// 提取同名脚本。globals.page 是判别标签，分发见 src/app.tsx。
 
 import type { ComponentType } from "react";
 
@@ -143,7 +143,7 @@ export type AnyPageData =
   | OgData
   | NotFoundData;
 
-// 类型守卫（ZJSearch 同款分发方式；嵌套判别字段无法直接 switch 收窄）
+// 类型守卫（嵌套判别字段无法直接 switch 收窄）
 export function isHomeData(data: AnyPageData): data is HomeData {
   return data.globals.page === "home";
 }

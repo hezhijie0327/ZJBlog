@@ -1,7 +1,7 @@
 // 正文图片灯箱：原生 <dialog> 顶层弹层 —— Esc 原生关闭、模态期焦点困在
 // 弹层内。固定尺寸舞台（不随图片与缩放变化），图片 object-contain 居中；
 // 0.5×–5× 缩放（滚轮 / +− 键 / 按钮，双击或 0 复位），放大后拖拽平移；
-// 点击背板关闭。零依赖实现（舞台模型与 ZJSearch 的图片查看器同构）。
+// 点击背板关闭。零依赖实现。
 
 import { ChevronLeft, ChevronRight, Minus, Plus, X } from "lucide-react";
 import {

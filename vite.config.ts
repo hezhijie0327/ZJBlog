@@ -1,4 +1,4 @@
-// 治杰 Online — Vite 构建配置（ZJSearch 同构 SPA）
+// ZJBlog — Vite 构建配置
 //
 // 两条构建线：
 //   vite build              → 客户端 bundle 到 dist/（含 manifest 供预渲染读取资产名）

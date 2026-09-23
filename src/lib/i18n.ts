@@ -1,5 +1,5 @@
 // UI 文案字典（i18n）：英文（en.ts）是基准，其他 locale 逐键回退 EN。
-// 结构对齐 ZJSearch —— 新增语言只需两步：
+// 新增语言只需两步：
 //   1. 新建 ./i18n/<tag>.ts，导出 Record<StringKey, string>（Partial 亦可）
 //   2. 在下方 CATALOGS 注册
 // UI 语言可切换：默认 zh-CN（与预渲染一致），偏好存 localStorage，由

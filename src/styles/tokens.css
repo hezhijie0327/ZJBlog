@@ -1,4 +1,4 @@
-/* 设计 token：暖纸 / 墨字 / 琥珀金调色板（与 ZJSearch 完全一致的基准值），
+/* 设计 token：暖纸 / 墨字 / 琥珀金调色板，
    色彩 token 以 <color> @property 注册（light / dark 两态），加 Tailwind
    主题映射与命名 keyframes。博客扩展：--font-serif 衬线栈与代码色板。 */
 
@@ -105,7 +105,7 @@
   initial-value: #24211a;
 }
 
-/* 暖纸调色板：暖中性 + 琥珀强调（ZJSearch 基准值） */
+/* 暖纸调色板：暖中性 + 琥珀强调 */
 :root {
   --bg: #faf9f6;
   --surface: #ffffff;

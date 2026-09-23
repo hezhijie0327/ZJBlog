@@ -1,5 +1,5 @@
 /* 元素默认值：底色 / 墨字 / 字体、选区、键盘焦点环、按钮指针。
-   全部走 token，与 ZJSearch 的 base.css 同构。 */
+   全部走 token。 */
 
 @layer base {
   html {

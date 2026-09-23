@@ -31,7 +31,7 @@ pnpm run ci
 
 ## Architecture
 
-**Vite 8 + React 19 纯 SPA，与 ZJSearch（`~/searxng/client/zjsearch`）同构**：每条路由构建期预渲染完整 HTML（`dist/<route>/index.html`，内嵌 `<script id="page-data">` JSON payload）；站内导航由 fetch-and-swap 路由接管（拦截链接 → fetch 目标页 → 提取 payload → pushState）。部署到 Cloudflare Workers Static Assets（`wrangler.jsonc` → `./dist`，`not_found_handling: "404-page"`）。
+**Vite 8 + React 19 纯 SPA**：每条路由构建期预渲染完整 HTML（`dist/<route>/index.html`，内嵌 `<script id="page-data">` JSON payload）；站内导航由 fetch-and-swap 路由接管（拦截链接 → fetch 目标页 → 提取 payload → pushState）。部署到 Cloudflare Workers Static Assets（`wrangler.jsonc` → `./dist`，`not_found_handling: "404-page"`）。
 
 ```
 src/

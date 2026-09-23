@@ -1,8 +1,8 @@
 # ZJBlog
 
-**ZJBlog** —— 贺治杰（He Zhijie）的个人技术博客与项目展示站点。ZJ 产品家族继 ZJSearch 之后的第二个产品。
+**ZJBlog** —— 个人技术博客与项目展示站点。
 
-基于 **Vite + React 19 纯 SPA**（与 [ZJSearch](https://github.com/hezhijie0327) 同构：预渲染 HTML + fetch-and-swap 客户端路由），Tailwind CSS v4，部署在 Cloudflare Workers Static Assets。设计语言遵循 [DESIGN.md](./DESIGN.md)（ZJ 设计系统：暖纸底 × 墨字 × 琥珀金，零 webfont）。开发指南见 [AGENTS.md](./AGENTS.md)。
+基于 **Vite + React 19 纯 SPA**（构建期预渲染完整 HTML + fetch-and-swap 客户端路由），Tailwind CSS v4，部署在 Cloudflare Workers Static Assets。设计语言遵循 [DESIGN.md](./DESIGN.md)（ZJ 设计系统：暖纸底 × 墨字 × 琥珀金，零 webfont）。开发指南见 [AGENTS.md](./AGENTS.md)。
 
 ## 特性
 

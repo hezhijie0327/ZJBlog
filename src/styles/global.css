@@ -1,4 +1,4 @@
-/* ZJBlog 设计系统 —— 单一 CSS 入口（ZJSearch 同构）。
+/* ZJBlog 设计系统 —— 单一 CSS 入口。
    组件样式 = Tailwind utilities（TSX 内）；这里的分件只承载 utilities
    够不到的部分：token、元素默认值、长文排印、文档级行为。
    KaTeX 样式不在此处（全站 render-blocking 代价过高）：构建期由

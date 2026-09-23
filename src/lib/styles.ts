@@ -1,5 +1,5 @@
 /**
- * 设计语言类片段单一来源（ZJSearch 的 lib/styles.ts 约定）
+ * 设计语言类片段单一来源。
  *
  * 重复出现的 Tailwind 组合一律收拢到这里，用 className={FRAGMENT} 消费；
  * 需要覆盖时用 cn(FRAGMENT, "覆盖类")，让 tailwind-merge 处理冲突。
