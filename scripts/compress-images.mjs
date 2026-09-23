@@ -69,7 +69,10 @@ for (const { file, maxWidth } of ROOT_ASSETS) {
 }
 
 let files = 0;
-for (const p of walk(dist, /\.(html|xml|txt)$/i)) {
+// 改写面 = .html/.xml/.txt（prerender 产物与生成文件，payload JSON 内嵌其中）
+// + .js（SPA 换页后组件从 bundle 里的字面量重新挂载，不改写则引用已删除的
+//   原扩展名而 404）+ .json（search-index 等生成索引里的正文引用）。
+for (const p of walk(dist, /\.(html|xml|txt|js|json)$/i)) {
   let html = readFileSync(p, "utf8");
   let changed = false;
   for (const [from, to] of refMap) {
