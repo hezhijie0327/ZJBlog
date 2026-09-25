@@ -278,7 +278,7 @@ src/
 - TypeScript 全严格（含 `noUncheckedIndexedAccess`）；Lint 用 **Biome**（含 sorted-attributes、2 空格、120 列）。
 - TypeScript strict 下禁 `any`；外部宽松响应用 `Raw*` 接口 + 显式收窄。
 - 文案边界：界面词汇 → i18n 词库；个人内容（姓名/格言）→ `config/site.ts`；产品内容 → content/。
-- 包管理器：各产品**单一 lockfile**（pnpm 或 npm）并在产品文档中记录；同一产品内不得混用、不得双 lockfile 并存。
+- 包管理器：各产品**单一 lockfile**（pnpm 或 npm）并在产品文档中记录；同一产品内不得混用、不得双 lockfile 并存。ZJSearch 采用 **pnpm**（`pnpm-lock.yaml` + `packageManager` 钉扎，见 `client/zjsearch/README.rst`）；迁移用 `pnpm import` 保版本一致，严格 node_modules 暴露的幻影依赖（如 `unified` 类型导入）补显式声明。
 
 ## 13. SPA 契约（fetch-and-swap 路由）
 
