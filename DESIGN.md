@@ -140,6 +140,11 @@
 | `BTN_OUTLINE` | 描边胶囊次操作 | hover：`surface-2` 底 |
 | `PAPER_STRIP` | 撕边纸条入口（纸色经 `--strip` 注入） | hover：抬起 `-translate-y-0.5` 回正 |
 | `CHIP` / `MONO_CHIP` | 标签胶囊 / 等宽小号版 | — |
+| `CODE_CHIP` | 方角行内代码令牌（算法名/配置键/许可证），12px 元层 | — |
+| `PILL` | 13px 控制层胶囊底座（导出条/建议条/媒体触发），调用方追加 `gap-*` 与 hover 色 | hover 由调用方给 |
+| `META_TOGGLE` | 结果元行 12px 文本开关（「找到 N 条 · 耗时 X s」） | hover：字色提亮 |
+| `SEGMENT` / `SEGMENT_ACTIVE` / `SEGMENT_IDLE` | 分段控制（偏好页页签、信息页页签、行情区间） | 选中：`accent-strong` 填充 |
+| `SEGMENT_SM` | 紧凑分段（行内选项组：HTTP 方法、主题样式、行情胶囊） | 同上 |
 | `META` | 等宽元信息文字（日期/计数/键位） | — |
 | `SECTION` / `SECTION_DETAIL` | 页面级 / 详情页 section 外壳（§6 节奏） | — |
 
