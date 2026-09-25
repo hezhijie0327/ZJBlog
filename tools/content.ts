@@ -24,6 +24,7 @@ import { createHighlighter } from "shiki";
 import { type Processor, unified } from "unified";
 import type { Node } from "unist";
 import { visit } from "unist-util-visit";
+import type { TocItem } from "../src/lib/types.ts";
 import { remarkCallouts } from "./callouts";
 import {
   plantumlFigure,
@@ -64,8 +65,10 @@ const highlighter = await createHighlighter({
 // ==高亮==（Pandoc/Typora 风格）：micromark 微扩展经标准注入点挂进 remark-parse。
 // 注意 data(key, value) 是整体替换而非追加 —— 必须读出现有列表再 push，
 // 否则会把 remark-gfm / remark-math 已注册的扩展整个顶掉（pandocMark 是
-// 工厂函数，须调用取扩展对象）。mark mdast 节点没有官方 hast handler，
-// 内联补一个（输出形态对齐 gfm strikethrough 的 handler）。
+// 工厂函数，须调用取扩展对象）。mark mdast 节点没有官方 hast handler，在
+// 解析后的树上统一补 data.hName="mark"（与 gfm delete 的 data.hName 同机制，
+// remarkRehype 的未知节点兜底会按它输出 <mark>）—— 不能包装 enter.mark 从
+// 返回值挂：上游 handler 经 this.enter() 建节点、返回 undefined。
 function remarkMark(this: Processor) {
   const data = this.data() as {
     micromarkExtensions?: unknown[];
@@ -73,28 +76,18 @@ function remarkMark(this: Processor) {
   };
   data.micromarkExtensions ??= [];
   data.micromarkExtensions.push(pandocMark());
-  // mdast 层：pandocMarkFromMarkdown 产出 type:"mark" 节点但不带 hast 信息，
-  // 包装其 enter.mark 补 data.hName="mark"（与 gfm delete 的 data.hName 同机制，
-  // remarkRehype 的未知节点兜底会按它输出 <mark>）
-  const inner = pandocMarkFromMarkdown;
-  const originalEnterMark = inner.enter.mark;
-  const fromMarkdownExt = {
-    canContainEols: inner.canContainEols,
-    enter: {
-      ...inner.enter,
-      mark: function (this: unknown, token: unknown) {
-        const node = originalEnterMark?.call(this, token) as { data?: { hName?: string } } | undefined;
-        if (node) {
-          node.data ??= {};
-          node.data.hName = "mark";
-        }
-        return node;
-      },
-    },
-    exit: inner.exit,
-  };
   data.fromMarkdownExtensions ??= [];
-  data.fromMarkdownExtensions.push(fromMarkdownExt);
+  data.fromMarkdownExtensions.push(pandocMarkFromMarkdown);
+  return (tree: Node) => {
+    visit(tree, (node) => {
+      if (node.type !== "mark") {
+        return;
+      }
+      const mark = node as Node & { data?: { hName?: string } };
+      mark.data ??= {};
+      mark.data.hName = "mark";
+    });
+  };
 }
 
 /** 站内图片注入固有尺寸（src 以 / 开头 → public/ 下的文件）：正文里的
@@ -183,12 +176,8 @@ function escapeHtml(text: string): string {
   return text.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 }
 
-/** 目录条目（构建期从编译产物提取，id 与 rehype-slug 生成的锚点一致）。 */
-export interface TocItem {
-  id: string;
-  text: string;
-  depth: 2 | 3;
-}
+/** 目录条目类型 TocItem 与客户端契约同源（src/lib/types.ts）：构建期提取，
+ *  id 与 rehype-slug 生成的锚点一致。 */
 
 /** 单个代码块 → code-card HTML（语言标签 + 复制按钮 + shiki 高亮）。
  *  未识别语言回退纯 <pre><code>，不吞内容。 */

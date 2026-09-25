@@ -131,15 +131,17 @@ function collectGeometries(
   } else if (node.type === "Feature") {
     const geometry = node.geometry as Json | null;
     const props = node.properties as Record<string, unknown> | null;
-    if (geometry && typeof props?.name === "string") {
-      if (geometry.type === "Point") {
-        labels.push({
-          coords: geometry.coordinates as Coord,
-          name: props.name,
-          dx: typeof props["label-dx"] === "number" ? props["label-dx"] : 7,
-          dy: typeof props["label-dy"] === "number" ? props["label-dy"] : -7,
-        });
-      }
+    // name 只决定是否生成点位标注，几何体无论如何都要收集 ——
+    // 否则无 name 的 Feature（如 {ID: 0}）会让整幅地图坐标为空而抛错
+    if (geometry?.type === "Point" && typeof props?.name === "string") {
+      labels.push({
+        coords: geometry.coordinates as Coord,
+        name: props.name,
+        dx: typeof props["label-dx"] === "number" ? props["label-dx"] : 7,
+        dy: typeof props["label-dy"] === "number" ? props["label-dy"] : -7,
+      });
+    }
+    if (geometry) {
       collectGeometries(geometry, out, labels);
     }
   } else if (node.type === "GeometryCollection") {
