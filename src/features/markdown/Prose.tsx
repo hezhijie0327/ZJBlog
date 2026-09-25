@@ -1,7 +1,10 @@
 // 文章正文渲染：构建期编译好的 HTML 直接注入（dangerouslySetInnerHTML），
 // mermaid 占位容器在挂载后逐个替换为懒加载渲染器；代码块的复制按钮走
 // 事件委托（构建期生成的静态按钮，无需逐个挂 React）。
-// 外层 content-visibility 跳过长文的屏外渲染成本。
+// 曾经的 content-visibility:auto + contain-intrinsic-size 优化已移除：
+// Chromium 146+/Edge 153 实测「相关度」不再触发展开，长文在占位高度处被
+// 裁断（正文 92% 不可达，复现页在 Electron 41 与 Edge 153 双双确认）。
+// 正确性优先 —— 屏外渲染成本本就只省一次性 layout，量级远小于内容不可达。
 
 import { useEffect, useRef, useState } from "react";
 import { createRoot, type Root } from "react-dom/client";
@@ -58,11 +61,17 @@ export function Prose({ html, needsKatex }: { html: string; needsKatex?: boolean
     };
   }, [html, needsKatex]);
 
-  // 复制代码按钮：构建期生成的是静态 HTML，事件委托一处接管全部代码块
+  // 复制代码按钮：构建期生成的是静态 HTML（初始文案是构建基准语言），
+  // 事件委托一处接管全部代码块；水合时先把所有按钮文案校正为当前 UI 语言。
   useEffect(() => {
     const container = ref.current;
     if (!container) {
       return;
+    }
+    for (const button of container.querySelectorAll<HTMLButtonElement>(".copy-code")) {
+      if (!button.dataset.copied) {
+        button.textContent = t("post.copyCode");
+      }
     }
     const onClick = (event: MouseEvent) => {
       const button = (event.target as HTMLElement).closest(".copy-code");
@@ -148,11 +157,7 @@ export function Prose({ html, needsKatex }: { html: string; needsKatex?: boolean
 
   return (
     <>
-      <div
-        className="prose max-w-none [content-visibility:auto] [contain-intrinsic-size:auto_2000px]"
-        dangerouslySetInnerHTML={{ __html: html }}
-        ref={ref}
-      />
+      <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: html }} ref={ref} />
       {preview && preview.images.length > 0 && (
         <Lightbox images={preview.images} initialIndex={preview.index} onClose={closePreview} />
       )}
