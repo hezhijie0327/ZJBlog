@@ -113,11 +113,11 @@ tags:
 
 链接悬停提示写法：[Title](https://a.com "hint")
 
-![图片链接](/test/favicon.png)
+![图片链接](/images/markdown-test/favicon.png)
 
 ![图片链接带脚注][2]
 
-[2]: /test/favicon.png " 图片标题 "
+[2]: /images/markdown-test/favicon.png " 图片标题 "
 
 【提示】Obsidian 在浏览模式下正常，在编辑模式有点迷惑，这是由它们的链接特色决定的。
 
@@ -704,11 +704,11 @@ Markdown 风格的嵌入，使用 **\!\[AltText\|100x100\]\(https://url/to/image
 >
 > 行内代码：`Class<?> class = MyClass.class;`
 >
-> 图片：![图片链接](/test/favicon.png)
+> 图片：![图片链接](/images/markdown-test/favicon.png)
 
 > [!error] 标题内公式 $a^2+b^2=c^2$，标题内代码 `Hello world!`
 
-> [!cite] 标题内图片：![图片链接](/test/favicon.png)图片后文字
+> [!cite] 标题内图片：![图片链接](/images/markdown-test/favicon.png)图片后文字
 
 > [!question] Can callouts be nested?
 > > [!todo] Yes!, they can.
@@ -767,7 +767,7 @@ Microsoft Learn 还支持自定义 Markdown 扩展。
 
 可以使用普通的 `<img>` 标签指定图片的高度与宽度：
 
-<img src="/test/favicon.png" alt="图片尺寸演示" height="72">
+<img src="/images/markdown-test/favicon.png" alt="图片尺寸演示" height="72">
 
 ### 一般标签
 
