@@ -104,7 +104,6 @@ export const EN = {
   "projects.empty.title": "No projects yet",
   "projects.empty.desc": "Projects are being prepared — stay tuned.",
   "projects.githubMore": "See more on GitHub",
-  "project.notFound": "Project not found",
   "project.fallbackDesc": "Personal project showcase",
 
   // 元信息

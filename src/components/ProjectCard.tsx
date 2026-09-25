@@ -5,6 +5,7 @@
 
 import { ArrowUpRight } from "lucide-react";
 import { Link } from "@/components/Shell.tsx";
+import { Tape } from "@/components/Tape.tsx";
 import { cn } from "@/lib/cn.ts";
 import { formatDateISO } from "@/lib/format.ts";
 import { CARD_HOVER } from "@/lib/styles.ts";
@@ -56,7 +57,7 @@ export function ProjectCard({ project, index, heading: Heading }: ProjectCardPro
   return (
     <Link className={cn(CARD_HOVER, "group relative flex flex-col pt-5", tilt)} href={`/projects/${project.slug}/`}>
       {/* 胶带（纯装饰）：压在卡片上缘，位置角度随序号变化 */}
-      <span aria-hidden="true" className={cn("absolute -top-2.5 z-10 h-6 w-24 bg-accent-soft/80", tape)} />
+      <Tape className={cn("-top-2.5 w-24 bg-accent-soft/80", tape)} />
       {/* 封面：frontmatter.image 优先，缺省为品牌化纸面封面（首字母 + 域名） */}
       <div className="relative overflow-hidden border-b border-line">
         {project.image ? (

@@ -5,8 +5,9 @@
 // 渲染循环跟随视口：模型滚出视口即停帧（setAnimationLoop(null)），回到视口
 // 恢复 —— autoRotate 场景下不停帧会持续吃满 CPU/GPU。
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useT } from "@/lib/i18n.ts";
+import { useInView } from "@/lib/useInView.ts";
 
 interface StlViewerProps {
   stl: string;
@@ -32,29 +33,9 @@ function loadThree() {
 
 export function StlViewer({ stl }: StlViewerProps) {
   const t = useT();
-  const containerRef = useRef<HTMLDivElement>(null);
-  // 旧浏览器无 IntersectionObserver 时直接以可见起始，避免在 effect 里同步 setState
-  const [visible, setVisible] = useState(() => typeof window !== "undefined" && !("IntersectionObserver" in window));
-  const [failed, setFailed] = useState(false);
-
   // 进入视口（含 300px 缓冲）才触发加载
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el || visible) {
-      return;
-    }
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) {
-          setVisible(true);
-          observer.disconnect();
-        }
-      },
-      { rootMargin: "300px" },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [visible]);
+  const { ref: containerRef, inView: visible } = useInView<HTMLDivElement>({ once: true });
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     if (!visible) {
@@ -70,7 +51,7 @@ export function StlViewer({ stl }: StlViewerProps) {
     void (async () => {
       try {
         const [THREE, { OrbitControls }, { STLLoader }] = await loadThree();
-        if (disposed || !containerRef.current) {
+        if (disposed || !el.isConnected) {
           return;
         }
 
@@ -149,7 +130,7 @@ export function StlViewer({ stl }: StlViewerProps) {
       disposed = true;
       teardown();
     };
-  }, [visible, stl]);
+  }, [visible, stl, containerRef.current]);
 
   if (failed) {
     return (

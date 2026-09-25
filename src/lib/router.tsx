@@ -10,18 +10,12 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import { extractPageData } from "@/lib/pageData.ts";
 import type { AnyPageData } from "@/lib/types.ts";
 
-export interface NavigateOptions {
-  replace?: boolean;
-}
-
 interface RouterContextValue {
   data: AnyPageData | null;
   loading: boolean;
   error: string | null;
   /** 站内导航；失败时回退整页加载。 */
-  navigate: (url: string, options?: NavigateOptions) => void;
-  /** 重新拉取当前 URL（绕过缓存）。 */
-  reload: () => void;
+  navigate: (url: string) => void;
   /** 当前完整 href（含 origin），供导航高亮等使用。 */
   href: string;
 }
@@ -84,13 +78,13 @@ export function RouterProvider({
   }, []);
 
   const load = useCallback(
-    async (url: string, historyMode: "push" | "replace" | "none" = "push", options?: { bypassCache?: boolean }) => {
+    async (url: string, historyMode: "push" | "none" = "push") => {
       const seq = ++seqRef.current;
       abortRef.current?.abort();
       const controller = new AbortController();
       abortRef.current = controller;
       const key = routeKey(url);
-      const cached = options?.bypassCache ? undefined : payloadCache.get(key);
+      const cached = payloadCache.get(key);
 
       const finish = (pageData: AnyPageData) => {
         if (seq !== seqRef.current) {
@@ -99,7 +93,7 @@ export function RouterProvider({
         onPageData?.(pageData);
         if (historyMode !== "none") {
           // payload 不进 history state：数据在 React 状态里，popstate 按 URL 重取（走缓存）
-          window.history[historyMode === "replace" ? "replaceState" : "pushState"](null, "", url);
+          window.history.pushState(null, "", url);
         }
         setHref(new URL(url, window.location.href).href);
         setData(pageData);
@@ -152,20 +146,16 @@ export function RouterProvider({
   );
 
   const navigate = useCallback(
-    (url: string, options?: NavigateOptions) => {
+    (url: string) => {
       if (url === window.location.href) {
         return;
       }
       // 记录离开页的阅读位置（前进/后退恢复用）
       scrollPositions.set(routeKey(window.location.href), window.scrollY);
-      void load(url, options?.replace ? "replace" : "push");
+      void load(url, "push");
     },
     [load],
   );
-
-  const reload = useCallback(() => {
-    void load(window.location.href, "none", { bypassCache: true });
-  }, [load]);
 
   const hrefRef = useRef(href);
   hrefRef.current = href;
@@ -190,9 +180,7 @@ export function RouterProvider({
     };
   }, [load]);
 
-  return (
-    <RouterContext.Provider value={{ data, loading, error, navigate, reload, href }}>{children}</RouterContext.Provider>
-  );
+  return <RouterContext.Provider value={{ data, loading, error, navigate, href }}>{children}</RouterContext.Provider>;
 }
 
 export function useRouter(): RouterContextValue {

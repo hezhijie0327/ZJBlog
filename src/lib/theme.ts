@@ -47,5 +47,17 @@ export function watchSystemTheme() {
   });
 }
 
+/** 订阅暗色状态（html.dark 是唯一事实源，站内切换与系统跟随都会翻它）。
+ *  返回退订函数。重主题依赖（giscus iframe / mermaid 重渲染）经此联动，
+ *  不要各自再挂 MutationObserver。 */
+export function watchThemeDark(onChange: (dark: boolean) => void): () => void {
+  const root = document.documentElement;
+  const observer = new MutationObserver(() => onChange(root.classList.contains("dark")));
+  observer.observe(root, { attributeFilter: ["class"], attributes: true });
+  return () => {
+    observer.disconnect();
+  };
+}
+
 /** 预渲染 HTML <head> 内联脚本：首帧前挂好 .dark 与 data-theme-mode，避免明暗/图标闪烁。 */
 export const THEME_BOOTSTRAP = `(function(){try{var s=localStorage.getItem("zj-theme");if(s!=="light"&&s!=="dark")s="auto";var d=s==="dark"||(s==="auto"&&window.matchMedia("(prefers-color-scheme: dark)").matches);var r=document.documentElement;if(d)r.classList.add("dark");r.setAttribute("data-theme-mode",s);}catch(e){}})();`;

@@ -8,14 +8,7 @@ import { cn } from "@/lib/cn.ts";
 import { useT } from "@/lib/i18n.ts";
 import { useRouter } from "@/lib/router.tsx";
 import { CARD, CHIP, META, MONO_CHIP } from "@/lib/styles.ts";
-
-interface SearchItem {
-  title: string;
-  description?: string;
-  type: "blog" | "project";
-  tags: string[];
-  href: string;
-}
+import type { SearchItem } from "@/lib/types.ts";
 
 const LIST_ID = "command-palette-list";
 const OPTION_PREFIX = "command-palette-option";

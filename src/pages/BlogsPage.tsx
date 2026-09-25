@@ -1,13 +1,13 @@
 // 全部文章列表页：标签云 + 文章列表（幽灵日期水印）+ 右栏最近文章（xl 宽屏）。
 
 import { EmptyState } from "@/components/EmptyState.tsx";
-import { PageHeading } from "@/components/PageHeading.tsx";
 import { PostList } from "@/components/PostList.tsx";
+import { SectionHeading } from "@/components/SectionHeading.tsx";
 import { Link } from "@/components/Shell.tsx";
 import { cn } from "@/lib/cn.ts";
 import { formatDateISO } from "@/lib/format.ts";
 import { useT } from "@/lib/i18n.ts";
-import { CHIP, SECTION } from "@/lib/styles.ts";
+import { CHIP, EYEBROW, SECTION } from "@/lib/styles.ts";
 import type { BlogsData } from "@/lib/types.ts";
 
 export function BlogsPage({ data }: { data: BlogsData }) {
@@ -21,9 +21,10 @@ export function BlogsPage({ data }: { data: BlogsData }) {
     <div className={SECTION}>
       <div className="mx-auto flex max-w-6xl justify-center gap-10">
         <div className="min-w-0 max-w-3xl flex-1">
-          <PageHeading
+          <SectionHeading
             en={t("page.blogs.en")}
             hint={t("count.posts", { n: data.blogs.length })}
+            level={1}
             title={t("page.blogs.title")}
           />
 
@@ -53,7 +54,7 @@ export function BlogsPage({ data }: { data: BlogsData }) {
         {recent.length > 0 && (
           <aside className="hidden w-60 shrink-0 xl:block">
             <div className="sticky top-20">
-              <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.2em] text-ink-3">{t("blog.rail")}</p>
+              <p className={cn(EYEBROW, "mb-3")}>{t("blog.rail")}</p>
               <ul className="space-y-3 border-l border-line">
                 {recent.map((blog) => (
                   <li key={blog.slug}>

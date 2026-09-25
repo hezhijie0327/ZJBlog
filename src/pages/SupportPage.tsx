@@ -40,6 +40,8 @@ export function SupportPage() {
       <div className="mx-auto mt-10 grid max-w-xl grid-cols-1 gap-4 sm:grid-cols-2">
         {channels.map((item) => (
           <div className={cn("flex flex-col items-center", CARD, "p-6")} key={item.name}>
+            {/* 固定白底是有意的（DESIGN.md §3 登记豁免）：收款码需要真实白底
+                保证扫码器对比度，暗色下也不能跟 token 翻黑 */}
             <div className="mb-5 size-48 rounded-xl border border-line bg-white p-3">
               <img
                 alt={item.image.alt}

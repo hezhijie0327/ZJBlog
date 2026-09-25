@@ -1,7 +1,7 @@
 // 归档页：按年份分组的全部文章。
 
 import { EmptyState } from "@/components/EmptyState.tsx";
-import { PageHeading } from "@/components/PageHeading.tsx";
+import { SectionHeading } from "@/components/SectionHeading.tsx";
 import { Link } from "@/components/Shell.tsx";
 import { formatDateISO } from "@/lib/format.ts";
 import { useT } from "@/lib/i18n.ts";
@@ -24,9 +24,10 @@ export function ArchivesPage({ data }: { data: ArchivesData }) {
   return (
     <div className={SECTION}>
       <div className="mx-auto max-w-3xl">
-        <PageHeading
+        <SectionHeading
           en={t("page.archives.en")}
           hint={t("count.posts", { n: data.blogs.length })}
+          level={1}
           title={t("page.archives.title")}
         />
 

@@ -104,7 +104,6 @@ export const ZH_CN: Record<StringKey, string> = {
   "projects.empty.title": "暂无项目",
   "projects.empty.desc": "项目正在整理中，敬请期待。",
   "projects.githubMore": "在 GitHub 查看更多",
-  "project.notFound": "项目未找到",
   "project.fallbackDesc": "个人项目展示",
 
   // 元信息

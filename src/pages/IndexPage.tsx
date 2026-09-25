@@ -7,14 +7,16 @@ import { ProjectCard } from "@/components/ProjectCard.tsx";
 import { SectionHeading } from "@/components/SectionHeading.tsx";
 import { Link } from "@/components/Shell.tsx";
 import { StoryBar } from "@/components/StoryBar.tsx";
+import { Tape } from "@/components/Tape.tsx";
 import { ViewAllLink } from "@/components/ViewAllLink.tsx";
 import { featuredProjectCount, moreProjectsCount, siteConfig } from "@/config/site.ts";
 import { cn } from "@/lib/cn.ts";
 import { formatDateISO } from "@/lib/format.ts";
 import { useT } from "@/lib/i18n.ts";
 import { jumpToSection } from "@/lib/scroll.ts";
-import { CHIP, DIVIDE_LIST, LIST_ROW, PAPER_STRIP, SECTION } from "@/lib/styles.ts";
+import { CHIP, DIVIDE_LIST, EYEBROW, LIST_ROW, PAPER_STRIP, SECTION } from "@/lib/styles.ts";
 import type { HomeData } from "@/lib/types.ts";
+import { useInView } from "@/lib/useInView.ts";
 
 export function IndexPage({ data }: { data: HomeData }) {
   const t = useT();
@@ -23,12 +25,17 @@ export function IndexPage({ data }: { data: HomeData }) {
   const featured = ordered.slice(0, featuredProjectCount);
   const moreProjects = ordered.slice(featuredProjectCount, featuredProjectCount + moreProjectsCount);
   const latestBlogs = data.blogs.slice(0, 3);
+  // 下滚提示的循环动画只在 Hero 可见时运行（离屏停帧，与 STL 自转同一纪律）
+  const { ref: heroRef, inView: heroInView } = useInView<HTMLElement>({ rootMargin: "0px" });
 
   return (
     <div className="min-h-full">
       {/* Hero：首屏占满整个视口（对标 justin3go），内容垂直居中；扣除 sticky 导航高度（h-14），
           否则区块底缘会超出折叠线 */}
-      <section className="container relative mx-auto flex min-h-[calc(100svh-3.5rem)] items-center px-4 pb-16 pt-20 sm:pb-20 sm:pt-24">
+      <section
+        className="container relative mx-auto flex min-h-[calc(100svh-3.5rem)] items-center px-4 pb-16 pt-20 sm:pb-20 sm:pt-24"
+        ref={heroRef}
+      >
         <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-14 lg:flex-row lg:items-center lg:justify-between lg:gap-8">
           <div className="max-w-3xl">
             <p className="animate-fade-up mb-6 flex items-center gap-2 font-mono text-[11px] tracking-[0.24em] text-ink-3">
@@ -105,14 +112,8 @@ export function IndexPage({ data }: { data: HomeData }) {
             {/* 胶带放在 .paper-note 外层：撕边 clip-path 会裁掉子元素，
                 贴纸悬在纸外的角会被剪没；旋转由外层统一承载 */}
             <div className="relative mt-4 w-[340px] max-w-full rotate-2">
-              <span
-                aria-hidden="true"
-                className="pointer-events-none absolute -top-3 left-9 z-10 h-6 w-24 -rotate-6 bg-accent-soft/80"
-              />
-              <span
-                aria-hidden="true"
-                className="pointer-events-none absolute -top-2 right-8 z-10 h-6 w-20 rotate-[5deg] bg-accent-soft/60"
-              />
+              <Tape className="-top-3 left-9 w-24 -rotate-6 bg-accent-soft/80" />
+              <Tape className="-top-2 right-8 w-20 rotate-[5deg] bg-accent-soft/60" />
               <div className="paper-note p-10">
                 <img
                   alt=""
@@ -131,7 +132,7 @@ export function IndexPage({ data }: { data: HomeData }) {
         {/* 底部滚动提示（对标 justin3go「向下滚动」）：纯装饰，锚点跳转交给分镜条 */}
         <p className="absolute inset-x-0 bottom-5 flex items-center justify-center gap-2 font-mono text-[11px] tracking-[0.2em] text-ink-3">
           {t("hero.scrollHint")}
-          <ArrowDown aria-hidden="true" className="size-3.5 animate-hint-bob" />
+          <ArrowDown aria-hidden="true" className={cn("size-3.5", heroInView && "animate-hint-bob")} />
         </p>
       </section>
 
@@ -162,9 +163,7 @@ export function IndexPage({ data }: { data: HomeData }) {
 
             {moreProjects.length > 0 && (
               <div className="mt-8">
-                <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.2em] text-ink-3">
-                  {t("home.moreProjects")}
-                </p>
+                <p className={cn(EYEBROW, "mb-3")}>{t("home.moreProjects")}</p>
                 {/* 开放列表（对标参考站更多项目）：短横标记 + 下划线品名 + 金色 ↗ + 行内描述 */}
                 <ul>
                   {moreProjects.map((project) => (
@@ -210,14 +209,8 @@ export function IndexPage({ data }: { data: HomeData }) {
         />
         {/* 纸面微倾斜 + 两角胶带压住纸边（胶带在 .paper-note 外层，避免被撕边裁剪） */}
         <div className="relative -rotate-[0.35deg]">
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute -top-3 left-12 z-10 h-6 w-24 -rotate-6 bg-accent-soft/80"
-          />
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute -top-2 right-14 z-10 h-6 w-20 rotate-[5deg] bg-accent-soft/60"
-          />
+          <Tape className="-top-3 left-12 w-24 -rotate-6 bg-accent-soft/80" />
+          <Tape className="-top-2 right-14 w-20 rotate-[5deg] bg-accent-soft/60" />
           <div className={cn("paper-note", DIVIDE_LIST)}>
             {latestBlogs.length > 0 ? (
               latestBlogs.map((blog) => (
@@ -250,14 +243,8 @@ export function IndexPage({ data }: { data: HomeData }) {
         <SectionHeading en={t("home.contact.en")} index="03" title={t("home.contact.title")} />
         {/* 纸面便签承载联系入口（标题靠左，便签在剩余空间垂直居中）：轻微反向外倾 + 两角胶带 */}
         <div className="relative mx-auto max-w-2xl rotate-[0.4deg]">
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute -top-3 left-10 z-10 h-6 w-24 -rotate-3 bg-accent-soft/80"
-          />
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute -top-3 right-10 z-10 h-6 w-20 rotate-[4deg] bg-accent-soft/60"
-          />
+          <Tape className="-top-3 left-10 w-24 -rotate-3 bg-accent-soft/80" />
+          <Tape className="-top-3 right-10 w-20 rotate-[4deg] bg-accent-soft/60" />
           <div className="paper-note px-6 py-8 sm:px-10 sm:py-10">
             <p className="mx-auto max-w-xl text-sm leading-relaxed text-ink-2 sm:text-[15px]">
               {t("home.contact.desc")}

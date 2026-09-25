@@ -10,7 +10,6 @@ import { createContext, useContext, useMemo } from "react";
 import { EN, type StringKey } from "@/lib/i18n/en.ts";
 import { ZH_CN } from "@/lib/i18n/zh-CN.ts";
 
-export type { StringKey };
 export type Translate = (key: StringKey, params?: Record<string, string | number>) => string;
 
 /** UI 语言。 */
@@ -56,7 +55,7 @@ function themeLocaleTag(locale: string): UiLocale {
   return locale.toLowerCase().startsWith("zh") ? "zh-CN" : "en";
 }
 
-export interface I18nContextValue {
+interface I18nContextValue {
   locale: UiLocale;
   /** 切换 UI 语言（zh-CN ↔ en）并持久化。 */
   switchLocale: () => void;

@@ -93,6 +93,16 @@ export interface PostNavLink {
   title: string;
 }
 
+/** 搜索索引条目（/search-index.json，构建期 generators.ts 产出、命令面板消费 ——
+ *  两端共享同一契约，防止字段漂移）。 */
+export interface SearchItem {
+  title: string;
+  description?: string;
+  type: "blog" | "project";
+  tags: string[];
+  href: string;
+}
+
 export interface BlogTagData {
   globals: PageGlobals & { page: "blog-tag" };
   /** 标签名（解码后的原文） */

@@ -82,11 +82,6 @@ export function allRoutes(): string[] {
   ];
 }
 
-/** 全部标签（按出现顺序去重）。 */
-export function allTags(): string[] {
-  return [...new Set(loadContent().blogs.flatMap((blog) => blog.tags))];
-}
-
 /** 路由 → payload。未知路径返回 not-found payload（预渲染 404 页与
  *  客户端兜底共用）。 */
 export function buildPayload(pathname: string): AnyPageData {

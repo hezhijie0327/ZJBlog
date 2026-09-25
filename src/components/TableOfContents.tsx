@@ -5,6 +5,7 @@
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/cn.ts";
 import { useT } from "@/lib/i18n.ts";
+import { EYEBROW } from "@/lib/styles.ts";
 import type { TocItem } from "@/lib/types.ts";
 
 export function TableOfContents({ items }: { items: TocItem[] }) {
@@ -46,7 +47,7 @@ export function TableOfContents({ items }: { items: TocItem[] }) {
 
   return (
     <nav aria-label={t("post.toc")} className="sticky top-20 max-h-[calc(100dvh-6rem)] overflow-y-auto py-2">
-      <p className={cn("mb-3 font-mono text-[11px] uppercase tracking-[0.2em] text-ink-3")}>{t("post.toc")}</p>
+      <p className={cn(EYEBROW, "mb-3")}>{t("post.toc")}</p>
       <ul className="space-y-1 border-l border-line">
         {items.map((item) => {
           const active = item.id === activeId;

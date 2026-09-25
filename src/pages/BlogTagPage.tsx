@@ -3,8 +3,8 @@
 
 import { BackLink } from "@/components/BackLink.tsx";
 import { EmptyState } from "@/components/EmptyState.tsx";
-import { PageHeading } from "@/components/PageHeading.tsx";
 import { PostList } from "@/components/PostList.tsx";
+import { SectionHeading } from "@/components/SectionHeading.tsx";
 import { useT } from "@/lib/i18n.ts";
 import { SECTION } from "@/lib/styles.ts";
 import type { BlogTagData } from "@/lib/types.ts";
@@ -16,10 +16,11 @@ export function BlogTagPage({ data }: { data: BlogTagData }) {
     <div className={SECTION}>
       <div className="mx-auto max-w-3xl">
         <BackLink href="/blogs/" label={t("blog.back")} />
-        <PageHeading
+        <SectionHeading
           className="mt-10"
           en={t("page.blogs.en")}
           hint={t("count.posts", { n: data.blogs.length })}
+          level={1}
           title={`#${data.tag}`}
         />
 

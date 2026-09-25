@@ -2,6 +2,7 @@
 // 构建期由预渲染脚本写入 dist/（迁移前是 Next 路由处理器，逻辑保持一致）。
 
 import { siteConfig } from "../src/config/site.ts";
+import type { SearchItem } from "../src/lib/types.ts";
 import { loadContent } from "./content.ts";
 
 function escapeXml(value: string): string {
@@ -86,14 +87,6 @@ Allow: /
 
 Sitemap: ${siteConfig.url}/sitemap.xml
 `;
-}
-
-export interface SearchItem {
-  title: string;
-  description?: string;
-  type: "blog" | "project";
-  tags: string[];
-  href: string;
 }
 
 export function generateSearchIndex(): string {

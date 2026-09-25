@@ -6,7 +6,7 @@ import { BackToTop } from "@/components/BackToTop.tsx";
 import { Footer } from "@/components/Footer.tsx";
 import { Navigation } from "@/components/Navigation.tsx";
 import { useT } from "@/lib/i18n.ts";
-import { isModifiedClick, newTabLinkProps } from "@/lib/link.ts";
+import { isModifiedClick } from "@/lib/link.ts";
 import { useRouter } from "@/lib/router.tsx";
 import { prefetchHref } from "@/pages/registry.ts";
 
@@ -18,7 +18,6 @@ export function Link({
   ariaLabel,
   ariaCurrent,
   title,
-  external,
   onClick,
 }: {
   href: string;
@@ -28,13 +27,12 @@ export function Link({
   /** 当前项标记（导航激活态），如 aria-current="page" */
   ariaCurrent?: "page" | "location" | "step" | "true";
   title?: string;
-  external?: boolean;
   /** 追加的点击回调（如关闭移动端菜单），先于导航逻辑执行 */
   onClick?: () => void;
 }) {
   const { navigate } = useRouter();
   const path = href.split("?")[0] ?? href;
-  const internal = href.startsWith("/") && !external && !/\.[a-z0-9]+$/i.test(path);
+  const internal = href.startsWith("/") && !/\.[a-z0-9]+$/i.test(path);
 
   const handleClick = (event: MouseEvent<HTMLAnchorElement>) => {
     onClick?.();
@@ -62,7 +60,6 @@ export function Link({
       onPointerEnter={handlePrefetch}
       {...(ariaLabel ? { "aria-label": ariaLabel } : {})}
       {...(title ? { title } : {})}
-      {...newTabLinkProps(external)}
     >
       {children}
     </a>

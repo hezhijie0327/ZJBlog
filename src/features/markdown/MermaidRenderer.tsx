@@ -7,8 +7,10 @@
 // 的图表立即触发渲染（尽力而为）。
 
 import type { Mermaid } from "mermaid";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useT } from "@/lib/i18n.ts";
+import { watchThemeDark } from "@/lib/theme.ts";
+import { useInView } from "@/lib/useInView.ts";
 
 interface MermaidRendererProps {
   chart: string;
@@ -25,55 +27,23 @@ function loadMermaid(): Promise<Mermaid> {
   return mermaidPromise;
 }
 
-/** 当前是否暗色（html.dark 是唯一事实源，auto 跟随系统也会翻它）。 */
-function isDarkTheme(): boolean {
-  return document.documentElement.classList.contains("dark");
-}
-
-/** 监听 html class 翻转（含 auto 跟随系统），返回退订函数。 */
-function watchThemeChange(onChange: () => void): () => void {
-  const observer = new MutationObserver(onChange);
-  observer.observe(document.documentElement, { attributeFilter: ["class"] });
-  return () => {
-    observer.disconnect();
-  };
-}
-
 export function MermaidRenderer({ chart }: MermaidRendererProps) {
   const t = useT();
-  const containerRef = useRef<HTMLDivElement>(null);
-  // 旧浏览器无 IntersectionObserver 时直接以可见起始，避免在 effect 里同步 setState
-  const [visible, setVisible] = useState(() => typeof window !== "undefined" && !("IntersectionObserver" in window));
-  const [theme, setTheme] = useState(() => isDarkTheme());
+  // 进入视口（含 300px 缓冲）才触发加载；beforeprint 时强制渲染兜底
+  const { ref: containerRef, inView: scrolled } = useInView<HTMLDivElement>({ once: true });
+  const [printed, setPrinted] = useState(false);
+  const visible = scrolled || printed;
+  const [theme, setTheme] = useState(() => document.documentElement.classList.contains("dark"));
   const [svg, setSvg] = useState("");
   const [error, setError] = useState("");
 
-  // 进入视口（含 300px 缓冲）才触发加载
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el || visible) {
-      return;
-    }
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) {
-          setVisible(true);
-          observer.disconnect();
-        }
-      },
-      { rootMargin: "300px" },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [visible]);
-
   // 主题翻转后重渲染（theme 变化触发下面的渲染 effect）
-  useEffect(() => watchThemeChange(() => setTheme(isDarkTheme())), []);
+  useEffect(() => watchThemeDark(setTheme), []);
 
   // 打印时未滚动到的图表是空占位——尽力触发一次渲染
   useEffect(() => {
     const onBeforePrint = () => {
-      setVisible(true);
+      setPrinted(true);
     };
     window.addEventListener("beforeprint", onBeforePrint);
     return () => {

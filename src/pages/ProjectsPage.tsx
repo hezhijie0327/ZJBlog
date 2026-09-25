@@ -2,11 +2,12 @@
 
 import { EmptyState } from "@/components/EmptyState.tsx";
 import { GithubIcon } from "@/components/icons.tsx";
-import { PageHeading } from "@/components/PageHeading.tsx";
 import { ProjectCard } from "@/components/ProjectCard.tsx";
+import { SectionHeading } from "@/components/SectionHeading.tsx";
 import { siteConfig } from "@/config/site.ts";
+import { cn } from "@/lib/cn.ts";
 import { useT } from "@/lib/i18n.ts";
-import { BTN_OUTLINE, SECTION } from "@/lib/styles.ts";
+import { BTN_OUTLINE, EYEBROW, SECTION } from "@/lib/styles.ts";
 import type { ProjectsData } from "@/lib/types.ts";
 
 export function ProjectsPage({ data }: { data: ProjectsData }) {
@@ -15,16 +16,17 @@ export function ProjectsPage({ data }: { data: ProjectsData }) {
 
   return (
     <div className={SECTION}>
-      <PageHeading
+      <SectionHeading
         en={t("page.projects.en")}
         hint={t("count.projects", { n: data.projects.length })}
+        level={1}
         title={t("page.projects.title")}
       />
 
       {/* 个人项目 */}
       {personalProjects.length > 0 && (
         <section className="mb-16">
-          <p className="mb-5 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.2em] text-ink-3">
+          <p className={cn(EYEBROW, "mb-5 flex items-center gap-2")}>
             <span aria-hidden="true" className="inline-block size-1.5 rounded-full bg-accent-strong" />
             {t("projects.selectedLabel")}
           </p>

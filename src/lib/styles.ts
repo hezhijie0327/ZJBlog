@@ -16,13 +16,10 @@ export const CARD = "rounded-2xl border border-line bg-surface shadow-card";
 /** 卡片容器 + 悬停加深阴影 */
 export const CARD_HOVER = `${CARD} transition-shadow hover:shadow-pop`;
 
-/** 分隔行式列表（无边框壳变体；卡片壳版本见 LIST_CONTAINER） */
+/** 分隔行式列表（无边框壳；卡片壳由调用方拼 CARD + DIVIDE_LIST） */
 export const DIVIDE_LIST = "divide-y divide-line/70";
 
-/** 紧凑列表容器（分隔行式，卡片壳） */
-export const LIST_CONTAINER = `rounded-2xl border border-line bg-surface ${DIVIDE_LIST}`;
-
-/** 紧凑列表行（LIST_CONTAINER 内；首页项目行与文章行共用同一节奏） */
+/** 紧凑列表行（首页项目行与文章行共用同一节奏；卡片壳由调用方拼 CARD + DIVIDE_LIST） */
 export const LIST_ROW =
   "group flex items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-surface-2 sm:gap-6 sm:px-6";
 
@@ -47,6 +44,13 @@ export const MONO_CHIP = `${CHIP} font-mono text-[11px]`;
 
 /** 等宽元信息文字（日期 / 计数 / 键盘提示） */
 export const META = "font-mono text-xs text-ink-3";
+
+/** 眉标（eyebrow）：等宽小号全大写间距标签，用于标题旁的英文点缀与分组小标题 */
+export const EYEBROW = "font-mono text-[11px] uppercase tracking-[0.2em] text-ink-3";
+
+/** 胶带（DESIGN.md §7 纸感装饰）：半透明金底矩形压在纸边之上；
+ *  定位 / 旋转 / 透明度由调用方给（两角对压优于单条居中） */
+export const TAPE = "pointer-events-none absolute z-10 h-6 bg-accent-soft";
 
 /** 页面级 section 外壳（容器 + 统一纵向节奏） */
 export const SECTION = "container mx-auto px-4 py-14 sm:py-20";

@@ -11,12 +11,14 @@
 
 import Giscus from "@giscus/react";
 import { MessageSquare } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { siteConfig } from "@/config/site.ts";
 import { cn } from "@/lib/cn.ts";
 import { useLocale, useT } from "@/lib/i18n.ts";
 import { useRouter } from "@/lib/router.tsx";
 import { CARD } from "@/lib/styles.ts";
+import { watchThemeDark } from "@/lib/theme.ts";
+import { useInView } from "@/lib/useInView.ts";
 
 export function GiscusComments() {
   const t = useT();
@@ -25,10 +27,8 @@ export function GiscusComments() {
   // SPA 换页时 pathname 变化而本组件保持挂载 —— 以 pathname 作为 giscus
   // widget 的 key 强制重挂载，iframe 才会按新路径加载对应讨论
   const pathname = new URL(href, "http://localhost").pathname;
-  const containerRef = useRef<HTMLElement>(null);
-  // 旧浏览器无 IntersectionObserver 时直接以可见起始，避免在 effect 里同步 setState；
-  // 初始化器在 SSR 也会执行，读 DOM 前必须守卫 window
-  const [visible, setVisible] = useState(() => typeof window !== "undefined" && !("IntersectionObserver" in window));
+  // 进视口（含 300px 缓冲）才开始挂载
+  const { ref: containerRef, inView: visible } = useInView<HTMLElement>({ once: true });
   // 站点唯一真源 html.dark 的镜像：初始值在 SSR 也要能算，读 DOM 前守卫 window
   const [dark, setDark] = useState(
     () => typeof window !== "undefined" && document.documentElement.classList.contains("dark"),
@@ -37,33 +37,9 @@ export function GiscusComments() {
   const { repo, repoId, category, categoryId } = siteConfig.giscus;
   const configured = Boolean(repo && repoId && category && categoryId);
 
-  // 进视口（含 300px 缓冲）才开始挂载
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el || visible) {
-      return;
-    }
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) {
-          setVisible(true);
-          observer.disconnect();
-        }
-      },
-      { rootMargin: "300px" },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [visible]);
-
   // 主题联动：html.dark 翻转（站内切换或系统切换）→ 更新 theme prop →
   // @giscus/react 内部 postMessage setConfig，iframe 原地换主题样式表
-  useEffect(() => {
-    const root = document.documentElement;
-    const observer = new MutationObserver(() => setDark(root.classList.contains("dark")));
-    observer.observe(root, { attributeFilter: ["class"], attributes: true });
-    return () => observer.disconnect();
-  }, []);
+  useEffect(() => watchThemeDark(setDark), []);
 
   // 自托管主题 CSS（映射站点 token 色板，见 public/giscus-*.css）：giscus
   // 以完整 URL 加载自定义主题，跨域 iframe 必须用绝对地址。window 仅浏览
