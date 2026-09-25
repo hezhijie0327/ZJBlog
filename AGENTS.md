@@ -1,6 +1,6 @@
 # AGENTS.md - Development Guide for Agentic Coding
 
-AI agent 开发指南。修改代码前先读完本文件。设计语言与品牌规范见 **[DESIGN.md](./DESIGN.md)**。
+AI agent 开发指南。修改代码前先读完本文件。设计语言与品牌规范见 **[DESIGN.md](./DESIGN.md)**；全站审计的执行手册与历史教训见 **[AUDIT.md](./AUDIT.md)**。
 
 ## Essential Commands
 
@@ -46,8 +46,9 @@ src/
 ├── lib/
 │   ├── router.tsx       # fetch-and-swap SPA 路由（pushState/popstate/回退整页/会话缓存）
 │   ├── pageData.ts      # payload 提取（内嵌/DOMParser）
-│   ├── types.ts         # payload 判别联合 + 类型守卫（客户端契约）
-│   ├── theme.ts         # 明暗（localStorage + html.dark + pre-paint 内联脚本防闪烁）
+│   ├── types.ts         # payload 判别联合 + 类型守卫 + 跨端共享契约（SearchItem 等）
+│   ├── theme.ts         # 明暗（localStorage + html.dark + pre-paint 内联脚本防闪烁；watchThemeDark 主题订阅）
+│   ├── useInView.ts     # 进视口检测（懒挂载 once / 持续跟踪；全站唯一 IntersectionObserver 封装）
 │   ├── i18n.ts + i18n/  # EN 基准词库 + zh-CN；useT/translateFor
 │   ├── styles.ts        # 设计片段单一来源（DESIGN.md §5）
 │   └── cn / format / link
@@ -80,7 +81,7 @@ scripts/
 - TypeScript strict（含 `noUncheckedIndexedAccess`），禁 `any`（外部响应用 `Raw*` 接口收窄）。
 - 颜色一律 token（DESIGN.md §3）；重复类名一律 `lib/styles.ts` 片段；零 webfont；`dark:` 只用于图标显隐。
 - **禁止 `localeCompare` 排序任何参与 SSR 的数据**：Node 与浏览器 ICU collation 不一致会导致水合文本不匹配（React #418，曾挂 best-practices 门禁）。排序用 codepoint 比较（`a < b ? -1 : …`）。
-- 重依赖必须惰性：进视口才加载（先例：Mermaid ~2.7MB、three.js、KaTeX 样式按页、giscus iframe）。**持续动画（如 STL 自转）必须随视口启停**（离屏 `setAnimationLoop(null)`），否则长文页持续吃 CPU。
+- 重依赖必须惰性：进视口才加载（先例：Mermaid ~2.7MB、three.js、KaTeX 样式按页、giscus iframe），统一用 `lib/useInView.ts` 的 `useInView`（`{ once: true }` 懒挂载 / 持续跟踪两用），不要手写 IntersectionObserver。**持续动画（如 STL 自转）必须随视口启停**（离屏 `setAnimationLoop(null)`），否则长文页持续吃 CPU。**禁止给 `.prose` 等长内容容器加 `content-visibility: auto`**：Chromium 146+/Edge 153 实测「相关度」不再触发展开，长文在 `contain-intrinsic-size` 占位高度处被裁断（正文 92% 不可达；2026-09 审计在 Electron 41 与 Edge 153 双双复现后移除，教训详见 AUDIT.md）。
 - 懒组件的关闭路径若依赖 `animationend`（如 CommandPalette 退出动画），必须加超时兜底 —— 渲染管线冻结/事件丢失时 UI 会滞留。
 - 图标：lucide-react；品牌图标（GitHub）用 `components/icons.tsx` 内联 SVG。
 - 图片：`public/images/` 存**原始** PNG/JPG（不做本地预压缩）；最终产物一律 **webp**（对齐 Lab/Web）——`pnpm build` 在 prerender 后用 `scripts/compress-images.mjs`（sharp）把 `dist/images` 的 jpg/png 转为同名 webp（限宽 1920、q80），并改写 dist 内 `.html/.xml/.txt` 的引用；`pnpm run img` 可单独执行。正文引用原始扩展名 `/images/x.jpg` 即可（dev 服务原图）。

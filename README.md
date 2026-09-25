@@ -2,7 +2,7 @@
 
 **ZJBlog** —— 个人技术博客与项目展示站点。
 
-基于 **Vite + React 19 纯 SPA**（构建期预渲染完整 HTML + fetch-and-swap 客户端路由），Tailwind CSS v4，部署在 Cloudflare Workers Static Assets。设计语言遵循 [DESIGN.md](./DESIGN.md)（ZJ 设计系统：暖纸底 × 墨字 × 琥珀金，零 webfont）。开发指南见 [AGENTS.md](./AGENTS.md)。
+基于 **Vite + React 19 纯 SPA**（构建期预渲染完整 HTML + fetch-and-swap 客户端路由），Tailwind CSS v4，部署在 Cloudflare Workers Static Assets。设计语言遵循 [DESIGN.md](./DESIGN.md)（ZJ 设计系统：暖纸底 × 墨字 × 琥珀金，零 webfont）。开发指南见 [AGENTS.md](./AGENTS.md)，全站审计手册见 [AUDIT.md](./AUDIT.md)。
 
 ## 特性
 
@@ -44,7 +44,7 @@ scripts/                  # prerender（预渲染）+ audit（Lighthouse 双端�
 
 ## 写内容
 
-在 `content/blogs/` 或 `content/projects/` 新建 `.md`：
+在 `content/blogs/` 或 `content/projects/` 新建 `.md`（完整语法能力与写作风格见 `.agents/skills/md-style/`）：
 
 ```yaml
 ---
@@ -85,6 +85,17 @@ image: "/images/cover.jpg" # 封面图，站点根路径；缺省不渲染封面
 pnpm build
 pnpm deploy           # = wrangler deploy（锁在 devDependencies；wrangler.jsonc 指向 ./dist）
 ```
+
+## 文档体系（后续如何撰写与维护文档）
+
+| 文档 | 读者 | 内容 | 何时更新 |
+|---|---|---|---|
+| `DESIGN.md` | 设计 agent + 人 | 界面契约：token、片段、排印、动效、页面骨架 | **先登记再落码** —— 新 token/片段/豁免先写进 DESIGN.md 对应章节，再写代码（§17 治理：文档与实现不一致按 bug 处理） |
+| `AGENTS.md` | 编码 agent | 工程契约：架构、命令、约定、门禁、踩坑 | 引入新架构/约定/工具时；每条约定必须带「为什么」（历史教训一句话） |
+| `AUDIT.md` | 审计执行者 | 审计手册：环境、门禁、测试矩阵、调试配方、环境陷阱 | 每次全站审计后，把新踩的坑与新配方追加进对应章节 |
+| `.agents/skills/md-style/` | 写文章的人/agent | 本博客 Markdown 的完整语法能力与写作风格 | 渲染管线新增语法能力时 |
+
+写作规则：文档用中文陈述句，规则必须可执行（带命令/文件名/行号级证据）；同一语义只允许一处定义（DESIGN.md 定「长什么样」，AGENTS.md 定「怎么建」），交叉引用而不复制。
 
 ## License
 

@@ -98,6 +98,7 @@
 
 - **OLED `.black` 档**：叠在 `.dark` 之上的第三调色板（`dark`+`black` 双 class），仅再压深表面档（`--bg/--surface/--surface-2/--line/--ink*/--accent-soft/--highlight-bg/--shadow-card`），强调色沿用 `.dark` 值。
 - **固定暗色媒体 chrome 豁免**：图片灯箱、缩略图角标（`TILE_BADGE`）与媒体浮层在**所有调色板下都渲染在同一暗色底上**，主题 token 不适用 —— 允许固定色值（灯箱的 zinc 系文字、`bg-black/70` 角标 scrim、`.lightbox::backdrop` 的 `rgb(0 0 0/0.6)` 背板）；canvas 画布内的 JS 颜色字面量同豁免（CSS 变量到不了 canvas）。豁免面仅限媒体浮层/角标/画布，页面 UI 一律走 token。
+- **扫码容器固定白底**（ZJBlog 支持页收款码）：二维码需要真实白底保证扫码器对比度，暗色下不能跟 token 翻黑 —— `bg-white` 固定值合法。
 
 **依赖样式按需加载**：大而少用的样式资产（如 KaTeX，25KB raw）不做全站 render-blocking —— 构建期标记需要的页面，仅对这些页注入对应样式（含字体资产），客户端 SPA 换页再幂等补注。
 
@@ -114,8 +115,8 @@
 | 层级 | 处方 | 出处 |
 |---|---|---|
 | 首页 Hero H1 | `font-serif text-4xl sm:text-6xl font-black leading-tight tracking-tight` | `IndexPage` |
-| 页面 H1 | `font-serif text-3xl sm:text-4xl font-black tracking-tight` | `PageHeading` 与各详情页 |
-| 区块 H2 | `font-serif text-2xl sm:text-3xl font-semibold tracking-tight` | `SectionHeading` |
+| 页面 H1 | `font-serif text-3xl sm:text-4xl font-black tracking-tight` | `SectionHeading level={1}` 与各详情页 |
+| 区块 H2 | `font-serif text-2xl sm:text-3xl font-semibold tracking-tight` | `SectionHeading`（level=2 默认） |
 | 界面正文 | `text-sm`（说明性文字 `text-xs`） | 全站默认 |
 | 元信息 | `META` 片段（mono `text-xs`） | 日期/计数/键位 |
 | 长文正文 | `.prose`（Tailwind Typography 默认刻度，衬线正文 + 衬线标题） | `prose.css`；颜色全走 `--tw-prose-*` → token 映射 |
@@ -134,7 +135,7 @@
 | `ICON_BTN` | 36px 圆形图标钮（导航/页脚/操作区） | hover：`surface-2` 底 + 字色提亮 |
 | `CARD` | 卡片容器：`rounded-2xl` + `border-line` + `surface` + `shadow-card` | — |
 | `CARD_HOVER` | `CARD` + 可悬停卡 | hover：阴影升 `shadow-pop` |
-| `LIST_CONTAINER` / `DIVIDE_LIST` | 分隔行式列表容器：卡片壳 / 无壳变体 | — |
+| `DIVIDE_LIST` | 分隔行式列表（无边框壳；卡片壳由调用方拼 `CARD + DIVIDE_LIST`） | — |
 | `LIST_ROW` | 分隔列表行（`px-5 py-4 sm:px-6`），两种容器通用 | row hover：`surface-2` 底 |
 | `BTN_PRIMARY` | 金底胶囊主操作（`h-10 px-5`，文字 `accent-contrast`） | hover：底色加深 + 阴影升 |
 | `BTN_OUTLINE` | 描边胶囊次操作 | hover：`surface-2` 底 |
@@ -146,6 +147,8 @@
 | `SEGMENT` / `SEGMENT_ACTIVE` / `SEGMENT_IDLE` | 分段控制（偏好页页签、信息页页签、行情区间） | 选中：`accent-strong` 填充 |
 | `SEGMENT_SM` | 紧凑分段（行内选项组：HTTP 方法、主题样式、行情胶囊） | 同上 |
 | `META` | 等宽元信息文字（日期/计数/键位） | — |
+| `EYEBROW` | 眉标：等宽 11px 全大写间距标签（标题旁英文点缀、分组小标题） | — |
+| `TAPE` | 胶带装饰基底（§7）：`aria-hidden` + `pointer-events-none` 内置，定位/旋转/透明度由调用方给 | — |
 | `SECTION` / `SECTION_DETAIL` | 页面级 / 详情页 section 外壳（§6 节奏） | — |
 
 各产品可增自有片段；**同语义在同产品内必须同名**，禁止同语义双别名并存。新增/改名片段必须先更新本表再落码（§17）。
@@ -168,7 +171,7 @@
 |---|---|---|
 | 撕边纸面 `.paper-note` | clip-path 撕边 + 横线纸纹 + 随轮廓 drop-shadow | 平贴会假 —— 微倾斜 ±0.5° 级，方向按位置轮换 |
 | 撕边纸条 `.paper-strip` | 按钮形态的撕边纸，纸色经 `--strip` 注入 | 主纸条金底（`--accent-strong`），次纸条纸面色；交错 ±1° 歪斜 |
-| 胶带 | 半透明 `bg-accent-soft` 矩形，压在纸边之上 | **必须是被裁剪元素（clip-path）的兄弟节点** —— 放在其内部会被撕边裁掉角；两角对压优于单条居中 |
+| 胶带（`TAPE` 片段 + `components/Tape.tsx`） | 半透明 `bg-accent-soft` 矩形，压在纸边之上 | **必须是被裁剪元素（clip-path）的兄弟节点** —— 放在其内部会被撕边裁掉角；两角对压优于单条居中 |
 | 马克笔高亮 `.marker-strip` | 文字下半截的撕边金条 | 只扫过关键字，微歪斜 |
 | 手绘分隔线 `.paper-chapter` | 章节顶部的 1px 细线，rotate -0.4° | 模拟纸页间手账分隔 |
 
@@ -203,7 +206,7 @@ Shell（min-h-dvh 纵向 flex）
 ```
 
 - 图标按钮必须有 `aria-label`；当前导航项 `aria-current="page"`；全局 `:focus-visible` 焦点环在 base.css（2px `--accent` outline + offset）。
-- 404 与空状态同构：图标圆盘（`accent-soft` 底）+ 标题 + 灰字说明 + 一个胶囊动作。
+- 404 与空状态同构：图标圆盘（`accent-soft` 底）+ 标题 + 灰字说明 + 一个胶囊动作 —— `components/EmptyState.tsx` 单一实现（`bare` 变体承载 404 整页居中，`heading="h1"` 取页面 H1 字号）。
 
 **响应式**
 
@@ -248,8 +251,8 @@ Shell（min-h-dvh 纵向 flex）
   2. 新 UI 先查 lib/styles.ts 片段，没有再新增；新增须先在本文档登记
   3. 深色只经 .dark token 生效；所有动画尊重 prefers-reduced-motion
 
-片段清单  ICON_BTN · CARD(+_HOVER) · LIST_CONTAINER/DIVIDE_LIST/LIST_ROW · BTN_PRIMARY/BTN_OUTLINE ·
-          PAPER_STRIP · CHIP/MONO_CHIP · META · SECTION/SECTION_DETAIL
+片段清单  ICON_BTN · CARD(+_HOVER) · DIVIDE_LIST/LIST_ROW · BTN_PRIMARY/BTN_OUTLINE ·
+          PAPER_STRIP · CHIP/MONO_CHIP · EYEBROW · TAPE · META · SECTION/SECTION_DETAIL
 ```
 
 **典型任务处方**
