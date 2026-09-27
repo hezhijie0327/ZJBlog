@@ -39,8 +39,8 @@ export const EN = {
   // 页头（SectionHeading）
   "page.blogs.title": "All Posts",
   "page.blogs.en": "",
-  "page.travels.title": "Travel Atlas",
-  "page.travels.en": "Travel Atlas",
+  "page.travels.title": "Travel",
+  "page.travels.en": "Travel",
   "page.archives.title": "Archives",
   "page.archives.en": "",
   "page.projects.title": "Projects",
@@ -87,7 +87,7 @@ export const EN = {
   "post.licenseNote": "keep attribution and link when sharing",
   "post.storynav": "Post navigation",
 
-  // 旅行相册（地图 + 明信片墙）
+  // 旅行（地图 + 明信片墙）
   "travel.eyebrow": "Our Footsteps",
   "travel.stats": "{n} places · {m} together",
   "travel.couple": "Together",

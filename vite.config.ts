@@ -32,6 +32,18 @@ function plgDevServer(): Plugin {
     apply: "serve",
     configureServer(server: ViteDevServer) {
       server.watcher.add("content");
+      // content 下的文件变动必须让 SSR 模块失效：loadContent 的索引缓存在
+      // 模块作用域里，不失效的话新增/移动/删除 md 在 dev 里都不生效
+      const invalidateContent = (file: string) => {
+        if (!file.includes("/content/")) {
+          return;
+        }
+        server.moduleGraph.invalidateAll();
+        server.ws.send({ type: "full-reload" });
+      };
+      server.watcher.on("add", invalidateContent);
+      server.watcher.on("change", invalidateContent);
+      server.watcher.on("unlink", invalidateContent);
       server.middlewares.use(async (req, res, next) => {
         const raw = req.url ?? "/";
         const path = raw.split("?")[0] ?? "/";

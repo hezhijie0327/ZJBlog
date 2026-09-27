@@ -39,8 +39,8 @@ export const ZH_CN: Record<StringKey, string> = {
   // 页头（SectionHeading）
   "page.blogs.title": "全部文章",
   "page.blogs.en": "Blog",
-  "page.travels.title": "旅行相册",
-  "page.travels.en": "Travel Atlas",
+  "page.travels.title": "旅行",
+  "page.travels.en": "Travel",
   "page.archives.title": "归档",
   "page.archives.en": "Archive",
   "page.projects.title": "项目",
@@ -87,7 +87,7 @@ export const ZH_CN: Record<StringKey, string> = {
   "post.licenseNote": "转载请保留署名与链接",
   "post.storynav": "文章导航",
 
-  // 旅行相册（地图 + 明信片墙）
+  // 旅行（地图 + 明信片墙）
   "travel.eyebrow": "我们的步伐",
   "travel.stats": "已点亮 {n} 站 · 同行 {m} 次",
   "travel.couple": "情侣同行",
