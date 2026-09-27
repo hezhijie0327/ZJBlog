@@ -11,6 +11,8 @@ export const pageLoaders = {
   blogs: () => import("@/pages/BlogsPage.tsx"),
   "blog-post": () => import("@/pages/BlogPostPage.tsx"),
   "blog-tag": () => import("@/pages/BlogTagPage.tsx"),
+  travels: () => import("@/pages/TravelsPage.tsx"),
+  travel: () => import("@/pages/TravelPage.tsx"),
   projects: () => import("@/pages/ProjectsPage.tsx"),
   project: () => import("@/pages/ProjectPage.tsx"),
   archives: () => import("@/pages/ArchivesPage.tsx"),
@@ -33,6 +35,8 @@ const ROUTE_PATTERNS: ReadonlyArray<readonly [RegExp, LoadablePage]> = [
   [/^\/blogs\/tags\/[^/]+\/$/, "blog-tag"],
   [/^\/blogs\/[^/]+\/$/, "blog-post"],
   [/^\/blogs\/$/, "blogs"],
+  [/^\/travels\/[^/]+\/$/, "travel"],
+  [/^\/travels\/$/, "travels"],
   [/^\/projects\/[^/]+\/$/, "project"],
   [/^\/projects\/$/, "projects"],
   [/^\/archives\/$/, "archives"],
@@ -64,6 +68,8 @@ export const LazyIndexPage = lazy(async () => ({ default: (await pageLoaders.hom
 export const LazyBlogsPage = lazy(async () => ({ default: (await pageLoaders.blogs()).BlogsPage }));
 export const LazyBlogPostPage = lazy(async () => ({ default: (await pageLoaders["blog-post"]()).BlogPostPage }));
 export const LazyBlogTagPage = lazy(async () => ({ default: (await pageLoaders["blog-tag"]()).BlogTagPage }));
+export const LazyTravelsPage = lazy(async () => ({ default: (await pageLoaders.travels()).TravelsPage }));
+export const LazyTravelPage = lazy(async () => ({ default: (await pageLoaders.travel()).TravelPage }));
 export const LazyProjectsPage = lazy(async () => ({ default: (await pageLoaders.projects()).ProjectsPage }));
 export const LazyProjectPage = lazy(async () => ({ default: (await pageLoaders.project()).ProjectPage }));
 export const LazyArchivesPage = lazy(async () => ({ default: (await pageLoaders.archives()).ArchivesPage }));

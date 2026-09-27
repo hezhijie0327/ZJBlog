@@ -22,6 +22,7 @@ export function Navigation() {
     { name: t("nav.home"), href: "/" },
     { name: t("nav.projects"), href: "/projects/" },
     { name: t("nav.blogs"), href: "/blogs/" },
+    { name: t("nav.travels"), href: "/travels/" },
     { name: t("nav.archives"), href: "/archives/" },
     { name: t("nav.support"), href: "/support/" },
   ];
@@ -36,6 +37,9 @@ export function Navigation() {
       case "blog-post":
       case "blog-tag":
         return "/blogs/";
+      case "travels":
+      case "travel":
+        return "/travels/";
       case "projects":
       case "project":
         return "/projects/";

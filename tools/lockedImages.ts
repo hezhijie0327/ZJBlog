@@ -26,6 +26,8 @@ const refsBySlug = new Map<string, Set<string>>();
 const publicRefs = new Set<string>();
 /** 独占图登记：bin 相对路径（不含 /images/ 前缀）→ 加密材料 */
 interface SealedImage {
+  /** `<kind>:<slug>` 命名空间密钥 */
+  key: string;
   slug: string;
   src: string;
   iv: Buffer;
@@ -57,8 +59,9 @@ export function noteImageRefs(slug: string, html: string, locked: boolean): void
 }
 
 /** 内容密封：为锁定文生成独占图 IV 表（随正文一起进信封密文）。
+ *  key = `<kind>:<slug>` 命名空间密钥，slug 用于 .bin 资产命名。
  *  共享图告警并跳过；返回值直接并入信封明文 JSON。 */
-export function sealImagesForPost(slug: string): Record<string, { iv: string; ct: string }> {
+export function sealImagesForPost(key: string, slug: string): Record<string, { iv: string; ct: string }> {
   const images: Record<string, { iv: string; ct: string }> = {};
   for (const src of refsBySlug.get(slug) ?? []) {
     if (publicRefs.has(src)) {
@@ -71,6 +74,7 @@ export function sealImagesForPost(slug: string): Record<string, { iv: string; ct
     const reencoded = /\.(jpe?g|png)$/i.test(src);
     const iv = randomBytes(12);
     const sealed: SealedImage = {
+      key,
       slug,
       src,
       iv,
@@ -120,7 +124,7 @@ async function encryptImage(sealed: SealedImage): Promise<Buffer> {
     const pipeline = (meta.width ?? 0) > MAX_WIDTH ? sharp(abs).resize({ width: MAX_WIDTH }) : sharp(abs);
     payload = await pipeline.webp({ quality: 80 }).toBuffer();
   }
-  const cipher = createCipheriv("aes-256-gcm", keyFor(sealed.slug), sealed.iv);
+  const cipher = createCipheriv("aes-256-gcm", keyFor(sealed.key), sealed.iv);
   return Buffer.concat([cipher.update(payload), cipher.final(), cipher.getAuthTag()]);
 }
 

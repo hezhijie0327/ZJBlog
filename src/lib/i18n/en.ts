@@ -22,6 +22,7 @@ export const EN = {
   "nav.home": "Home",
   "nav.projects": "Projects",
   "nav.blogs": "Blog",
+  "nav.travels": "Travel",
   "nav.archives": "Archives",
   "nav.support": "Support",
   "nav.search": "Search",
@@ -38,6 +39,8 @@ export const EN = {
   // 页头（SectionHeading）
   "page.blogs.title": "All Posts",
   "page.blogs.en": "",
+  "page.travels.title": "Travel Atlas",
+  "page.travels.en": "Travel Atlas",
   "page.archives.title": "Archives",
   "page.archives.en": "",
   "page.projects.title": "Projects",
@@ -83,6 +86,21 @@ export const EN = {
   "post.authorBy": "Written by {author}",
   "post.licenseNote": "keep attribution and link when sharing",
   "post.storynav": "Post navigation",
+
+  // 旅行相册（地图 + 明信片墙）
+  "travel.eyebrow": "Our Footsteps",
+  "travel.stats": "{n} places · {m} together",
+  "travel.couple": "Together",
+  "travel.solo": "Solo",
+  "travel.replay": "Replay our steps",
+  "travel.zoomIn": "Zoom in",
+  "travel.zoomOut": "Zoom out",
+  "travel.zoomWorld": "Whole world",
+  "travel.closeup": "City close-up",
+  "travel.readStory": "Read the post",
+  "travel.back": "TRAVEL / Atlas",
+  "travel.protectedDesc": "Password-protected travel story",
+  "travel.empty": "No travels recorded yet.",
 
   // 加密博文（锁屏与列表锁标）：信件隐喻，配合纸感锁屏
   "lock.eyebrow": "Sealed Letter",

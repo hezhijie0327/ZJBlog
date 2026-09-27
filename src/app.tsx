@@ -20,6 +20,8 @@ import {
   isProjectData,
   isProjectsData,
   isSupportData,
+  isTravelData,
+  isTravelsData,
 } from "@/lib/types.ts";
 import { NotFoundPage } from "@/pages/NotFoundPage.tsx";
 import {
@@ -32,6 +34,8 @@ import {
   LazyProjectPage,
   LazyProjectsPage,
   LazySupportPage,
+  LazyTravelPage,
+  LazyTravelsPage,
   preloadPage,
 } from "@/pages/registry.ts";
 
@@ -78,6 +82,18 @@ function Pages({ syncPages }: { syncPages?: SyncPages }) {
     const Sync = syncPages?.["blog-tag"];
     return (
       <Suspense fallback={<PageFallback />}>{Sync ? <Sync data={data} /> : <LazyBlogTagPage data={data} />}</Suspense>
+    );
+  }
+  if (isTravelsData(data)) {
+    const Sync = syncPages?.travels;
+    return (
+      <Suspense fallback={<PageFallback />}>{Sync ? <Sync data={data} /> : <LazyTravelsPage data={data} />}</Suspense>
+    );
+  }
+  if (isTravelData(data)) {
+    const Sync = syncPages?.travel;
+    return (
+      <Suspense fallback={<PageFallback />}>{Sync ? <Sync data={data} /> : <LazyTravelPage data={data} />}</Suspense>
     );
   }
   if (isProjectsData(data)) {

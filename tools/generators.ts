@@ -53,7 +53,7 @@ ${items}
 }
 
 export function generateSitemap(): string {
-  const { blogs, projects } = loadContent();
+  const { blogs, projects, travels } = loadContent();
   // 与 trailingSlash 语义一致：所有 URL 带尾斜杠
   const staticPaths = ["", "/blogs", "/archives", "/projects", "/support"];
   const urls = [
@@ -67,6 +67,15 @@ export function generateSitemap(): string {
       lastmod: blog.date ? new Date(blog.date).toISOString() : new Date().toISOString(),
       priority: "0.6",
     })),
+    // 旅行：列表页 + 未上锁的详情（锁定详情 noindex，不进 sitemap）
+    { loc: `${siteConfig.url}/travels/`, lastmod: new Date().toISOString(), priority: "0.6" },
+    ...travels
+      .filter((travel) => !travel.locked)
+      .map((travel) => ({
+        loc: `${siteConfig.url}/travels/${encodeURIComponent(travel.slug)}/`,
+        lastmod: travel.date ? new Date(travel.date).toISOString() : new Date().toISOString(),
+        priority: "0.5",
+      })),
     ...projects.map((project) => ({
       loc: `${siteConfig.url}/projects/${encodeURIComponent(project.slug)}/`,
       lastmod: project.date ? new Date(project.date).toISOString() : new Date().toISOString(),

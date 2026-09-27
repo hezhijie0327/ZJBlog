@@ -12,7 +12,15 @@ import { renderToString } from "react-dom/server";
 import { App } from "../src/app.tsx";
 import { siteConfig } from "../src/config/site.ts";
 import { THEME_BOOTSTRAP } from "../src/lib/theme.ts";
-import { type AnyPageData, isBlogPostData, isProjectData, type PageKind, type SyncPages } from "../src/lib/types.ts";
+import {
+  type AnyPageData,
+  isBlogPostData,
+  isProjectData,
+  isTravelData,
+  isTravelsData,
+  type PageKind,
+  type SyncPages,
+} from "../src/lib/types.ts";
 import { ArchivesPage } from "../src/pages/ArchivesPage.tsx";
 import { BlogPostPage } from "../src/pages/BlogPostPage.tsx";
 import { BlogsPage } from "../src/pages/BlogsPage.tsx";
@@ -22,6 +30,8 @@ import { OgPage } from "../src/pages/OgPage.tsx";
 import { ProjectPage } from "../src/pages/ProjectPage.tsx";
 import { ProjectsPage } from "../src/pages/ProjectsPage.tsx";
 import { SupportPage } from "../src/pages/SupportPage.tsx";
+import { TravelPage } from "../src/pages/TravelPage.tsx";
+import { TravelsPage } from "../src/pages/TravelsPage.tsx";
 import {
   generateLlms,
   generateLlmsFull,
@@ -40,6 +50,8 @@ const SYNC_PAGES: SyncPages = {
   blogs: BlogsPage,
   "blog-post": BlogPostPage,
   "blog-tag": BlogTagPage,
+  travels: TravelsPage,
+  travel: TravelPage,
   projects: ProjectsPage,
   project: ProjectPage,
   archives: ArchivesPage,
@@ -53,6 +65,8 @@ const PAGE_CHUNK_SOURCES: Record<Exclude<PageKind, "not-found">, string> = {
   blogs: "src/pages/BlogsPage.tsx",
   "blog-post": "src/pages/BlogPostPage.tsx",
   "blog-tag": "src/pages/BlogTagPage.tsx",
+  travels: "src/pages/TravelsPage.tsx",
+  travel: "src/pages/TravelPage.tsx",
   projects: "src/pages/ProjectsPage.tsx",
   project: "src/pages/ProjectPage.tsx",
   archives: "src/pages/ArchivesPage.tsx",
@@ -107,12 +121,21 @@ function escapeHtml(text: string): string {
   return text.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
 }
 
-/** page-data 剔除正文 HTML：正文单份存于 DOM（SEO/首帧看 DOM，客户端换页
- *  时从 fetch 到的文档解析回填），长文文档体积不因 SPA 契约翻倍。 */
+/** page-data 剔除大体积字段：正文 HTML（contentHtml）与旅行地图 SVG
+ *  （mapSvg）均单份存于 DOM（SEO/首帧看 DOM，客户端换页时从 fetch 到的
+ *  文档解析回填），避免 SPA 契约让文档体积翻倍。 */
 function slimForClient(data: AnyPageData): AnyPageData {
   if (isBlogPostData(data)) {
     const { contentHtml: _contentHtml, ...post } = data.post;
     return { ...data, post };
+  }
+  if (isTravelsData(data)) {
+    const { mapSvg: _mapSvg, ...rest } = data;
+    return rest;
+  }
+  if (isTravelData(data)) {
+    const { contentHtml: _contentHtml, ...trip } = data.trip;
+    return { ...data, trip };
   }
   if (isProjectData(data)) {
     const { contentHtml: _contentHtml, ...project } = data.project;
@@ -137,6 +160,9 @@ function katexAssetPath(): string {
 function needsKatex(payload: AnyPageData): boolean {
   if (isBlogPostData(payload)) {
     return payload.post.needsKatex === true;
+  }
+  if (isTravelData(payload)) {
+    return payload.trip.needsKatex === true;
   }
   if (isProjectData(payload)) {
     return payload.project.needsKatex === true;
@@ -220,7 +246,12 @@ export async function renderRoute(rawPath: string, assets?: AssetUrls): Promise<
       : `<link rel="canonical" href="${escapeHtml(`${g.siteUrl}${pathname === "/" ? "/" : pathname}`)}">`;
   // 加密博文与 /og/ 一样不进索引：URL 的存在可以公开，但搜索结果里不该
   // 出现标题/描述快照（描述已是兜底文案，标题的索引价值由作者自决）
-  const noindex = g.page === "og" || (isBlogPostData(payload) && payload.post.locked !== undefined);
+  // 加密博文/旅行与 /og/ 一样不进索引：URL 的存在可以公开，但搜索结果里
+  // 不该出现标题/描述快照（描述已是兜底文案，标题的索引价值由作者自决）
+  const noindex =
+    g.page === "og" ||
+    (isBlogPostData(payload) && payload.post.locked !== undefined) ||
+    (isTravelData(payload) && payload.trip.locked !== undefined);
   const noindexTag = noindex ? `<meta name="robots" content="noindex">` : "";
   const ogTags = [
     `<meta property="og:type" content="${g.og ? "article" : "website"}">`,

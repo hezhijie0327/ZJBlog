@@ -106,16 +106,19 @@ interface KeyMaterial {
 const keyMaterials = new Map<string, KeyMaterial>();
 
 export interface SecretRef {
-  slug: string;
+  /** 密钥命名空间：blogs 与 travels 的 slug 可能同名，一律 `<kind>:<slug>` */
+  key: string;
+  /** 错误信息里的可读位置（如 blogs/xxx.md） */
+  context: string;
   secretName: string;
 }
 
 /** 预派生密钥（Argon2id 是异步 API，而内容管线全同步 —— 与 shiki 同一
  *  模式：模块加载期 await 完成重活，请求/构建路径保持同步）。每篇独立盐，
- *  同名 secret 的多篇博文密钥互不相同。 */
+ *  同名 secret 的多篇内容密钥互不相同。 */
 export async function deriveSecretKeys(refs: SecretRef[]): Promise<void> {
   for (const ref of refs) {
-    const password = loadSecret(ref.secretName, `blogs/${ref.slug}.md`);
+    const password = loadSecret(ref.secretName, ref.context);
     const salt = randomBytes(16);
     const key = Buffer.from(
       await argon2id({
@@ -128,25 +131,25 @@ export async function deriveSecretKeys(refs: SecretRef[]): Promise<void> {
         outputType: "binary",
       }),
     );
-    keyMaterials.set(ref.slug, { key, salt });
+    keyMaterials.set(ref.key, { key, salt });
   }
 }
 
-/** 取已预派生的文章密钥（图片等同文衍生资产复用同一把口令密钥）。 */
-export function keyFor(slug: string): Buffer {
-  const material = keyMaterials.get(slug);
+/** 取已预派生的内容密钥（图片等同文衍生资产复用同一把口令密钥）。 */
+export function keyFor(key: string): Buffer {
+  const material = keyMaterials.get(key);
   if (!material) {
-    throw new Error(`[crypto] blogs/${slug}.md: 密钥未预派生（deriveSecretKeys 未覆盖该 slug，属管线缺陷）`);
+    throw new Error(`[crypto] ${key}: 密钥未预派生（deriveSecretKeys 未覆盖，属管线缺陷）`);
   }
   return material.key;
 }
 
-/** 加密正文包（同步；明文 = JSON { html, toc, images? }，由调用方序列化）。
+/** 加密内容包（同步；明文 = JSON { html, toc, images? }，由调用方序列化）。
  *  认证 tag 后置拼接，与 WebCrypto AES-GCM 的密文布局一致。 */
-export function encryptBundle(slug: string, plaintext: string): LockedContent {
-  const material = keyMaterials.get(slug);
+export function encryptBundle(key: string, plaintext: string): LockedContent {
+  const material = keyMaterials.get(key);
   if (!material) {
-    throw new Error(`[crypto] blogs/${slug}.md: 密钥未预派生（deriveSecretKeys 未覆盖该 slug，属管线缺陷）`);
+    throw new Error(`[crypto] ${key}: 密钥未预派生（deriveSecretKeys 未覆盖，属管线缺陷）`);
   }
   const iv = randomBytes(12);
   const cipher = createCipheriv("aes-256-gcm", material.key, iv);

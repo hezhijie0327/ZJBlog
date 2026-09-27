@@ -314,6 +314,9 @@ importers:
       vite:
         specifier: ^8.3.1
         version: 8.3.1(@types/node@26.6.2)(esbuild@0.28.1)(jiti@2.7.0)
+      world-atlas:
+        specifier: ^2.0.2
+        version: 2.0.2
       wrangler:
         specifier: ^4.139.0
         version: 4.139.0(@types/node@26.6.2)
@@ -2969,6 +2972,9 @@ packages:
     resolution: {integrity: sha512-1xynegnJJqkgk/zuhNVcOFzAJXzsJ4UxazfThUe0K80eZXKpsRIXI2sHcT4trswLfeHCc+3uWTBvtSWLFRozbQ==}
     engines: {node: '>=16'}
     hasBin: true
+
+  world-atlas@2.0.2:
+    resolution: {integrity: sha512-IXfV0qwlKXpckz1FhwXVwKRjiIhOnWttOskm5CtxMsjgE/MXAYRHWJqgXOpM8IkcPBoXnyTU5lFHcYa5ChG0LQ==}
 
   wrangler@4.139.0:
     resolution: {integrity: sha512-9RtaWkIkxqntg58bGwNVRfGVSgf+cAq/45YzC87LN5YniCt4DDNrFM2gXK5SHMj3iG5YnDHhRVvh63FWnmJnaA==}
@@ -5906,6 +5912,8 @@ snapshots:
       '@cloudflare/workerd-linux-64': 1.20260923.1
       '@cloudflare/workerd-linux-arm64': 1.20260923.1
       '@cloudflare/workerd-windows-64': 1.20260923.1
+
+  world-atlas@2.0.2: {}
 
   wrangler@4.139.0(@types/node@26.6.2):
     dependencies:

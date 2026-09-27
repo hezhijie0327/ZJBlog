@@ -342,13 +342,45 @@ type RawEntry = {
   toc?: TocItem[];
   content?: string;
   locked?: LockedContent;
-  /** frontmatter secret 名（blogs 专属；密封阶段据此生成信封） */
+  /** frontmatter secret 名（blogs/travels；密封阶段据此生成信封） */
   secretName?: string;
+  /** 旅行专属（travels） */
+  place?: string;
+  coords?: [number, number];
+  endDate?: string;
+  companion?: "couple" | "solo";
+  cover?: string;
 };
+
+/** 旅行条目：/travels/ 明信片墙与地图针脚的数据源。 */
+export interface TravelEntry {
+  slug: string;
+  title: string;
+  /** 地图针脚短标签 */
+  place: string;
+  /** [lng, lat] */
+  coords: [number, number];
+  date?: string;
+  endDate?: string;
+  companion: "couple" | "solo";
+  cover?: string;
+  description?: string;
+  summary?: string;
+  /** 相关游记（/blogs/...） */
+  link?: string;
+  contentHtml: string;
+  /** 正文含 KaTeX 公式（页面需按需加载 katex.min.css） */
+  needsKatex: boolean;
+  /** 原始 Markdown 正文（构建内存私有，不进 payload） */
+  content: string;
+  /** 加密信封（frontmatter.secret 命中）：contentHtml 不出站 */
+  locked?: LockedContent;
+}
 
 export interface ContentIndex {
   blogs: BlogEntry[];
   projects: ProjectEntry[];
+  travels: TravelEntry[];
 }
 
 /** frontmatter 白名单；白名单外的键一律告警（typo 防线）。 */
@@ -366,16 +398,33 @@ const FRONTMATTER_KEYS = new Set([
   "secret",
 ]);
 
+/** travels 专属白名单（body 为故事正文；photo 走正文 Markdown 图片）。 */
+const TRAVEL_FRONTMATTER_KEYS = new Set([
+  "title",
+  "description",
+  "date",
+  "endDate",
+  "place",
+  "coords",
+  "companion",
+  "cover",
+  "summary",
+  "link",
+  "draft",
+  "secret",
+]);
+
 function validateFrontmatter(type: string, slug: string, data: Record<string, unknown>): void {
+  const whitelist = type === "travels" ? TRAVEL_FRONTMATTER_KEYS : FRONTMATTER_KEYS;
   for (const key of Object.keys(data)) {
-    if (!FRONTMATTER_KEYS.has(key)) {
+    if (!whitelist.has(key)) {
       console.warn(`[content] ${type}/${slug}.md: 未知的 frontmatter 字段 "${key}"（检查拼写或补充白名单）`);
     }
   }
   if (!data.title) {
     console.warn(`[content] ${type}/${slug}.md: 缺少 title，列表与文档头将退化显示 slug`);
   }
-  if (!data.description) {
+  if (type !== "travels" && !data.description) {
     console.warn(`[content] ${type}/${slug}.md: 缺少 description，SEO/OG 描述将使用兜底文案`);
   }
   if (!data.date) {
@@ -401,7 +450,7 @@ function parseDate(type: string, slug: string, value: unknown): string | undefin
   return value;
 }
 
-function readEntries(type: "blogs" | "projects"): RawEntry[] {
+function readEntries(type: "blogs" | "projects" | "travels"): RawEntry[] {
   const dirPath = path.join(contentDirectory, type);
   if (!existsSync(dirPath)) {
     return [];
@@ -419,17 +468,36 @@ function readEntries(type: "blogs" | "projects"): RawEntry[] {
       continue;
     }
     const compiled = compileMarkdown(content);
-    // secret: <name> → 加密博文（仅 blogs；projects 无锁屏 UI）。信封在
+    // secret: <name> → 加密内容（blogs/travels；projects 无锁屏 UI）。信封在
     // loadContent 的密封阶段生成 —— 独占图判定需要全站引用图先完成。
     // 口令缺失时 deriveSecretKeys 阶段的 loadSecret 直接抛错，fail-closed。
     const secretName =
-      type === "blogs" && typeof data.secret === "string" && data.secret !== "" ? data.secret : undefined;
+      type !== "projects" && typeof data.secret === "string" && data.secret !== "" ? data.secret : undefined;
     if (data.secret !== undefined && secretName === undefined) {
       console.warn(
-        type === "blogs"
-          ? `[content] ${type}/${slug}.md: secret 需为非空字符串，已忽略`
-          : `[content] ${type}/${slug}.md: secret 仅支持 blogs（projects 无锁屏），已忽略`,
+        type === "projects"
+          ? `[content] ${type}/${slug}.md: secret 仅支持 blogs/travels（projects 无锁屏），已忽略`
+          : `[content] ${type}/${slug}.md: secret 需为非空字符串，已忽略`,
       );
+    }
+    // 旅行专属字段：coords 必须是 [lng, lat] 数值对，companion 缺省按情侣同行
+    let coords: [number, number] | undefined;
+    if (type === "travels") {
+      const raw = data.coords;
+      if (Array.isArray(raw) && raw.length === 2 && raw.every((n) => typeof n === "number" && Number.isFinite(n))) {
+        coords = [raw[0] as number, raw[1] as number];
+      } else {
+        console.warn(`[content] ${type}/${slug}.md: coords 需为 [lng, lat] 数值对，针脚将缺失`);
+      }
+    }
+    const companion = data.companion === "solo" ? "solo" : "couple";
+    if (
+      type === "travels" &&
+      data.companion !== undefined &&
+      data.companion !== "solo" &&
+      data.companion !== "couple"
+    ) {
+      console.warn(`[content] ${type}/${slug}.md: companion 需为 couple | solo，已按 couple 处理`);
     }
     entries.push({
       slug,
@@ -439,7 +507,7 @@ function readEntries(type: "blogs" | "projects"): RawEntry[] {
       category: data.category,
       tags: data.tags ?? [],
       type: data.type === "starred" ? "starred" : "personal",
-      link: data.link,
+      link: typeof data.link === "string" ? data.link : undefined,
       image: data.image,
       readingMinutes: Math.ceil(readingTime(content).minutes),
       summary: typeof data.summary === "string" ? data.summary : undefined,
@@ -448,6 +516,11 @@ function readEntries(type: "blogs" | "projects"): RawEntry[] {
       toc: compiled.toc,
       content,
       secretName,
+      place: type === "travels" && typeof data.place === "string" && data.place !== "" ? data.place : undefined,
+      coords,
+      endDate: type === "travels" ? parseDate(type, slug, data.endDate) : undefined,
+      companion,
+      cover: type === "travels" && typeof data.cover === "string" ? data.cover : undefined,
     });
   }
   // 日期倒序，无日期排后（与迁移前排序一致）
@@ -459,24 +532,30 @@ function readEntries(type: "blogs" | "projects"): RawEntry[] {
   });
 }
 
-/** 扫描 blogs frontmatter，收集需要预派生密钥的加密文（含 slug + secret 名）。
- *  draft 的条目已整体剔除，不参与。 */
+/** 扫描 blogs/travels frontmatter，收集需要预派生密钥的加密内容（含命名
+ *  空间密钥 + secret 名）。draft 的条目已整体剔除，不参与。 */
 function collectSecretRefs(): SecretRef[] {
-  const dirPath = path.join(contentDirectory, "blogs");
-  if (!existsSync(dirPath)) {
-    return [];
-  }
   const refs: SecretRef[] = [];
-  for (const file of readdirSync(dirPath)) {
-    if (!file.endsWith(".md")) {
+  for (const kind of ["blogs", "travels"] as const) {
+    const dirPath = path.join(contentDirectory, kind);
+    if (!existsSync(dirPath)) {
       continue;
     }
-    const { data } = matter(readFileSync(path.join(dirPath, file), "utf8"));
-    if (data.draft === true) {
-      continue;
-    }
-    if (typeof data.secret === "string" && data.secret !== "") {
-      refs.push({ slug: file.replace(/\.md$/, ""), secretName: data.secret });
+    for (const file of readdirSync(dirPath)) {
+      if (!file.endsWith(".md")) {
+        continue;
+      }
+      const { data } = matter(readFileSync(path.join(dirPath, file), "utf8"));
+      if (data.draft === true) {
+        continue;
+      }
+      if (typeof data.secret === "string" && data.secret !== "") {
+        refs.push({
+          key: `${kind}:${file.replace(/\.md$/, "")}`,
+          context: `${kind}/${file}`,
+          secretName: data.secret,
+        });
+      }
     }
   }
   return refs;
@@ -492,6 +571,7 @@ export function loadContent(): ContentIndex {
   if (!cache) {
     const rawBlogs = readEntries("blogs");
     const rawProjects = readEntries("projects");
+    const rawTravels = readEntries("travels");
 
     // 引用图分析必须先于密封全量完成：独占性是全站判定（任何公开内容也
     // 引用的图片无法加密）
@@ -501,20 +581,40 @@ export function loadContent(): ContentIndex {
     for (const entry of rawProjects) {
       noteImageRefs(entry.slug, entry.contentHtml ?? "", false);
     }
+    for (const entry of rawTravels) {
+      // 锁定旅行的 frontmatter cover 同样是私密照片 —— 拼进引用分析，
+      // 让密封管线把它一并加密（明文不留在 dist）
+      const html =
+        entry.cover !== undefined && entry.cover !== ""
+          ? `${entry.contentHtml ?? ""}<img src="${entry.cover}">`
+          : (entry.contentHtml ?? "");
+      noteImageRefs(entry.slug, html, entry.secretName !== undefined);
+    }
 
-    // 密封锁定文：正文 HTML + TOC + 独占图 IV 表一起进信封密文。明文不出
-    // 构建内存（payloads/generators 对锁定文一律不再消费它们）。
+    // 密封锁定内容：正文 HTML + TOC + 独占图 IV 表一起进信封密文。明文不出
+    // 构建内存（payloads/generators 对锁定内容一律不再消费它们）。
     for (const entry of rawBlogs) {
       if (!entry.secretName) {
         continue;
       }
-      const images = sealImagesForPost(entry.slug);
+      const images = sealImagesForPost(`blogs:${entry.slug}`, entry.slug);
       const bundle = JSON.stringify({
         html: entry.contentHtml,
         toc: entry.toc,
         ...(Object.keys(images).length > 0 ? { images } : {}),
       });
-      entry.locked = encryptBundle(entry.slug, bundle);
+      entry.locked = encryptBundle(`blogs:${entry.slug}`, bundle);
+    }
+    for (const entry of rawTravels) {
+      if (!entry.secretName) {
+        continue;
+      }
+      const images = sealImagesForPost(`travels:${entry.slug}`, entry.slug);
+      const bundle = JSON.stringify({
+        html: entry.contentHtml,
+        ...(Object.keys(images).length > 0 ? { images } : {}),
+      });
+      entry.locked = encryptBundle(`travels:${entry.slug}`, bundle);
     }
 
     const toBlog = (entry: RawEntry): BlogEntry => ({
@@ -545,9 +645,27 @@ export function loadContent(): ContentIndex {
       needsKatex: entry.needsKatex ?? false,
       content: entry.content ?? "",
     });
+    const toTravel = (entry: RawEntry): TravelEntry => ({
+      slug: entry.slug,
+      title: entry.title,
+      place: entry.place ?? entry.title,
+      coords: entry.coords ?? [0, 0],
+      date: entry.date,
+      endDate: entry.endDate,
+      companion: entry.companion ?? "couple",
+      cover: entry.cover,
+      description: entry.description,
+      summary: entry.summary,
+      link: entry.link,
+      contentHtml: entry.contentHtml ?? "",
+      needsKatex: entry.needsKatex ?? false,
+      content: entry.content ?? "",
+      locked: entry.locked,
+    });
     cache = {
       blogs: rawBlogs.map(toBlog),
       projects: rawProjects.map(toProject),
+      travels: rawTravels.map(toTravel),
     };
   }
   return cache;

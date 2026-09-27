@@ -9,6 +9,8 @@ export type PageKind =
   | "blogs"
   | "blog-post"
   | "blog-tag"
+  | "travels"
+  | "travel"
   | "projects"
   | "project"
   | "archives"
@@ -135,6 +137,48 @@ export interface BlogTagData {
   blogs: BlogListItem[];
 }
 
+/** 旅行条目（/travels/ 明信片墙 + 地图针脚共用）。针脚与地名/日期是公开的
+ *  纪念层；secret 命中的旅行详情上锁，summary/cover 等内容性字段不出站。 */
+export interface TravelListItem {
+  slug: string;
+  title: string;
+  /** 地图针脚短标签 */
+  place: string;
+  /** [lng, lat]（GeoJSON 约定） */
+  coords: [number, number];
+  date?: string;
+  endDate?: string;
+  /** 同行者：情侣心形针脚 / 独行圆环针脚 */
+  companion: "couple" | "solo";
+  /** 封面图（明信片卡；锁定文不出站） */
+  cover?: string;
+  summary?: string;
+  /** 相关游记（/blogs/...） */
+  link?: string;
+  /** 详情已上锁（frontmatter.secret 命中） */
+  locked?: boolean;
+}
+
+export interface TravelsData {
+  globals: PageGlobals & { page: "travels" };
+  trips: TravelListItem[];
+  /** 构建期烘好的世界地图 SVG（含市内细节层与重放镜头编排 data-stops）：
+   *  单份存于 DOM（#travel-map），由启动管道与换页管道注入后才存在
+   *  （同 contentHtml 契约，不进 page-data） */
+  mapSvg?: string;
+}
+
+export interface TravelData {
+  globals: PageGlobals & { page: "travel" };
+  /** 同 BlogPostData：contentHtml 由 DOM 注入，不进 page-data。
+   *  locked 在列表项上是布尔标记、在这里是密文信封，故 Omit 后重定义。 */
+  trip: Omit<TravelListItem, "locked"> & {
+    contentHtml?: string;
+    needsKatex?: boolean;
+    locked?: LockedContent;
+  };
+}
+
 export interface ProjectsData {
   globals: PageGlobals & { page: "projects" };
   projects: ProjectListItem[];
@@ -171,6 +215,8 @@ export type AnyPageData =
   | BlogsData
   | BlogPostData
   | BlogTagData
+  | TravelsData
+  | TravelData
   | ProjectsData
   | ProjectData
   | ArchivesData
@@ -190,6 +236,12 @@ export function isBlogPostData(data: AnyPageData): data is BlogPostData {
 }
 export function isBlogTagData(data: AnyPageData): data is BlogTagData {
   return data.globals.page === "blog-tag";
+}
+export function isTravelsData(data: AnyPageData): data is TravelsData {
+  return data.globals.page === "travels";
+}
+export function isTravelData(data: AnyPageData): data is TravelData {
+  return data.globals.page === "travel";
 }
 export function isProjectsData(data: AnyPageData): data is ProjectsData {
   return data.globals.page === "projects";
@@ -214,6 +266,8 @@ export interface SyncPages {
   blogs: ComponentType<{ data: BlogsData }>;
   "blog-post": ComponentType<{ data: BlogPostData }>;
   "blog-tag": ComponentType<{ data: BlogTagData }>;
+  travels: ComponentType<{ data: TravelsData }>;
+  travel: ComponentType<{ data: TravelData }>;
   projects: ComponentType<{ data: ProjectsData }>;
   project: ComponentType<{ data: ProjectData }>;
   archives: ComponentType<{ data: ArchivesData }>;

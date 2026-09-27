@@ -22,6 +22,7 @@ export const ZH_CN: Record<StringKey, string> = {
   "nav.home": "首页",
   "nav.projects": "项目",
   "nav.blogs": "博客",
+  "nav.travels": "旅行",
   "nav.archives": "归档",
   "nav.support": "支持",
   "nav.search": "搜索",
@@ -38,6 +39,8 @@ export const ZH_CN: Record<StringKey, string> = {
   // 页头（SectionHeading）
   "page.blogs.title": "全部文章",
   "page.blogs.en": "Blog",
+  "page.travels.title": "旅行相册",
+  "page.travels.en": "Travel Atlas",
   "page.archives.title": "归档",
   "page.archives.en": "Archive",
   "page.projects.title": "项目",
@@ -83,6 +86,21 @@ export const ZH_CN: Record<StringKey, string> = {
   "post.authorBy": "撰文 · {author}",
   "post.licenseNote": "转载请保留署名与链接",
   "post.storynav": "文章导航",
+
+  // 旅行相册（地图 + 明信片墙）
+  "travel.eyebrow": "我们的步伐",
+  "travel.stats": "已点亮 {n} 站 · 同行 {m} 次",
+  "travel.couple": "情侣同行",
+  "travel.solo": "独自出发",
+  "travel.replay": "重放我们的步伐",
+  "travel.zoomIn": "放大",
+  "travel.zoomOut": "缩小",
+  "travel.zoomWorld": "看全世界",
+  "travel.closeup": "城市特写",
+  "travel.readStory": "看游记",
+  "travel.back": "旅行 / 足迹地图",
+  "travel.protectedDesc": "加密旅行记",
+  "travel.empty": "还没有旅行记录。",
 
   // 加密博文（锁屏与列表锁标）：信件隐喻，配合纸感锁屏
   "lock.eyebrow": "加密信件",
