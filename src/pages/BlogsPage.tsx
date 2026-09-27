@@ -1,5 +1,6 @@
 // 全部文章列表页：标签云 + 文章列表（幽灵日期水印）+ 右栏最近文章（xl 宽屏）。
 
+import { Lock } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState.tsx";
 import { PostList } from "@/components/PostList.tsx";
 import { SectionHeading } from "@/components/SectionHeading.tsx";
@@ -67,6 +68,12 @@ export function BlogsPage({ data }: { data: BlogsData }) {
                       </span>
                       <span className="mt-0.5 block text-sm leading-snug text-ink-2 transition-colors hover:text-ink">
                         {blog.title}
+                        {blog.locked && (
+                          <>
+                            <span className="sr-only">（{t("post.locked")}）</span>
+                            <Lock aria-hidden="true" className="ml-1 inline size-3.5 text-accent-strong" />
+                          </>
+                        )}
                       </span>
                     </Link>
                   </li>

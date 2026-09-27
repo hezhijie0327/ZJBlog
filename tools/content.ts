@@ -24,8 +24,9 @@ import { createHighlighter } from "shiki";
 import { type Processor, unified } from "unified";
 import type { Node } from "unist";
 import { visit } from "unist-util-visit";
-import type { TocItem } from "../src/lib/types.ts";
+import type { LockedContent, TocItem } from "../src/lib/types.ts";
 import { remarkCallouts } from "./callouts";
+import { deriveSecretKeys, encryptBundle, type SecretRef } from "./crypto";
 import {
   plantumlFigure,
   renderGeoSvg,
@@ -33,6 +34,7 @@ import {
   translateFlowToMermaid,
   translateSequenceToMermaid,
 } from "./diagrams";
+import { noteImageRefs, sealImagesForPost } from "./lockedImages";
 
 const contentDirectory = path.join(process.cwd(), "content");
 
@@ -301,6 +303,9 @@ export interface BlogEntry {
   toc: TocItem[];
   /** 原始 Markdown 正文（llms-full.txt 用，不进页面 payload） */
   content: string;
+  /** 加密信封（frontmatter.secret 命中时有值）：contentHtml/toc/content 均
+   *  不出站（构建内存私有），仅信封随 payload 落盘，客户端解锁后还原 */
+  locked?: LockedContent;
 }
 
 export interface ProjectEntry {
@@ -336,6 +341,9 @@ type RawEntry = {
   needsKatex?: boolean;
   toc?: TocItem[];
   content?: string;
+  locked?: LockedContent;
+  /** frontmatter secret 名（blogs 专属；密封阶段据此生成信封） */
+  secretName?: string;
 };
 
 export interface ContentIndex {
@@ -355,6 +363,7 @@ const FRONTMATTER_KEYS = new Set([
   "image",
   "draft",
   "summary",
+  "secret",
 ]);
 
 function validateFrontmatter(type: string, slug: string, data: Record<string, unknown>): void {
@@ -410,6 +419,18 @@ function readEntries(type: "blogs" | "projects"): RawEntry[] {
       continue;
     }
     const compiled = compileMarkdown(content);
+    // secret: <name> → 加密博文（仅 blogs；projects 无锁屏 UI）。信封在
+    // loadContent 的密封阶段生成 —— 独占图判定需要全站引用图先完成。
+    // 口令缺失时 deriveSecretKeys 阶段的 loadSecret 直接抛错，fail-closed。
+    const secretName =
+      type === "blogs" && typeof data.secret === "string" && data.secret !== "" ? data.secret : undefined;
+    if (data.secret !== undefined && secretName === undefined) {
+      console.warn(
+        type === "blogs"
+          ? `[content] ${type}/${slug}.md: secret 需为非空字符串，已忽略`
+          : `[content] ${type}/${slug}.md: secret 仅支持 blogs（projects 无锁屏），已忽略`,
+      );
+    }
     entries.push({
       slug,
       title: data.title || slug,
@@ -426,6 +447,7 @@ function readEntries(type: "blogs" | "projects"): RawEntry[] {
       needsKatex: compiled.html.includes('class="katex'),
       toc: compiled.toc,
       content,
+      secretName,
     });
   }
   // 日期倒序，无日期排后（与迁移前排序一致）
@@ -437,10 +459,64 @@ function readEntries(type: "blogs" | "projects"): RawEntry[] {
   });
 }
 
+/** 扫描 blogs frontmatter，收集需要预派生密钥的加密文（含 slug + secret 名）。
+ *  draft 的条目已整体剔除，不参与。 */
+function collectSecretRefs(): SecretRef[] {
+  const dirPath = path.join(contentDirectory, "blogs");
+  if (!existsSync(dirPath)) {
+    return [];
+  }
+  const refs: SecretRef[] = [];
+  for (const file of readdirSync(dirPath)) {
+    if (!file.endsWith(".md")) {
+      continue;
+    }
+    const { data } = matter(readFileSync(path.join(dirPath, file), "utf8"));
+    if (data.draft === true) {
+      continue;
+    }
+    if (typeof data.secret === "string" && data.secret !== "") {
+      refs.push({ slug: file.replace(/\.md$/, ""), secretName: data.secret });
+    }
+  }
+  return refs;
+}
+
+// Argon2id 是异步 API 而内容管线全同步：与 shiki 高亮器同一模式，模块加载期
+// await 完成重活（每篇约百毫秒级），此后 loadContent 的调用路径保持同步。
+await deriveSecretKeys(collectSecretRefs());
+
 let cache: ContentIndex | null = null;
 
 export function loadContent(): ContentIndex {
   if (!cache) {
+    const rawBlogs = readEntries("blogs");
+    const rawProjects = readEntries("projects");
+
+    // 引用图分析必须先于密封全量完成：独占性是全站判定（任何公开内容也
+    // 引用的图片无法加密）
+    for (const entry of rawBlogs) {
+      noteImageRefs(entry.slug, entry.contentHtml ?? "", entry.secretName !== undefined);
+    }
+    for (const entry of rawProjects) {
+      noteImageRefs(entry.slug, entry.contentHtml ?? "", false);
+    }
+
+    // 密封锁定文：正文 HTML + TOC + 独占图 IV 表一起进信封密文。明文不出
+    // 构建内存（payloads/generators 对锁定文一律不再消费它们）。
+    for (const entry of rawBlogs) {
+      if (!entry.secretName) {
+        continue;
+      }
+      const images = sealImagesForPost(entry.slug);
+      const bundle = JSON.stringify({
+        html: entry.contentHtml,
+        toc: entry.toc,
+        ...(Object.keys(images).length > 0 ? { images } : {}),
+      });
+      entry.locked = encryptBundle(entry.slug, bundle);
+    }
+
     const toBlog = (entry: RawEntry): BlogEntry => ({
       slug: entry.slug,
       title: entry.title,
@@ -454,6 +530,7 @@ export function loadContent(): ContentIndex {
       needsKatex: entry.needsKatex ?? false,
       toc: entry.toc ?? [],
       content: entry.content ?? "",
+      locked: entry.locked,
     });
     const toProject = (entry: RawEntry): ProjectEntry => ({
       slug: entry.slug,
@@ -469,8 +546,8 @@ export function loadContent(): ContentIndex {
       content: entry.content ?? "",
     });
     cache = {
-      blogs: readEntries("blogs").map(toBlog),
-      projects: readEntries("projects").map(toProject),
+      blogs: rawBlogs.map(toBlog),
+      projects: rawProjects.map(toProject),
     };
   }
   return cache;

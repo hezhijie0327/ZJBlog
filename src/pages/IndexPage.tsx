@@ -1,6 +1,6 @@
 // 首页：Hero + 精选项目（starred 优先）+ 最新文章 + 联系（GitHub / RSS）。
 
-import { ArrowDown, ArrowRight, ArrowUpRight, Rss } from "lucide-react";
+import { ArrowDown, ArrowRight, ArrowUpRight, Lock, Rss } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState.tsx";
 import { GithubIcon } from "@/components/icons.tsx";
 import { ProjectCard } from "@/components/ProjectCard.tsx";
@@ -223,6 +223,12 @@ export function IndexPage({ data }: { data: HomeData }) {
                   <span className="min-w-0 flex-1 truncate font-serif text-base font-medium text-ink transition-colors group-hover:text-accent sm:text-lg">
                     {blog.title}
                   </span>
+                  {blog.locked && (
+                    <>
+                      <span className="sr-only">（{t("post.locked")}）</span>
+                      <Lock aria-hidden="true" className="size-3.5 shrink-0 text-accent-strong" />
+                    </>
+                  )}
                   {blog.category && <span className={cn(CHIP, "hidden shrink-0 sm:inline-flex")}>{blog.category}</span>}
                   <ArrowUpRight
                     aria-hidden="true"

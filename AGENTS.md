@@ -73,6 +73,7 @@ scripts/
 - 完整语法支持矩阵见 README。
 - 每条路由的 payload 由 `tools/payloads.ts` 生成；新增页面类型 = types.ts 加 payload + 守卫 → payloads.ts 加分支 → pages/ 加页面 → app.tsx 分发。
 - 中文 slug：URL 用 `encodeURIComponent`，磁盘/查找用解码后的原始 slug（content.ts 已处理）。
+- **加密博文**：frontmatter 加 `secret: <name>`（→ 环境变量 `BLOG_SECRET_<NAME>`，查 process.env → `.env.local` → `.env`；`.env*` 已 gitignore，模板见 `.env.example`）。构建期用 Argon2id（64MiB/t3/p1，参数随信封存档）+ AES-256-GCM 把正文 HTML+TOC 加密进 `post.locked` 信封（`tools/crypto.ts` 加密、`src/lib/locked.ts` 解密，解锁态仅会话内存、刷新即重锁）。**fail-closed：缺口令或口令 <8 字符直接构建失败，绝不降级明文**。锁定文的正文/toc/summary/description 不进任何 payload，且从 RSS / sitemap / search-index / llms.txt / llms-full.txt 排除，页面 noindex、跳过 JSON-LD；列表仅标题 + 锁标。**独占图加密**：只被锁定文引用的图片构建期加密为 `<路径>.<slug>.bin` 并删除 dist 明文（`tools/lockedImages.ts`，sharp→webp 后复用该文密钥，IV 表随正文信封存档；dev 中间件明文 404、现算 .bin）；被公开内容共享的图无法加密、保持明文并告警——私密照片必须用加密文独占的文件；密文唯一防线是口令强度（建议 ≥16 字符）。
 
 ## Conventions
 

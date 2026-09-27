@@ -4,7 +4,14 @@
 
 import { siteConfig } from "../src/config/site.ts";
 import { translateFor } from "../src/lib/i18n.ts";
-import type { AnyPageData, BlogListItem, PageGlobals, PageKind, ProjectListItem } from "../src/lib/types.ts";
+import type {
+  AnyPageData,
+  BlogListItem,
+  LockedContent,
+  PageGlobals,
+  PageKind,
+  ProjectListItem,
+} from "../src/lib/types.ts";
 import { loadContent } from "./content.ts";
 
 const t = translateFor("zh-CN");
@@ -29,16 +36,23 @@ function toBlogListItem(entry: {
   category?: string;
   tags: string[];
   readingMinutes: number;
+  locked?: LockedContent;
 }): BlogListItem {
-  return {
+  const item: BlogListItem = {
     slug: entry.slug,
     title: entry.title,
     date: entry.date,
-    description: entry.description,
     category: entry.category,
     tags: entry.tags,
     readingMinutes: entry.readingMinutes,
   };
+  // 加密文：description / summary 即内容摘要，任何列表一律不带；仅标记锁
+  if (entry.locked) {
+    item.locked = true;
+  } else {
+    item.description = entry.description;
+  }
+  return item;
 }
 
 function toProjectListItem(entry: {
@@ -129,16 +143,37 @@ export function buildPayload(pathname: string): AnyPageData {
     const post = blogs[index];
     if (post) {
       const item = toBlogListItem(post);
+      // 列表项上的 locked 是布尔标记；文章 payload 上的 locked 是密文信封，
+      // 同名不同义，先剥掉标记再按分支组装
+      const { locked: _lockFlag, ...meta } = item;
       // blogs 已按日期倒序：i-1 更新（下一篇），i+1 更旧（上一篇）
       const newer = index > 0 ? blogs[index - 1] : undefined;
       const older = index >= 0 && index < blogs.length - 1 ? blogs[index + 1] : undefined;
+      // 加密文：目录结构也属内容（随正文一起加密），meta 描述用兜底文案，
+      // 只公开标题/日期/分类/标签等与列表页同级的元信息
+      if (post.locked) {
+        return {
+          globals: {
+            ...globals("blog-post", post.title, t("blog.protectedDesc")),
+            og: { type: "article", publishedTime: post.date, tags: post.tags },
+          },
+          post: {
+            ...meta,
+            toc: [],
+            needsKatex: post.needsKatex,
+            locked: post.locked,
+            ...(older ? { prev: { slug: older.slug, title: older.title } } : {}),
+            ...(newer ? { next: { slug: newer.slug, title: newer.title } } : {}),
+          },
+        };
+      }
       return {
         globals: {
           ...globals("blog-post", post.title, post.description ?? t("blog.fallbackDesc")),
           og: { type: "article", publishedTime: post.date, tags: post.tags },
         },
         post: {
-          ...item,
+          ...meta,
           toc: post.toc,
           contentHtml: post.contentHtml,
           needsKatex: post.needsKatex,

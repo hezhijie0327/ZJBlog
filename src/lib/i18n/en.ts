@@ -84,6 +84,18 @@ export const EN = {
   "post.licenseNote": "keep attribution and link when sharing",
   "post.storynav": "Post navigation",
 
+  // 加密博文（锁屏与列表锁标）：信件隐喻，配合纸感锁屏
+  "lock.eyebrow": "Sealed Letter",
+  "lock.title": "This letter is sealed",
+  "lock.desc": "Enter the passphrase to open it — decryption happens only in your browser.",
+  "lock.label": "Passphrase",
+  "lock.placeholder": "Enter passphrase",
+  "lock.submit": "Open",
+  "lock.pending": "Opening…",
+  "lock.wrong": "Wrong passphrase — please try again.",
+  "post.locked": "Locked",
+  "blog.protectedDesc": "Password-protected post",
+
   // 图片灯箱
   "lightbox.close": "Close",
   "lightbox.prev": "Previous image",

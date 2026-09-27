@@ -30,6 +30,7 @@ import {
   generateSearchIndex,
   generateSitemap,
 } from "./generators.ts";
+import { allSealedImages } from "./lockedImages.ts";
 import { allRoutes, buildPayload } from "./payloads.ts";
 
 /** SSR 用同步页面表：renderToString 无法等待 React.lazy，经此表直接渲染
@@ -143,10 +144,14 @@ function needsKatex(payload: AnyPageData): boolean {
   return false;
 }
 
-/** 结构化数据：文章页 BlogPosting，首页 WebSite + Person，其余页不输出。 */
+/** 结构化数据：文章页 BlogPosting，首页 WebSite + Person，其余页不输出。
+ *  加密博文不输出（description/headline 之外的元数据不该给爬虫画像）。 */
 function jsonLdFor(payload: ReturnType<typeof buildPayload>, pathname: string): string {
   const g = payload.globals;
   if (isBlogPostData(payload)) {
+    if (payload.post.locked) {
+      return "";
+    }
     return JSON.stringify({
       "@context": "https://schema.org",
       "@type": "BlogPosting",
@@ -213,7 +218,10 @@ export async function renderRoute(rawPath: string, assets?: AssetUrls): Promise<
     g.page === "not-found"
       ? ""
       : `<link rel="canonical" href="${escapeHtml(`${g.siteUrl}${pathname === "/" ? "/" : pathname}`)}">`;
-  const noindexTag = g.page === "og" ? `<meta name="robots" content="noindex">` : "";
+  // 加密博文与 /og/ 一样不进索引：URL 的存在可以公开，但搜索结果里不该
+  // 出现标题/描述快照（描述已是兜底文案，标题的索引价值由作者自决）
+  const noindex = g.page === "og" || (isBlogPostData(payload) && payload.post.locked !== undefined);
+  const noindexTag = noindex ? `<meta name="robots" content="noindex">` : "";
   const ogTags = [
     `<meta property="og:type" content="${g.og ? "article" : "website"}">`,
     `<meta property="og:site_name" content="${escapeHtml(g.siteName)}">`,
@@ -313,6 +321,20 @@ export async function prerenderAll(): Promise<void> {
   for (const [name, content] of staticFiles) {
     writeFileSync(path.join(DIST_DIR, name), content);
     console.log(`  generated /${name}`);
+  }
+
+  // 加密文的独占图：加密为 .bin 资产并删除 dist 内明文原图（vite 已从
+  // public/ 拷入）。必须发生在 compress-images 之前 —— 明文删除后压缩器
+  // 自然跳过；密文内的图片引用整体位于密文内部，不受其改写影响。
+  const sealedImages = allSealedImages();
+  for (const { rel, src, bytes } of sealedImages) {
+    const binPath = path.join(DIST_DIR, "images", ...rel.split("/"));
+    mkdirSync(path.dirname(binPath), { recursive: true });
+    writeFileSync(binPath, await bytes);
+    rmSync(path.join(DIST_DIR, src.slice(1)), { force: true });
+  }
+  if (sealedImages.length > 0) {
+    console.log(`  sealed ${sealedImages.length} locked image(s) as .bin (plaintext removed)`);
   }
 
   // manifest 只在构建期用于解析资产名，发布物不需要

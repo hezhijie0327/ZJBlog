@@ -3,7 +3,14 @@
 
 import { siteConfig } from "../src/config/site.ts";
 import type { SearchItem } from "../src/lib/types.ts";
+import type { BlogEntry } from "./content.ts";
 import { loadContent } from "./content.ts";
+
+/** 加密博文不进任何公开索引 / 订阅 / 全文导出（URL 存在但 noindex，
+ *  正文只以密文形式存在于对应页面）。 */
+function publicBlogs(blogs: BlogEntry[]): BlogEntry[] {
+  return blogs.filter((blog) => !blog.locked);
+}
 
 function escapeXml(value: string): string {
   return value
@@ -15,7 +22,7 @@ function escapeXml(value: string): string {
 }
 
 export function generateRss(): string {
-  const blogs = loadContent().blogs;
+  const blogs = publicBlogs(loadContent().blogs);
 
   const items = blogs
     .map((blog) => {
@@ -55,7 +62,7 @@ export function generateSitemap(): string {
       lastmod: new Date().toISOString(),
       priority: p === "" ? "1.0" : "0.7",
     })),
-    ...blogs.map((blog) => ({
+    ...publicBlogs(blogs).map((blog) => ({
       loc: `${siteConfig.url}/blogs/${encodeURIComponent(blog.slug)}/`,
       lastmod: blog.date ? new Date(blog.date).toISOString() : new Date().toISOString(),
       priority: "0.6",
@@ -92,7 +99,7 @@ Sitemap: ${siteConfig.url}/sitemap.xml
 export function generateSearchIndex(): string {
   const { blogs, projects } = loadContent();
   const items: SearchItem[] = [
-    ...blogs.map((blog) => ({
+    ...publicBlogs(blogs).map((blog) => ({
       title: blog.title,
       description: blog.description,
       type: "blog" as const,
@@ -113,6 +120,7 @@ export function generateSearchIndex(): string {
 /** llms.txt：站点摘要 + 分组链接清单，指向 llms-full.txt 全文版。 */
 export function generateLlms(): string {
   const { blogs, projects } = loadContent();
+  const publicPosts = publicBlogs(blogs);
   const abs = (path: string) => `${siteConfig.url}${path}`;
 
   return [
@@ -124,13 +132,13 @@ export function generateLlms(): string {
     "",
     "## 站点导航 / Site Pages",
     `- [首页 / Home](${abs("/")}): 个人介绍、精选项目、经历与最新文章。`,
-    `- [全部文章 / Blog](${abs("/blogs/")}): 技术文章列表，共 ${blogs.length} 篇。`,
+    `- [全部文章 / Blog](${abs("/blogs/")}): 技术文章列表，共 ${publicPosts.length} 篇。`,
     `- [归档 / Archives](${abs("/archives/")}): 按年份分组的全部文章。`,
     `- [项目 / Projects](${abs("/projects/")}): 个人项目与精选开源项目，共 ${projects.length} 个。`,
     `- [支持 / Support](${abs("/support/")}): 赞赏与赞助方式。`,
     "",
     "## 文章 / Blog Posts",
-    ...blogs.map(
+    ...publicPosts.map(
       (blog) =>
         `- [${blog.title}](${abs(`/blogs/${encodeURIComponent(blog.slug)}/`)}): ${blog.description ?? ""} [${blog.date ?? ""}]`,
     ),
@@ -152,12 +160,13 @@ export function generateLlms(): string {
 /** llms-full.txt：全部页面正文全文（原始 Markdown，与迁移前一致）。 */
 export function generateLlmsFull(): string {
   const { blogs, projects } = loadContent();
+  const publicPosts = publicBlogs(blogs);
   const abs = (path: string) => `${siteConfig.url}${path}`;
   const lines: string[] = [`# ${siteConfig.title} / Full Content`, ""];
 
-  if (blogs.length > 0) {
+  if (publicPosts.length > 0) {
     lines.push("## Blog Posts", "");
-    for (const blog of blogs) {
+    for (const blog of publicPosts) {
       lines.push(
         `### ${blog.title}`,
         "",

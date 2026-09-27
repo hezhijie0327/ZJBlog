@@ -8,9 +8,10 @@
 
 import { type AnyPageData, isBlogPostData, isProjectData } from "@/lib/types.ts";
 
-/** 正文单份存于 DOM：把 .prose 的 innerHTML 注回 payload（就地补齐）。 */
+/** 正文单份存于 DOM：把 .prose 的 innerHTML 注回 payload（就地补齐）。
+ *  加密博文跳过：锁屏页没有正文 DOM，锁定 payload 永远不该被回填。 */
 function attachProseHtml(doc: Document, data: AnyPageData): AnyPageData {
-  if (isBlogPostData(data) && data.post.contentHtml === undefined) {
+  if (isBlogPostData(data) && data.post.contentHtml === undefined && data.post.locked === undefined) {
     const html = doc.querySelector(".prose")?.innerHTML;
     if (html !== undefined) {
       return { ...data, post: { ...data.post, contentHtml: html } };

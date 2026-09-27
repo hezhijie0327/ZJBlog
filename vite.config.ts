@@ -35,6 +35,38 @@ function plgDevServer(): Plugin {
       server.middlewares.use(async (req, res, next) => {
         const raw = req.url ?? "/";
         const path = raw.split("?")[0] ?? "/";
+        // 加密博文独占图与生产 dist 同构：明文一律 404（vite 会直接服
+        // public/ 原图，必须先拦下），.bin 密文由构建管线现算
+        if (path.startsWith("/images/")) {
+          try {
+            const mod = (await server.ssrLoadModule("/tools/lockedImages.ts")) as {
+              imageBinBytes: (rel: string) => Promise<Uint8Array> | undefined;
+              isLockedImageSrc: (src: string) => boolean;
+            };
+            let decoded = path;
+            try {
+              decoded = decodeURIComponent(path);
+            } catch {
+              // 非法编码按原样处理
+            }
+            if (decoded.endsWith(".bin")) {
+              const bytes = mod.imageBinBytes(decoded.replace(/^\/images\//, ""));
+              if (bytes) {
+                res.statusCode = 200;
+                res.setHeader("Content-Type", "application/octet-stream");
+                res.end(await bytes);
+                return;
+              }
+            } else if (mod.isLockedImageSrc(decoded)) {
+              res.statusCode = 404;
+              res.end();
+              return;
+            }
+          } catch (error) {
+            next(error);
+            return;
+          }
+        }
         const generated = GENERATED_FILES[path];
         if (generated) {
           try {

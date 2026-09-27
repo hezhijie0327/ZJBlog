@@ -84,6 +84,18 @@ export const ZH_CN: Record<StringKey, string> = {
   "post.licenseNote": "转载请保留署名与链接",
   "post.storynav": "文章导航",
 
+  // 加密博文（锁屏与列表锁标）：信件隐喻，配合纸感锁屏
+  "lock.eyebrow": "加密信件",
+  "lock.title": "这封信上了锁",
+  "lock.desc": "输入口令即可拆信阅读——内容只在你的浏览器里解开。",
+  "lock.label": "口令",
+  "lock.placeholder": "输入口令",
+  "lock.submit": "拆信",
+  "lock.pending": "拆信中…",
+  "lock.wrong": "口令不对，再想想？",
+  "post.locked": "加密文章",
+  "blog.protectedDesc": "加密博文",
+
   // 图片灯箱
   "lightbox.close": "关闭",
   "lightbox.prev": "上一张",

@@ -36,6 +36,25 @@ export interface PageGlobals {
   og?: { type: "article"; publishedTime?: string; tags?: string[] };
 }
 
+/** 加密博文信封：构建期 tools/crypto.ts 产出（Argon2id 派生密钥 +
+ * AES-256-GCM 加密，明文为 JSON { html, toc }），客户端 src/lib/locked.ts
+ * 按信封内参数解密。两端共用同一契约，参数演进靠 v 分支。 */
+export interface LockedContent {
+  /** 信封版本 */
+  v: 1;
+  /** Argon2id：内存（KiB）/ 迭代次数 / 并行度 / 派生密钥字节数 */
+  m: number;
+  t: number;
+  p: number;
+  len: number;
+  /** base64：16B 随机盐（每篇每构建独立，重建即换） */
+  salt: string;
+  /** base64：12B 随机 IV */
+  iv: string;
+  /** base64：AES-256-GCM 密文（认证 tag 后置，即 WebCrypto 原生格式） */
+  ciphertext: string;
+}
+
 export interface BlogListItem {
   slug: string;
   title: string;
@@ -45,6 +64,8 @@ export interface BlogListItem {
   tags: string[];
   /** 阅读时长（分钟）；展示文案走 i18n（meta.readingTime） */
   readingMinutes: number;
+  /** 加密博文：列表仅公开标题等元信息（description 即内容摘要，绝不公开），正文需密码解锁 */
+  locked?: boolean;
 }
 
 export interface ProjectListItem {
@@ -73,14 +94,18 @@ export interface BlogsData {
 export interface BlogPostData {
   globals: PageGlobals & { page: "blog-post" };
   /** contentHtml 不进 page-data 脚本（长文会让文档体积翻倍）：正文单份存于
-   *  DOM，由启动管道（首帧）与换页管道（fetch 解析）注入后才存在 */
-  post: BlogListItem & {
+   *  DOM，由启动管道（首帧）与换页管道（fetch 解析）注入后才存在。
+   *  注意 locked 在列表项上是布尔标记、在这里是密文信封，故 Omit 后重定义。 */
+  post: Omit<BlogListItem, "locked"> & {
     toc: TocItem[];
     contentHtml?: string;
     /** 正文含 KaTeX 公式：页面需加载 katex.min.css（SSR 注入 / Prose 补注） */
     needsKatex?: boolean;
     /** 手写摘要（frontmatter.summary，有才渲染摘要卡） */
     summary?: string;
+    /** 加密信封（有值 = 锁定文）：contentHtml/toc/summary 不出现在 payload，
+     *  锁屏解锁后由客户端解密还原正文 */
+    locked?: LockedContent;
     /** 时间线上更旧 / 更新的一篇（构建期算好；边界为 undefined） */
     prev?: PostNavLink;
     next?: PostNavLink;
