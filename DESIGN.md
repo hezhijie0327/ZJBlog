@@ -159,6 +159,7 @@
 
 - **间距刻度**：Tailwind 默认 4px 基数，不自造刻度；纵向节奏统一由片段承载，不逐页散写 —— `SECTION`（`px-4 py-14 sm:py-20`）、`SECTION_DETAIL`（`py-12 sm:py-16`）、`LIST_ROW`（`px-5 py-4 sm:px-6`）。
 - **版心**：`container mx-auto`；长文容器 `max-w-3xl`。
+- **页头对齐**：每页 H1 / 页头块（BackLink + header / SectionHeading）直接置于 SECTION 容器下 —— 全站标题同一左缘；正文列宽由各页自定（网格 `max-w-6xl`、长文 `max-w-3xl`），不得为迁就正文而缩进页头。
 - **圆角**：按钮/图标钮 `rounded-full`；卡片 `rounded-2xl`；小件 `rounded-lg/xl`。
 - **表面层级**：`--bg`（页面底）→ `--surface`（卡片）→ `--surface-2`（悬停/次级），三级止步；更深的「底上底」一律先回到 token 语义再议。
 - **凸起（elevation）两档**：`shadow-card`（静态卡片）→ `shadow-pop`（弹层与悬停加深）。都是暖色调（值见 §3 表 / `tokens.css`），禁止裸写盒阴影。

@@ -31,27 +31,28 @@ export function BlogPostPage({ data }: { data: BlogPostData }) {
 
   return (
     <div className={SECTION_DETAIL}>
+      {/* 返回链接 */}
+      <BackLink href="/blogs/" label={t("blog.back")} />
+
+      {/* 文章头部：日期 · 阅读时长 · 分类一行，tags 与分类去重。
+          页头直接置于 SECTION_DETAIL 容器下：全站标题同一左缘（DESIGN.md §6） */}
+      <header className="mb-10 mt-8 border-b border-line pb-8">
+        <h1 className="font-serif text-3xl font-black leading-tight tracking-tight text-ink sm:text-4xl">
+          {post.title}
+        </h1>
+        <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 font-mono text-xs text-ink-3">
+          {post.date && <time dateTime={post.date}>{formatDateISO(post.date)}</time>}
+          <span className="inline-flex items-center gap-1">
+            <Clock aria-hidden="true" className="size-3" />
+            {t("meta.readingTime", { n: post.readingMinutes })}
+          </span>
+          {post.category && <span className={CHIP}>{post.category}</span>}
+        </div>
+        <TagList className="mt-4" exclude={post.category} linkTags tags={post.tags} />
+      </header>
+
       <div className="mx-auto flex max-w-6xl justify-center gap-10">
         <article className="min-w-0 max-w-3xl flex-1">
-          {/* 返回链接 */}
-          <BackLink href="/blogs/" label={t("blog.back")} />
-
-          {/* 文章头部：日期 · 阅读时长 · 分类一行，tags 与分类去重 */}
-          <header className="mb-10 mt-8 border-b border-line pb-8">
-            <h1 className="font-serif text-3xl font-black leading-tight tracking-tight text-ink sm:text-4xl">
-              {post.title}
-            </h1>
-            <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 font-mono text-xs text-ink-3">
-              {post.date && <time dateTime={post.date}>{formatDateISO(post.date)}</time>}
-              <span className="inline-flex items-center gap-1">
-                <Clock aria-hidden="true" className="size-3" />
-                {t("meta.readingTime", { n: post.readingMinutes })}
-              </span>
-              {post.category && <span className={CHIP}>{post.category}</span>}
-            </div>
-            <TagList className="mt-4" exclude={post.category} linkTags tags={post.tags} />
-          </header>
-
           {post.locked && !unlocked ? (
             /* 锁定文：锁屏即正文位。摘要/目录/评论同属内容，一并隐去 */
             <LockScreen locked={post.locked} onUnlock={setUnlocked} slug={post.slug} />

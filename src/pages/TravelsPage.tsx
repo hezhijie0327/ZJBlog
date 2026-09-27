@@ -341,14 +341,13 @@ export function TravelsPage({ data }: { data: TravelsData }) {
 
   return (
     <div className={SECTION}>
-      <div className="mx-auto max-w-7xl">
-        <SectionHeading
-          en={t("page.travels.en")}
-          hint={t("travel.stats", { n: data.trips.length, m: couples })}
-          level={1}
-          title={t("page.travels.title")}
-        />
-
+      <SectionHeading
+        en={t("page.travels.en")}
+        hint={t("travel.stats", { n: data.trips.length, m: couples })}
+        level={1}
+        title={t("page.travels.title")}
+      />
+      <div className="mx-auto max-w-6xl">
         {data.trips.length === 0 ? (
           <EmptyState desc={t("travel.empty")} />
         ) : (

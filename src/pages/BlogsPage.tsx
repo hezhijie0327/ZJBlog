@@ -20,15 +20,15 @@ export function BlogsPage({ data }: { data: BlogsData }) {
 
   return (
     <div className={SECTION}>
+      {/* 页头直接置于 SECTION 容器下：全站标题同一左缘（DESIGN.md §6） */}
+      <SectionHeading
+        en={t("page.blogs.en")}
+        hint={t("count.posts", { n: data.blogs.length })}
+        level={1}
+        title={t("page.blogs.title")}
+      />
       <div className="mx-auto flex max-w-6xl justify-center gap-10">
         <div className="min-w-0 max-w-3xl flex-1">
-          <SectionHeading
-            en={t("page.blogs.en")}
-            hint={t("count.posts", { n: data.blogs.length })}
-            level={1}
-            title={t("page.blogs.title")}
-          />
-
           {/* 标签云：点击进入标签筛选页 */}
           {tags.length > 0 && (
             <div className="mb-10 flex flex-wrap items-center gap-2">

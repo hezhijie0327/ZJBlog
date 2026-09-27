@@ -25,40 +25,41 @@ export function TravelPage({ data }: { data: TravelData }) {
 
   return (
     <div className={SECTION_DETAIL}>
-      <div className="mx-auto max-w-3xl">
-        <BackLink href="/travels/" label={t("travel.back")} />
+      {/* 页头直接置于容器下：全站标题同一左缘（DESIGN.md §6） */}
+      <BackLink href="/travels/" label={t("travel.back")} />
 
-        <header className="mb-10 mt-8 border-b border-line pb-8">
-          <h1 className="font-serif text-3xl font-black leading-tight tracking-tight text-ink sm:text-4xl">
-            {trip.title}
-          </h1>
-          <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 font-mono text-xs text-ink-3">
-            {trip.date && (
-              <time dateTime={trip.date}>
-                {formatDateISO(trip.date)}
-                {trip.endDate && ` – ${formatDateISO(trip.endDate)}`}
-              </time>
+      <header className="mb-10 mt-8 border-b border-line pb-8">
+        <h1 className="font-serif text-3xl font-black leading-tight tracking-tight text-ink sm:text-4xl">
+          {trip.title}
+        </h1>
+        <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 font-mono text-xs text-ink-3">
+          {trip.date && (
+            <time dateTime={trip.date}>
+              {formatDateISO(trip.date)}
+              {trip.endDate && ` – ${formatDateISO(trip.endDate)}`}
+            </time>
+          )}
+          <span className="inline-flex items-center gap-1">
+            <MapPin aria-hidden="true" className="size-3" />
+            {trip.place}
+          </span>
+          <span className={CHIP}>
+            {trip.companion === "solo" ? (
+              <>
+                <User aria-hidden="true" className="mr-1 inline size-3" />
+                {t("travel.solo")}
+              </>
+            ) : (
+              <>
+                <Heart aria-hidden="true" className="mr-1 inline size-3 fill-accent-strong text-accent-strong" />
+                {t("travel.couple")}
+              </>
             )}
-            <span className="inline-flex items-center gap-1">
-              <MapPin aria-hidden="true" className="size-3" />
-              {trip.place}
-            </span>
-            <span className={CHIP}>
-              {trip.companion === "solo" ? (
-                <>
-                  <User aria-hidden="true" className="mr-1 inline size-3" />
-                  {t("travel.solo")}
-                </>
-              ) : (
-                <>
-                  <Heart aria-hidden="true" className="mr-1 inline size-3 fill-accent-strong text-accent-strong" />
-                  {t("travel.couple")}
-                </>
-              )}
-            </span>
-          </div>
-        </header>
+          </span>
+        </div>
+      </header>
 
+      <div className="mx-auto max-w-3xl">
         {trip.locked && !unlocked ? (
           /* 锁定旅行：锁屏即正文位（故事/照片都属加密内容） */
           <LockScreen locked={trip.locked} onUnlock={setUnlocked} slug={trip.slug} unlockKey={`travel:${trip.slug}`} />

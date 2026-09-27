@@ -24,14 +24,13 @@ export function ArchivesPage({ data }: { data: ArchivesData }) {
 
   return (
     <div className={SECTION}>
+      <SectionHeading
+        en={t("page.archives.en")}
+        hint={t("count.posts", { n: data.blogs.length })}
+        level={1}
+        title={t("page.archives.title")}
+      />
       <div className="mx-auto max-w-3xl">
-        <SectionHeading
-          en={t("page.archives.en")}
-          hint={t("count.posts", { n: data.blogs.length })}
-          level={1}
-          title={t("page.archives.title")}
-        />
-
         <div className="space-y-14">
           {years.length > 0 ? (
             years.map(([year, posts]) => (
