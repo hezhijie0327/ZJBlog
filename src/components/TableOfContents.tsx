@@ -13,7 +13,7 @@ export function TableOfContents({ items }: { items: TocItem[] }) {
   const [activeId, setActiveId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (items.length === 0 || !("IntersectionObserver" in window)) {
+    if (items.length === 0) {
       return;
     }
     const headings = items

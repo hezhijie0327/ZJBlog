@@ -82,33 +82,20 @@ export function Prose({ html, needsKatex }: { html: string; needsKatex?: boolean
         return;
       }
       const text = code.textContent ?? "";
-      const copyText = async (): Promise<boolean> => {
-        try {
-          await navigator.clipboard.writeText(text);
-          return true;
-        } catch {
-          // 无权限/非安全上下文：退回选区 + execCommand
-          const range = document.createRange();
-          range.selectNodeContents(code);
-          const selection = window.getSelection();
-          selection?.removeAllRanges();
-          selection?.addRange(range);
-          const ok = document.execCommand("copy");
-          selection?.removeAllRanges();
-          return ok;
-        }
-      };
-      void copyText().then((ok) => {
-        if (!ok) {
-          return;
-        }
-        button.textContent = t("post.copied");
-        button.dataset.copied = "true";
-        window.setTimeout(() => {
-          button.textContent = t("post.copyCode");
-          delete button.dataset.copied;
-        }, 1600);
-      });
+      // baseline 2022 全员支持异步剪贴板（https/localhost 均为安全上下文），
+      // 失败（如内嵌 WebView 拒授权）就不出「已复制」反馈 —— 不再保留
+      // execCommand 老回退
+      navigator.clipboard.writeText(text).then(
+        () => {
+          button.textContent = t("post.copied");
+          button.dataset.copied = "true";
+          window.setTimeout(() => {
+            button.textContent = t("post.copyCode");
+            delete button.dataset.copied;
+          }, 1600);
+        },
+        () => {},
+      );
     };
     container.addEventListener("click", onClick);
     return () => {

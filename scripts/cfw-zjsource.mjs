@@ -1,9 +1,7 @@
 // Description: Using Cloudflare Workers to map and mirror hezhijie0327's repos.
-
-addEventListener("fetch", (event) => {
-  const fetchEvent = /** @type {any} */ (event);
-  fetchEvent.respondWith(handleRequest(fetchEvent.request));
-});
+// ES Modules 语法（Workers 当前默认；service-worker 的 addEventListener("fetch")
+// 语法已被 Cloudflare 废弃）。行为与旧版完全一致，单独 wrangler 部署，不属
+// 博客构建链。
 
 /** @param {Request} request */
 async function handleRequest(request) {
@@ -91,3 +89,7 @@ async function handleRequest(request) {
       : response_raw.headers,
   });
 }
+
+export default {
+  fetch: handleRequest,
+};

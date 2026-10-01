@@ -1,6 +1,6 @@
 // 进视口检测（Giscus / Mermaid / STL 懒挂载等共用）：IntersectionObserver
-// 封装。旧浏览器无 IO 时直接视为可见，避免在 effect 里同步 setState。
-// once 模式触发后即定格 true（重依赖只加载一次）；默认持续跟踪进出。
+// 封装。once 模式触发后即定格 true（重依赖只加载一次）；默认持续跟踪进出。
+// SSR 初值恒为 false —— 首帧不挂重依赖，与水合契约一致。
 
 import { useEffect, useRef, useState } from "react";
 
@@ -13,7 +13,7 @@ interface UseInViewOptions {
 
 export function useInView<T extends Element>({ rootMargin = "300px", once = false }: UseInViewOptions = {}) {
   const ref = useRef<T>(null);
-  const [inView, setInView] = useState(() => typeof window !== "undefined" && !("IntersectionObserver" in window));
+  const [inView, setInView] = useState(false);
 
   useEffect(() => {
     const el = ref.current;

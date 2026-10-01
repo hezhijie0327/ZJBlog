@@ -72,9 +72,7 @@ export function RouterProvider({
 
   // 浏览器的 auto 恢复发生在旧页面上（换页是异步的），位置必然错——全量手工接管
   useEffect(() => {
-    if ("scrollRestoration" in window.history) {
-      window.history.scrollRestoration = "manual";
-    }
+    window.history.scrollRestoration = "manual";
   }, []);
 
   const load = useCallback(
