@@ -84,6 +84,7 @@
 | `--highlight-bg` | `#fde68a` | `#4a4020` | 高亮/选区 |
 | `--ok / --warning / --danger` | 绿/橙/红 | 亮化 | 状态色 |
 | `--shadow-card / --shadow-pop` | 暖色阴影 | 加深 | 卡片 / 弹层 |
+| `--scrim` | `rgb(0 0 0 / 0.6)` | 同浅色 | 灯箱背板遮罩（媒体 chrome，物理黑不随主题翻转） |
 
 **硬性规则**
 
@@ -97,7 +98,7 @@
 **已登记扩展**
 
 - **OLED `.black` 档**：叠在 `.dark` 之上的第三调色板（`dark`+`black` 双 class），仅再压深表面档（`--bg/--surface/--surface-2/--line/--ink*/--accent-soft/--highlight-bg/--shadow-card`），强调色沿用 `.dark` 值。
-- **固定暗色媒体 chrome 豁免**：图片灯箱、缩略图角标（`TILE_BADGE`）与媒体浮层在**所有调色板下都渲染在同一暗色底上**，主题 token 不适用 —— 允许固定色值（灯箱的 zinc 系文字、`bg-black/70` 角标 scrim、`.lightbox::backdrop` 的 `rgb(0 0 0/0.6)` 背板）；canvas 画布内的 JS 颜色字面量同豁免（CSS 变量到不了 canvas）。豁免面仅限媒体浮层/角标/画布，页面 UI 一律走 token。
+- **固定暗色媒体 chrome 豁免**：图片灯箱、缩略图角标（`TILE_BADGE`）与媒体浮层在**所有调色板下都渲染在同一暗色底上**，主题 token 不适用 —— 允许固定色值（灯箱的 zinc 系文字、`bg-black/70` 角标 scrim）；灯箱背板已收编为 `--scrim` token（明暗同值），不再豁免。canvas 画布内的 JS 颜色字面量同豁免（CSS 变量到不了 canvas）。豁免面仅限媒体浮层/角标/画布，页面 UI 一律走 token。
 - **扫码容器固定白底**（ZJBlog 支持页收款码）：二维码需要真实白底保证扫码器对比度，暗色下不能跟 token 翻黑 —— `bg-white` 固定值合法。
 
 **依赖样式按需加载**：大而少用的样式资产（如 KaTeX，25KB raw）不做全站 render-blocking —— 构建期标记需要的页面，仅对这些页注入对应样式（含字体资产），客户端 SPA 换页再幂等补注。

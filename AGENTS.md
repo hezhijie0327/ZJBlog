@@ -48,7 +48,7 @@ src/
 │   ├── pageData.ts      # payload 提取（内嵌/DOMParser）
 │   ├── types.ts         # payload 判别联合 + 类型守卫 + 跨端共享契约（SearchItem 等）
 │   ├── theme.ts         # 明暗（localStorage + html.dark + pre-paint 内联脚本防闪烁；watchThemeDark 主题订阅）
-│   ├── useInView.ts     # 进视口检测（懒挂载 once / 持续跟踪；全站唯一 IntersectionObserver 封装）
+│   ├── useInView.ts     # 进视口检测（懒挂载 once / 持续跟踪；单元素观察统一走此封装）
 │   ├── i18n.ts + i18n/  # EN 基准词库 + zh-CN；useT/translateFor
 │   ├── styles.ts        # 设计片段单一来源（DESIGN.md §5）
 │   └── cn / format / link
@@ -73,8 +73,8 @@ scripts/
 - 完整语法支持矩阵见 README。
 - 每条路由的 payload 由 `tools/payloads.ts` 生成；新增页面类型 = types.ts 加 payload + 守卫 → payloads.ts 加分支 → pages/ 加页面 → app.tsx 分发。
 - 中文 slug：URL 用 `encodeURIComponent`，磁盘/查找用解码后的原始 slug（content.ts 已处理）。
-- **旅行（/travels/）**：`content/travels/*.md`（place/coords [lng,lat]/endDate/companion couple|solo/cover/link + 正文故事），frontmatter `secret` 可上锁（详情锁屏 + 独占图加密，针脚与地名/日期保持公开纪念层）。/travels/ 的地图由 `tools/travelMap.ts` 构建期投影 world-atlas（110m 主图 + 10m 城市特写）为内联 SVG（单份存 `#travel-map` / `#travel-cluster-*` DOM，page-data 经 slimForClient 剥离、pageData.ts 回填）；市内旅行（经纬距离 ≤0.7°）在主图聚合为「城市 ×N」组合针脚并自动生成城市特写图；逐站点亮有纯 CSS 初始编排（.travel-map.lit + --seq，global.css）；「重放」是 JS 镜头跟拍（useMapZoom 的 flyTo 逐站飞行：聚合站推进到市/区视角点亮成员，单站 pop，data-stops 编排由构建期下发；动画用 setTimeout 驱动，后台标签页不卡死）。地图支持缩放/平移（TravelsPage 的 useMapZoom：滚轮/双指/拖拽/双击/按钮；初始视野自动适配针脚包围盒，针脚与标签经 calc(1/var(--map-zoom)) 反缩放保持恒定大小，线条 non-scaling-stroke）。页面 kind = `travels`/`travel`。
-- **加密博文**：frontmatter 加 `secret: <name>`（→ 环境变量 `BLOG_SECRET_<NAME>`，查 process.env → `.env.local` → `.env`；`.env*` 已 gitignore，模板见 `.env.example`）。构建期用 Argon2id（64MiB/t3/p1，参数随信封存档）+ AES-256-GCM 把正文 HTML+TOC 加密进 `post.locked` 信封（`tools/crypto.ts` 加密、`src/lib/locked.ts` 解密，解锁态仅会话内存、刷新即重锁）。**fail-closed：缺口令或口令 <8 字符直接构建失败，绝不降级明文**。锁定文的正文/toc/summary/description 不进任何 payload，且从 RSS / sitemap / search-index / llms.txt / llms-full.txt 排除，页面 noindex、跳过 JSON-LD；列表仅标题 + 锁标。**独占图加密**：只被锁定文引用的图片构建期加密为 `<路径>.<slug>.bin` 并删除 dist 明文（`tools/lockedImages.ts`，sharp→webp 后复用该文密钥，IV 表随正文信封存档；dev 中间件明文 404、现算 .bin）；被公开内容共享的图无法加密、保持明文并告警——私密照片必须用加密文独占的文件；密文唯一防线是口令强度（建议 ≥16 字符）。
+- **旅行（/travels/）**：`content/travels/*.md`（place/coords [lng,lat]/endDate/companion couple|solo/cover/link + 正文故事），frontmatter `secret` 可上锁（详情锁屏 + 封面/独占图加密，针脚与地名/日期保持公开纪念层）。/travels/ 的地图由 `tools/travelMap.ts` 构建期投影 world-atlas（110m 主图 + 10m 市内细节）为**单份内联 SVG**（存 `#travel-map` DOM，page-data 经 slimForClient 剥离、pageData.ts 回填；画布尺寸走 types.ts 的 `TRAVEL_MAP_SIZE` 契约）；市内旅行（经纬距离 ≤0.7°）在主图聚合为「城市 ×N」组合针脚，10m 细节层按成员 bbox 裁选烘进主图并带 `data-threshold`，倍率达标才淡入（组合针脚同倍率反向隐藏）；逐站点亮有纯 CSS 初始编排（.travel-map.lit + --seq，global.css）；「重放」是 JS 镜头跟拍（useMapZoom 的 flyTo 逐站飞行：聚合站推进到市/区视角点亮成员，单站 pop，data-stops 编排由构建期下发、城市站携带 id 供成员回查点亮序号；动画用 setTimeout 驱动，后台标签页不卡死；重放后地图停留在 .on 点亮态，不回挂 .lit）。地图支持缩放/平移（TravelsPage 的 useMapZoom：滚轮/双指/拖拽/双击/按钮；初始视野自动适配针脚包围盒，针脚与标签经 calc(1/var(--map-zoom)) 反缩放保持恒定大小，线条 non-scaling-stroke；四个控制按钮必须 aria-label）。SVG 的 aria-label 构建期为中文基准，客户端水合后按当前 UI 语言校正（`travel.mapLabel`，同复制按钮模式）；针脚 `<title>`/聚合标签属内容层中文基准（i18n 白名单）。页面 kind = `travels`/`travel`。
+- **加密博文/旅行**：frontmatter 加 `secret: <name>`（→ 环境变量 `BLOG_SECRET_<NAME>`，查 process.env → `.env.local` → `.env`；`.env*` 已 gitignore，模板见 `.env.example`）。构建期用 Argon2id（64MiB/t3/p1，参数随信封存档）+ AES-256-GCM 把正文 HTML+TOC 加密进 `post.locked` 信封（`tools/crypto.ts` 加密、`src/lib/locked.ts` 解密，解锁态仅会话内存、刷新即重锁）。**fail-closed：缺口令或口令 <8 字符直接构建失败，绝不降级明文**。锁定文的正文/toc/summary/description 不进任何 payload，且从 RSS / sitemap / search-index / llms.txt / llms-full.txt 排除，页面 noindex、跳过 JSON-LD；列表仅标题 + 锁标。**独占图加密**：只被锁定文引用的图片构建期加密为 `<路径>.<slug>.bin` 并删除 dist 明文（`tools/lockedImages.ts`，sharp→webp 后复用该文密钥，IV 表随正文信封存档；dev 中间件明文 404、现算 .bin；.bin 文件名用**裸 slug**，客户端 `unlockPost(cacheKey, …, assetSlug)` 把缓存命名空间键与资产名分离——混用会让 .bin 请求永远 404）；被公开内容共享的图无法加密、保持明文并告警——prerender 落 `.locked-shared-images.json` 清单、compress-images 据此跳过转换保留原扩展名文件（信封密文里的引用改写不到，原图被删则解锁后共享图 404；清单读后即删不进发布物）；私密照片必须用加密文独占的文件；密文唯一防线是口令强度（建议 ≥16 字符）。图片引用表以 `<kind>:<slug>` 命名空间为键（blogs/travels 同名 slug 互不覆盖）；同名 slug 的两篇加密文独占同一图会撞 .bin 资产名，构建期直接报错要求改 slug。
 
 ## Conventions
 
@@ -83,10 +83,10 @@ scripts/
 - TypeScript strict（含 `noUncheckedIndexedAccess`），禁 `any`（外部响应用 `Raw*` 接口收窄）。
 - 颜色一律 token（DESIGN.md §3）；重复类名一律 `lib/styles.ts` 片段；零 webfont；`dark:` 只用于图标显隐。
 - **禁止 `localeCompare` 排序任何参与 SSR 的数据**：Node 与浏览器 ICU collation 不一致会导致水合文本不匹配（React #418，曾挂 best-practices 门禁）。排序用 codepoint 比较（`a < b ? -1 : …`）。
-- 重依赖必须惰性：进视口才加载（先例：Mermaid ~2.7MB、three.js、KaTeX 样式按页、giscus iframe），统一用 `lib/useInView.ts` 的 `useInView`（`{ once: true }` 懒挂载 / 持续跟踪两用），不要手写 IntersectionObserver。**持续动画（如 STL 自转）必须随视口启停**（离屏 `setAnimationLoop(null)`），否则长文页持续吃 CPU。**禁止给 `.prose` 等长内容容器加 `content-visibility: auto`**：Chromium 146+/Edge 153 实测「相关度」不再触发展开，长文在 `contain-intrinsic-size` 占位高度处被裁断（正文 92% 不可达；2026-09 审计在 Electron 41 与 Edge 153 双双复现后移除，教训详见 AUDIT.md）。
+- 重依赖必须惰性：进视口才加载（先例：Mermaid ~2.7MB、three.js、KaTeX 样式按页、giscus iframe），单元素观察统一用 `lib/useInView.ts` 的 `useInView`（`{ once: true }` 懒挂载 / 持续跟踪两用）；多目标/命令式观察器（TOC scrollspy 逐标题跟踪、STL 渲染循环停启）允许手写 IntersectionObserver，但卸载时必须 disconnect。**持续动画（如 STL 自转）必须随视口启停**（离屏 `setAnimationLoop(null)`），否则长文页持续吃 CPU。**禁止给 `.prose` 等长内容容器加 `content-visibility: auto`**：Chromium 146+/Edge 153 实测「相关度」不再触发展开，长文在 `contain-intrinsic-size` 占位高度处被裁断（正文 92% 不可达；2026-09 审计在 Electron 41 与 Edge 153 双双复现后移除，教训详见 AUDIT.md）。
 - 懒组件的关闭路径若依赖 `animationend`（如 CommandPalette 退出动画），必须加超时兜底 —— 渲染管线冻结/事件丢失时 UI 会滞留。
 - 图标：lucide-react；品牌图标（GitHub）用 `components/icons.tsx` 内联 SVG。
-- 图片：`public/images/` 存**原始** PNG/JPG（不做本地预压缩）；最终产物一律 **webp**（对齐 Lab/Web）——`pnpm build` 在 prerender 后用 `scripts/compress-images.mjs`（sharp）把 `dist/images` 的 jpg/png 转为同名 webp（限宽 1920、q80），并改写 dist 内 `.html/.xml/.txt` 的引用；`pnpm run img` 可单独执行。正文引用原始扩展名 `/images/x.jpg` 即可（dev 服务原图）。
+- 图片：`public/images/` 存**原始** PNG/JPG（不做本地预压缩）；最终产物一律 **webp**（对齐 Lab/Web）——`pnpm build` 在 prerender 后用 `scripts/compress-images.mjs`（sharp）把 `dist/images` 的 jpg/png 转为同名 webp（限宽 1920、q80），并改写 dist 内 `.html/.xml/.txt` 的引用；加密文引用的共享明文图按 `.locked-shared-images.json` 清单跳过（见 Content 的加密条目）；`pnpm run img` 可单独执行。正文引用原始扩展名 `/images/x.jpg` 即可（dev 服务原图）。
 - 可访问性：图标按钮必须 `aria-label`；当前导航项 `aria-current="page"`；装饰元素 `aria-hidden`；正文半透明前景色（color-mix 带 alpha）会导致对比度无法判定而挂审计 —— 关键文字显式用 token 实色。
 
 ## Quality Gates
