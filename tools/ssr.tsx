@@ -40,7 +40,7 @@ import {
   generateSearchIndex,
   generateSitemap,
 } from "./generators.ts";
-import { allSealedImages } from "./lockedImages.ts";
+import { allLockedSharedSrcs, allSealedImages } from "./lockedImages.ts";
 import { allRoutes, buildPayload } from "./payloads.ts";
 
 /** SSR 用同步页面表：renderToString 无法等待 React.lazy，经此表直接渲染
@@ -366,6 +366,15 @@ export async function prerenderAll(): Promise<void> {
   }
   if (sealedImages.length > 0) {
     console.log(`  sealed ${sealedImages.length} locked image(s) as .bin (plaintext removed)`);
+  }
+
+  // 加密文引用的共享明文图清单：compress-images 据此跳过转换并保留原扩展名
+  // 文件 —— 信封密文里的引用改写不到，原图被转 webp 后删除会让解锁后的
+  // 共享图 404（压缩脚本读完即删，不进发布物）。
+  const sharedSrcs = allLockedSharedSrcs();
+  if (sharedSrcs.length > 0) {
+    writeFileSync(path.join(DIST_DIR, ".locked-shared-images.json"), JSON.stringify(sharedSrcs));
+    console.log(`  protected ${sharedSrcs.length} shared plaintext image(s) for locked posts`);
   }
 
   // manifest 只在构建期用于解析资产名，发布物不需要

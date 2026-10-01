@@ -574,12 +574,13 @@ export function loadContent(): ContentIndex {
     const rawTravels = readEntries("travels");
 
     // 引用图分析必须先于密封全量完成：独占性是全站判定（任何公开内容也
-    // 引用的图片无法加密）
+    // 引用的图片无法加密）。键用 `<kind>:<slug>` 命名空间（与 crypto 密钥
+    // 一致），防 blogs/travels 同名 slug 互相覆盖引用表
     for (const entry of rawBlogs) {
-      noteImageRefs(entry.slug, entry.contentHtml ?? "", entry.secretName !== undefined);
+      noteImageRefs(`blogs:${entry.slug}`, entry.contentHtml ?? "", entry.secretName !== undefined);
     }
     for (const entry of rawProjects) {
-      noteImageRefs(entry.slug, entry.contentHtml ?? "", false);
+      noteImageRefs(`projects:${entry.slug}`, entry.contentHtml ?? "", false);
     }
     for (const entry of rawTravels) {
       // 锁定旅行的 frontmatter cover 同样是私密照片 —— 拼进引用分析，
@@ -588,7 +589,7 @@ export function loadContent(): ContentIndex {
         entry.cover !== undefined && entry.cover !== ""
           ? `${entry.contentHtml ?? ""}<img src="${entry.cover}">`
           : (entry.contentHtml ?? "");
-      noteImageRefs(entry.slug, html, entry.secretName !== undefined);
+      noteImageRefs(`travels:${entry.slug}`, html, entry.secretName !== undefined);
     }
 
     // 密封锁定内容：正文 HTML + TOC + 独占图 IV 表一起进信封密文。明文不出

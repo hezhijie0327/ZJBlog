@@ -20,10 +20,14 @@ const MAX_WIDTH = 1920;
 /** 编译后 HTML 里的站内图片引用（rehype-stringify 归一化为双引号属性） */
 const IMG_TAG = /<img[^>]*?src="(\/images\/[^"]+)"/g;
 
-/** slug → 该文正文引用的站内图片 */
-const refsBySlug = new Map<string, Set<string>>();
+/** `<kind>:<slug>` 命名空间键 → 该文正文引用的站内图片（与 crypto 的密钥
+ *  命名空间一致 —— blogs 与 travels 的 slug 可能同名，裸 slug 会互相覆盖）。 */
+const refsByKey = new Map<string, Set<string>>();
 /** 被任何非锁定内容引用的图片（公开面，无法加密） */
 const publicRefs = new Set<string>();
+/** 加密文引用但仍保持明文的共享图（compress-images 必须保留原扩展名 ——
+ *  信封密文里的引用改写不到，原图删了解锁后就 404） */
+const sharedLockedSrcs = new Set<string>();
 /** 独占图登记：bin 相对路径（不含 /images/ 前缀）→ 加密材料 */
 interface SealedImage {
   /** `<kind>:<slug>` 命名空间密钥 */
@@ -39,8 +43,9 @@ const bytesCache = new Map<string, Promise<Buffer>>();
 const warnedShared = new Set<string>();
 
 /** 密封前登记一条内容的图片引用（必须对全量条目调用后再密封 —— 独占性是
- *  全站判定）。locked=false 的引用使图片进入公开面。 */
-export function noteImageRefs(slug: string, html: string, locked: boolean): void {
+ *  全站判定）。locked=false 的引用使图片进入公开面。key 是 `<kind>:<slug>`
+ *  命名空间键，与 sealImagesForPost / crypto 密钥一致。 */
+export function noteImageRefs(key: string, html: string, locked: boolean): void {
   let refs: Set<string> | undefined;
   for (const match of html.matchAll(IMG_TAG)) {
     const src = match[1];
@@ -54,36 +59,46 @@ export function noteImageRefs(slug: string, html: string, locked: boolean): void
     }
   }
   if (refs) {
-    refsBySlug.set(slug, refs);
+    refsByKey.set(key, refs);
   }
 }
 
-/** 内容密封：为锁定文生成独占图 IV 表（随正文一起进信封密文）。
- *  key = `<kind>:<slug>` 命名空间密钥，slug 用于 .bin 资产命名。
- *  共享图告警并跳过；返回值直接并入信封明文 JSON。 */
+/** 密封内容：为锁定文生成独占图 IV 表（随正文一起进信封密文）。
+ *  key = `<kind>:<slug>` 命名空间密钥；slug 仅用于 .bin 资产命名。
+ *  共享图告警并跳过（登记进 sharedLockedSrcs，由压缩管线保留原文件）；
+ *  返回值直接并入信封明文 JSON。 */
 export function sealImagesForPost(key: string, slug: string): Record<string, { iv: string; ct: string }> {
   const images: Record<string, { iv: string; ct: string }> = {};
-  for (const src of refsBySlug.get(slug) ?? []) {
+  for (const src of refsByKey.get(key) ?? []) {
     if (publicRefs.has(src)) {
       if (!warnedShared.has(src)) {
         warnedShared.add(src);
         console.warn(`[crypto] ${src} 同时被公开内容引用，无法加密（保持明文）—— 私密照片请使用加密文独占的文件`);
       }
+      sharedLockedSrcs.add(src);
       continue;
     }
     const reencoded = /\.(jpe?g|png)$/i.test(src);
     const iv = randomBytes(12);
-    const sealed: SealedImage = {
-      key,
-      slug,
-      src,
-      iv,
-      ct: reencoded ? "image/webp" : mimeForSrc(src),
-    };
-    sealedByRel.set(`${src}.${slug}.bin`.replace(/^\/images\//, ""), sealed);
-    images[src] = { iv: iv.toString("base64"), ct: sealed.ct };
+    const rel = `${src}.${slug}.bin`.replace(/^\/images\//, "");
+    // 同名 slug 的加密文（blogs:foo 与 travels:foo）独占同一张图时，.bin 资产
+    // 路径会相撞、密钥却不同 —— 后写覆盖会让其中一篇永远解不开，fail-closed
+    const existing = sealedByRel.get(rel);
+    if (existing && existing.key !== key) {
+      throw new Error(
+        `[crypto] ${rel}: 独占图资产名冲突（${existing.key} 与 ${key} 的 slug 同名）—— 请给其中一篇改 slug`,
+      );
+    }
+    sealedByRel.set(rel, { key, slug, src, iv, ct: reencoded ? "image/webp" : mimeForSrc(src) });
+    images[src] = { iv: iv.toString("base64"), ct: reencoded ? "image/webp" : mimeForSrc(src) };
   }
   return images;
+}
+
+/** 加密文引用但仍保持明文的共享图（prerender 落清单，compress-images 据此
+ *  跳过转换并保留原文件 —— 信封密文里的原始扩展名引用改写不到）。 */
+export function allLockedSharedSrcs(): string[] {
+  return [...sharedLockedSrcs];
 }
 
 function mimeForSrc(src: string): string {

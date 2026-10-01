@@ -56,8 +56,33 @@ async function toWebp(p, relTo, urlBase, maxWidth) {
   console.log(`${from}: ${(srcSize / 1024) | 0}kB -> ${(webpSize / 1024) | 0}kB webp${shrunk}`);
 }
 
+// 加密文引用的共享图保护清单（prerender 落盘；读完即删，不进发布物）：
+// 这些文件的原始扩展名被锁进 AES-GCM 密文、引用改写不可达，转 webp 并删除
+// 原图会让解锁后的加密文共享图 404。
+const PROTECTED_LIST = join(dist, ".locked-shared-images.json");
+/** @type {Set<string>} dist 相对路径（如 "images/markdown-test/favicon.png"） */
+const protectedFiles = new Set();
+try {
+  const list = JSON.parse(readFileSync(PROTECTED_LIST, "utf8"));
+  for (const src of /** @type {string[]} */ (list)) {
+    protectedFiles.add(src.replace(/^\//, ""));
+  }
+} catch {
+  // 无锁定文或清单不存在：无保护对象
+}
+try {
+  unlinkSync(PROTECTED_LIST);
+} catch {
+  // 清单不存在即无锁定文
+}
+
 if (statSync(imagesDir, { throwIfNoEntry: false })) {
   for (const p of walk(imagesDir, /\.(jpe?g|png)$/i)) {
+    const rel = relative(imagesDir, p).replace(/\\/g, "/");
+    if (protectedFiles.has(join("images", rel).replace(/\\/g, "/"))) {
+      console.log(`${p}: kept (referenced by locked post envelope)`);
+      continue;
+    }
     await toWebp(p, imagesDir, "/images", MAX_WIDTH);
   }
 }

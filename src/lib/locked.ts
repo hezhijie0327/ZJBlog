@@ -75,9 +75,17 @@ async function resolveImage(
 }
 
 /** 校验口令并解密。成功后并行解析独占图（src 换成 blob URL），结果写入
- *  会话缓存；GCM 认证失败抛 UnlockError。 */
-export async function unlockPost(slug: string, locked: LockedContent, password: string): Promise<UnlockedBundle> {
-  const cached = unlockedBundles.get(slug);
+ *  会话缓存；GCM 认证失败抛 UnlockError。
+ *  cacheKey 是解锁缓存的命名空间键（blogs 与 travels 的 slug 可能同名）；
+ *  assetSlug 是 .bin 资产命名用的裸 slug（构建期 `${src}.${slug}.bin` 约定，
+ *  带命名空间前缀的 key 永远对不上磁盘文件 —— 图片会全部静默解密失败）。 */
+export async function unlockPost(
+  cacheKey: string,
+  locked: LockedContent,
+  password: string,
+  assetSlug: string = cacheKey,
+): Promise<UnlockedBundle> {
+  const cached = unlockedBundles.get(cacheKey);
   if (cached) {
     return cached.bundle;
   }
@@ -114,7 +122,7 @@ export async function unlockPost(slug: string, locked: LockedContent, password: 
   // 为双引号属性，与 tools/lockedImages.ts 的分析正则同源）
   const imageEntries = Object.entries(bundle.images ?? {});
   if (imageEntries.length > 0) {
-    const urls = await Promise.all(imageEntries.map(([src, meta]) => resolveImage(slug, src, meta, key)));
+    const urls = await Promise.all(imageEntries.map(([src, meta]) => resolveImage(assetSlug, src, meta, key)));
     let html = bundle.html;
     for (let i = 0; i < imageEntries.length; i += 1) {
       const src = imageEntries[i]?.[0];
@@ -126,6 +134,6 @@ export async function unlockPost(slug: string, locked: LockedContent, password: 
     bundle.html = html;
   }
 
-  unlockedBundles.set(slug, { bundle, key });
+  unlockedBundles.set(cacheKey, { bundle, key });
   return bundle;
 }

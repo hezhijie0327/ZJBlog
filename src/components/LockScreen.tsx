@@ -47,7 +47,9 @@ export function LockScreen({
     setFailed(false);
     let bundle: UnlockedBundle;
     try {
-      bundle = await unlockPost(unlockKey ?? slug, locked, password);
+      // 缓存键带命名空间（unlockKey），资产名永远用裸 slug —— 两者混用会让
+      // .bin 请求 404（见 unlockPost 注释）
+      bundle = await unlockPost(unlockKey ?? slug, locked, password, slug);
     } catch (error) {
       if (!(error instanceof UnlockError)) {
         throw error;
