@@ -177,7 +177,8 @@ function pinShape(companion: TravelListItem["companion"]): string {
 }
 
 /** 针脚锚点（data-play = 重放点亮的序号；缺省不参与重放编排）。
- *  点亮 .on 挂在 <a> 上，内部针脚 pop、标签浮现。 */
+ *  点亮 .on 挂在 <a> 上，内部针脚 pop、标签浮现。命中盘 r=24（随
+ *  --map-zoom 反缩放后手机上约 12px 半径）—— 纯透明触达补偿。 */
 function anchorMarkup(item: {
   x: number;
   y: number;
@@ -196,7 +197,7 @@ function anchorMarkup(item: {
     `<a class="trip-anchor${item.extraClass ? ` ${item.extraClass}` : ""}" href="${escapeXml(item.href)}" style="--seq:${item.seq}"${item.extraAttrs ?? ""}` +
     `${item.play >= 0 ? ` data-play="${item.play}"` : ""}>` +
     `<g class="trip-pos" style="--x:${item.x}px;--y:${item.y}px">` +
-    `<g class="trip-pin">${pinShape(item.companion)}<circle r="12" fill="transparent"/>` +
+    `<g class="trip-pin">${pinShape(item.companion)}<circle r="24" fill="transparent"/>` +
     `<title>${escapeXml(item.title)}</title></g>` +
     `<text class="trip-label" x="0" y="${item.labelDy}" text-anchor="middle">${escapeXml(item.label)}</text>` +
     `</g></a>`

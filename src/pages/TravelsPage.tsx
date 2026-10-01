@@ -359,11 +359,12 @@ export function TravelsPage({ data }: { data: TravelsData }) {
               <div className="flex flex-wrap items-center justify-between gap-3 px-2 pb-3 pt-1">
                 <p className={EYEBROW}>{t("travel.eyebrow")}</p>
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-                  <span className="inline-flex items-center gap-1.5 font-mono text-[11px] text-ink-2">
+                  {/* 图例仅 ≥sm 显示：小屏腾出空间让控制钮一行排布（配色语义由针脚形状自携带） */}
+                  <span className="hidden items-center gap-1.5 font-mono text-[11px] text-ink-2 sm:inline-flex">
                     <Heart aria-hidden="true" className="size-3 fill-accent-strong text-accent-strong" />
                     {t("travel.couple")}
                   </span>
-                  <span className="inline-flex items-center gap-1.5 font-mono text-[11px] text-ink-2">
+                  <span className="hidden items-center gap-1.5 font-mono text-[11px] text-ink-2 sm:inline-flex">
                     <User aria-hidden="true" className="size-3 text-accent-strong" />
                     {t("travel.solo")}
                   </span>

@@ -206,6 +206,13 @@
   stroke-width: 3.5px;
   transition: fill 0.2s ease;
 }
+/* 手机上地图视口仅 ~310px 宽（针脚/标签随 --map-zoom 反缩放，屏上尺寸 =
+   单位值 × 容器宽/1280），13 单位标签只有 ~3-6px —— 小屏加大单位字号补偿 */
+@media (max-width: 640px) {
+  .travel-map .trip-label {
+    font-size: 30px;
+  }
+}
 .travel-map .trip-anchor {
   cursor: pointer;
 }
