@@ -63,6 +63,8 @@ export function Prose({ html, needsKatex }: { html: string; needsKatex?: boolean
 
   // 复制代码按钮：构建期生成的是静态 HTML（初始文案是构建基准语言），
   // 事件委托一处接管全部代码块；水合时先把所有按钮文案校正为当前 UI 语言。
+  // html 是语义依赖：加密文解锁后注入的明文里也有构建期按钮，需同样校正。
+  // biome-ignore lint/correctness/useExhaustiveDependencies: 显式依赖 html 以重校按钮文案
   useEffect(() => {
     const container = ref.current;
     if (!container) {
@@ -112,7 +114,7 @@ export function Prose({ html, needsKatex }: { html: string; needsKatex?: boolean
     return () => {
       container.removeEventListener("click", onClick);
     };
-  }, [t]);
+  }, [t, html]);
 
   // 图片灯箱：委托点击正文图片（借鉴参考站的全文图片预览）。链接内的
   // 图片也拦截 —— 先看大图，preventDefault 阻止跳转；图片列表点击时收集。
