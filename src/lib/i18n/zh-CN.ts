@@ -89,6 +89,7 @@ export const ZH_CN: Record<StringKey, string> = {
 
   // 旅行（地图 + 明信片墙）
   "travel.eyebrow": "我们的步伐",
+  "travel.mapLabel": "我们的旅行足迹地图",
   "travel.stats": "已点亮 {n} 站 · 同行 {m} 次",
   "travel.couple": "情侣同行",
   "travel.solo": "独自出发",
@@ -96,7 +97,6 @@ export const ZH_CN: Record<StringKey, string> = {
   "travel.zoomIn": "放大",
   "travel.zoomOut": "缩小",
   "travel.zoomWorld": "看全世界",
-  "travel.closeup": "城市特写",
   "travel.readStory": "看游记",
   "travel.back": "旅行 / 足迹地图",
   "travel.protectedDesc": "加密旅行记",

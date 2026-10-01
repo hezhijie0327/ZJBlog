@@ -12,13 +12,13 @@
 
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import type { TravelListItem } from "../src/lib/types.ts";
+import { TRAVEL_MAP_SIZE, type TravelListItem } from "../src/lib/types.ts";
 import { topoToGeo } from "./diagrams.ts";
 
 /** 地图画布与经纬范围（收极地防变形，去南极洲）。
  *  H = 136° × (W/360°)：经纬像素密度一致，地图无拉伸。 */
-const W = 1280;
-const H = 484;
+const W = TRAVEL_MAP_SIZE.w;
+const H = TRAVEL_MAP_SIZE.h;
 const WORLD_EXTENT = { lonMin: -180, lonMax: 180, latMin: -58, latMax: 78 };
 
 /** 城市聚合半径（度）；市内视角最大倍率（10m 数据的表达极限）。 */
@@ -398,7 +398,8 @@ export function renderWorldMap(trips: TravelListItem[]): { mapSvg: string } {
 
   const mainPins: MainPin[] = [];
   const cityLayers: string[] = [];
-  const stops: Array<{ v: [number, number, number]; p: number[] }> = [];
+  /** 重放镜头编排：id 仅城市站携带（成员针脚按 id 回查本站的点亮序号） */
+  const stops: Array<{ id?: string; v: [number, number, number]; p: number[] }> = [];
   let play = 0;
 
   for (const group of grouped) {
@@ -440,7 +441,7 @@ export function renderWorldMap(trips: TravelListItem[]): { mapSvg: string } {
     const city = buildCityCluster(id, members);
     const playLine = play;
     const memberIdx = members.map((_, i) => play + 1 + i);
-    stops.push({ v: city.view, p: [playLine, ...memberIdx] });
+    stops.push({ id, v: city.view, p: [playLine, ...memberIdx] });
     mainPins.push({
       x,
       y,
@@ -502,7 +503,7 @@ export function renderWorldMap(trips: TravelListItem[]): { mapSvg: string } {
     .join("");
   const memberLayers = cityPins
     .map((item) => {
-      const stop = stops.find((stop) => stop.v[0] === item.city.view[0]);
+      const stop = stops.find((stop) => stop.id === item.city.id);
       const replaced = item.city.memberAnchors.map((anchor, i) =>
         anchor.replaceAll(`__PLAY_${i}__`, String(stop?.p[i + 1] ?? -1)),
       );

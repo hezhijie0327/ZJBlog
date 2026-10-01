@@ -25,6 +25,10 @@ export interface TocItem {
   depth: 2 | 3;
 }
 
+/** 旅行地图画布的用户坐标尺寸：tools/travelMap.ts 的 viewBox 与客户端
+ *  控制器（TravelsPage 缩放/平移的坐标换算）共用，防止两处漂移。 */
+export const TRAVEL_MAP_SIZE = { w: 1280, h: 484 } as const;
+
 export interface PageGlobals {
   page: PageKind;
   /** UI 语言标签（对应 src/lib/i18n/ 下的词库文件名） */

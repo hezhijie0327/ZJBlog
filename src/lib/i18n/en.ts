@@ -89,6 +89,7 @@ export const EN = {
 
   // 旅行（地图 + 明信片墙）
   "travel.eyebrow": "Our Footsteps",
+  "travel.mapLabel": "Our travel footprint map",
   "travel.stats": "{n} places · {m} together",
   "travel.couple": "Together",
   "travel.solo": "Solo",
@@ -96,7 +97,6 @@ export const EN = {
   "travel.zoomIn": "Zoom in",
   "travel.zoomOut": "Zoom out",
   "travel.zoomWorld": "Whole world",
-  "travel.closeup": "City close-up",
   "travel.readStory": "Read the post",
   "travel.back": "TRAVEL / Atlas",
   "travel.protectedDesc": "Password-protected travel story",

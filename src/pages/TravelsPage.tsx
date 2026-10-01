@@ -14,11 +14,10 @@ import { cn } from "@/lib/cn.ts";
 import { formatDateISO } from "@/lib/format.ts";
 import { useT } from "@/lib/i18n.ts";
 import { CARD, CARD_HOVER, CHIP, EYEBROW, ICON_BTN, MONO_CHIP, PAPER_STRIP, SECTION } from "@/lib/styles.ts";
-import type { TravelListItem, TravelsData } from "@/lib/types.ts";
+import { TRAVEL_MAP_SIZE, type TravelListItem, type TravelsData } from "@/lib/types.ts";
 
-/** 地图 SVG 的用户坐标尺寸（tools/travelMap.ts 的 W/H） */
-const MAP_W = 1280;
-const MAP_H = 484;
+const MAP_W = TRAVEL_MAP_SIZE.w;
+const MAP_H = TRAVEL_MAP_SIZE.h;
 const ZOOM_MIN = 1;
 const ZOOM_MAX = 660;
 
@@ -90,11 +89,8 @@ function attachMapController(container: HTMLDivElement, apiMap: Map<HTMLDivEleme
     const updateCityVisibility = () => {
       for (const city of cityEls) {
         const open = state.k >= city.threshold;
-        el_toggle(city, open);
+        city.el.classList.toggle(city.hideWhenOpen ? "off" : "on", open);
       }
-    };
-    const el_toggle = (city: { el: SVGElement; hideWhenOpen: boolean }, open: boolean) => {
-      city.el.classList.toggle(city.hideWhenOpen ? "off" : "on", city.hideWhenOpen ? open : open);
     };
     // 从构建期 transform 采纳初始视野（不跳变）
     const match = /translate\(([-\d.]+)[ ,]([-\d.]+)\)\s*scale\(([-\d.]+)\)/.exec(
@@ -299,6 +295,12 @@ export function TravelsPage({ data }: { data: TravelsData }) {
   const [preview, setPreview] = useState<number | null>(null);
   const { resetWorld, zoomBy, flyTo, light } = useMapZoom(mapsRootRef);
   const couples = data.trips.filter((trip) => trip.companion === "couple").length;
+
+  // 构建期 SVG 的 aria-label 是中文基准（与复制按钮同一模式），水合后按
+  // 当前 UI 语言就地校正；语言切换跟随 t 重跑
+  useEffect(() => {
+    mapRef.current?.querySelector("svg")?.setAttribute("aria-label", t("travel.mapLabel"));
+  }, [t]);
   // 灯箱素材 = 有封面的明信片（按展示顺序）
   const covers: LightboxImage[] = data.trips
     .filter((trip) => trip.cover !== undefined)
@@ -366,6 +368,7 @@ export function TravelsPage({ data }: { data: TravelsData }) {
                     {t("travel.solo")}
                   </span>
                   <button
+                    aria-label={t("travel.replay")}
                     className={cn(ICON_BTN, "size-8")}
                     disabled={playing}
                     onClick={replay}
@@ -376,6 +379,7 @@ export function TravelsPage({ data }: { data: TravelsData }) {
                   </button>
                   <span aria-hidden="true" className="h-4 w-px bg-line" />
                   <button
+                    aria-label={t("travel.zoomIn")}
                     className={cn(ICON_BTN, "size-8")}
                     onClick={() => zoomBy(mapRef.current, 1.4)}
                     title={t("travel.zoomIn")}
@@ -384,6 +388,7 @@ export function TravelsPage({ data }: { data: TravelsData }) {
                     <ZoomIn aria-hidden="true" className="size-4" />
                   </button>
                   <button
+                    aria-label={t("travel.zoomOut")}
                     className={cn(ICON_BTN, "size-8")}
                     onClick={() => zoomBy(mapRef.current, 1 / 1.4)}
                     title={t("travel.zoomOut")}
@@ -392,6 +397,7 @@ export function TravelsPage({ data }: { data: TravelsData }) {
                     <ZoomOut aria-hidden="true" className="size-4" />
                   </button>
                   <button
+                    aria-label={t("travel.zoomWorld")}
                     className={cn(ICON_BTN, "size-8")}
                     onClick={() => resetWorld(mapRef.current)}
                     title={t("travel.zoomWorld")}
@@ -493,11 +499,12 @@ function Postcard({ index, onPreview, trip }: { index: number; onPreview: () => 
                 )}
               </span>
             </div>
-            <h3 className="mt-2 font-serif text-xl font-semibold tracking-tight text-ink transition-colors group-hover:text-accent">
+            {/* h2：明信片是 h1 之后的顶层小节（heading-order 门禁要求逐级下降） */}
+            <h2 className="mt-2 font-serif text-xl font-semibold tracking-tight text-ink transition-colors group-hover:text-accent">
               <Link className="block" href={`/travels/${trip.slug}/`}>
                 {trip.title}
               </Link>
-            </h3>
+            </h2>
             {trip.summary && <p className="mt-2 text-sm leading-relaxed text-ink-2">{trip.summary}</p>}
             {trip.link && (
               <Link
