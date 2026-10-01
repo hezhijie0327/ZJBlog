@@ -20,7 +20,7 @@ export const pageLoaders = {
   og: () => import("@/pages/OgPage.tsx"),
 } as const;
 
-export type LoadablePage = keyof typeof pageLoaders;
+type LoadablePage = keyof typeof pageLoaders;
 
 /** payload 到手即预取对应 chunk（渲染前），让骨架尽量不出现。 */
 export function preloadPage(data: AnyPageData): void {

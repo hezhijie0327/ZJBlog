@@ -3,7 +3,7 @@
 // lib/i18n/*.ts 词库里，随界面语言切换；本文件只承载不翻译的元数据。
 
 /** giscus 评论配置（github.com/giscus/giscus 组件所需的仓库与分区标识） */
-export interface GiscusConfig {
+interface GiscusConfig {
   /** owner/repo 形态的仓库标识 */
   repo: `${string}/${string}`;
   /** 仓库的 GraphQL node id（giscus.app 生成） */

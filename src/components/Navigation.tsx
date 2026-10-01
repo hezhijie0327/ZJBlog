@@ -85,7 +85,10 @@ export function Navigation() {
             <span className="whitespace-nowrap font-serif text-2xl font-semibold tracking-tight">
               {t("site.brand")}
               {/* 品牌句号（DESIGN.md §2.1）：实心金点收尾，与品牌标句号同色系 */}
-              <span aria-hidden="true" className="ms-[0.14em] inline-block size-[0.25em] rounded-full bg-accent-strong" />
+              <span
+                aria-hidden="true"
+                className="ms-[0.14em] inline-block size-[0.25em] rounded-full bg-accent-strong"
+              />
             </span>
           </Link>
 

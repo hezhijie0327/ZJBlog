@@ -10,7 +10,7 @@ import { createContext, useContext, useMemo } from "react";
 import { EN, type StringKey } from "@/lib/i18n/en.ts";
 import { ZH_CN } from "@/lib/i18n/zh-CN.ts";
 
-export type Translate = (key: StringKey, params?: Record<string, string | number>) => string;
+type Translate = (key: StringKey, params?: Record<string, string | number>) => string;
 
 /** UI 语言。 */
 export type UiLocale = "zh-CN" | "en";

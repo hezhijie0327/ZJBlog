@@ -144,7 +144,7 @@
 
 /* 正文图片灯箱背板（dialog::backdrop 无法用 utilities 命中） */
 .lightbox::backdrop {
-  background: rgb(0 0 0 / 0.6);
+  background: var(--scrim);
 }
 
 /* ===== 旅行地图（/travels/ 构建期真实地理 SVG + 纯 CSS 逐站点亮） =====

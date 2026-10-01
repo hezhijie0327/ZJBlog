@@ -14,7 +14,7 @@ import { cn } from "@/lib/cn.ts";
 import { useT } from "@/lib/i18n.ts";
 import { jumpToSection } from "@/lib/scroll.ts";
 
-export interface StorySection {
+interface StorySection {
   id: string;
   no: string;
   label: string;

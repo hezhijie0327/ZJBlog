@@ -29,7 +29,7 @@ const ARGON2ID_PARAMS = { m: 65536, t: 3, p: 1, len: 32 } as const;
 /** secret 名 → 环境变量名（仅允许安全字符，防注入意外变量名）。 */
 const SECRET_NAME_PATTERN = /^[a-z0-9][a-z0-9_-]*$/;
 
-export function envNameForSecret(name: string): string {
+function envNameForSecret(name: string): string {
   return `BLOG_SECRET_${name.toUpperCase()}`;
 }
 

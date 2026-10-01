@@ -267,7 +267,7 @@
     0.4% 27%,
     1% 13%
   );
-  filter: drop-shadow(0 10px 18px rgb(32 29 23 / 0.14));
+  filter: drop-shadow(0 10px 18px color-mix(in oklab, var(--ink) 14%, transparent));
 }
 
 /* 正文图片可点开灯箱（Prose 委托），放大镜光标提示可预览 */
