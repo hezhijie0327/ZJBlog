@@ -36,6 +36,9 @@ export const EN = {
   "nav.closeMenu": "Close menu",
   "nav.mobileNav": "Mobile navigation",
 
+  // 页脚（PWA 安装入口，beforeinstallprompt 驱动，仅可安装时渲染）
+  "footer.installApp": "Install app",
+
   // 页头（SectionHeading）
   "page.blogs.title": "All Posts",
   "page.blogs.en": "",

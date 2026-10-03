@@ -84,6 +84,7 @@ scripts/
 - **Service Worker**：`public/sw.js` 直通 worker（GET 导航网络直通 + 503 离线兜底页），**刻意免缓存** —— 静态资产已 immutable、worker 缓存只会在部署后复活陈旧 bundle；缓存策略是后续显式 opt-in。头（`Cache-Control: no-cache` + `Service-Worker-Allowed: /`）在 `public/_headers`，audit 静态服务器镜像同一头。`main.tsx` 在 `load` 后注册（仅 `import.meta.env.PROD`、失败静默）。
 - **theme-color**：SSR 输出 light/dark 双 meta（media 查询）；显式主题由 `THEME_BOOTSTRAP` 预 paint 收敛为单枚，`applyThemeStyle` 翻调色板时同步（`src/lib/theme.ts`，色值常量 `THEME_COLOR_LIGHT/DARK` 单一来源）。
 - **standalone 布局**：`viewport-fit=cover`（ssr.tsx）+ `.app-bar`（Navigation）顶部安全区 inset + body 底部 inset；导航之下的次级 sticky 面（StoryBar/TOC/BlogsPage 侧栏）与 `[id]` 的 `scroll-margin-top` 偏移一律 `calc(原值 + env(safe-area-inset-top))` —— 新增 sticky 面照此办理。触控地板：`@media (pointer: coarse)` 下 input/select/textarea 16px（iOS 聚焦缩放地板，base.css）。
+- **安装入口**：`src/lib/installPrompt.ts` 模块级捕获 `beforeinstallprompt`（派发早于水合）；页脚「安装 App」按钮（`footer.installApp` 词库键）仅在可安装时渲染，`prompt()` 一次性消费、`appinstalled` 清槽；iOS 不派发事件、按钮永不出现。
 
 ## Conventions
 

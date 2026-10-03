@@ -36,6 +36,9 @@ export const ZH_CN: Record<StringKey, string> = {
   "nav.closeMenu": "关闭菜单",
   "nav.mobileNav": "移动端导航",
 
+  // 页脚（PWA 安装入口，beforeinstallprompt 驱动，仅可安装时渲染）
+  "footer.installApp": "安装 App",
+
   // 页头（SectionHeading）
   "page.blogs.title": "全部文章",
   "page.blogs.en": "Blog",

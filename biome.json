@@ -11,6 +11,7 @@
       "!.next",
       "!.zcode",
       "!.lighthouse-archive",
+      "!.wrangler",
       "!content",
       "!public",
       "!pnpm-lock.yaml",
