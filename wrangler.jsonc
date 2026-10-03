@@ -1,9 +1,19 @@
 {
   "name": "blog",
-  "compatibility_date": "2025-12-21",
+  // 追平本仓库 wrangler 支持的最新兼容日期（升 wrangler 时同步前移；
+  // 纯静态资产 Worker 不吃运行时语义，风险近乎为零）
+  "compatibility_date": "2026-09-30",
   "assets": {
     "directory": "./dist",
     "not_found_handling": "404-page"
+  },
+  // 运行时 Cache（仪表盘 Settings → Runtime → Cache 同源）：边缘节点缓存
+  // Worker 响应。跨版本复用（cross_version_cache）保持默认关闭 —— 缓存
+  // 按 Worker 版本隔离，每次 deploy 自动全量换新，不存在部署后吃到旧内容
+  // 的窗口；开了才会为换冷启动速度把缓存资产带进新版本（HTML 同路径换文
+  // 后有陈旧风险）。_headers 对 /sw.js 的 no-cache 边缘同样遵守。
+  "cache": {
+    "enabled": true
   },
   "observability": {
     "enabled": false,
