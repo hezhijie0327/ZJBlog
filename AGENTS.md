@@ -27,7 +27,7 @@ LH_ONLY=/blogs,/support pnpm run audit # 只审计路径前缀匹配的页面（
 pnpm run ci
 ```
 
-无测试框架；质量门禁 = tsc + biome + build，全部本地运行（无 CI）。包管理器 **pnpm**（唯一 lockfile）。
+无测试框架；质量门禁 = tsc + biome + build：本地跑 `pnpm run ci`，push 到 main 后由 GitHub Actions（`.github/workflows/deploy.yml`）跑同一套门禁并自动部署。包管理器 **pnpm**（唯一 lockfile）。
 
 ## Architecture
 
@@ -108,4 +108,6 @@ scripts/
 
 ## Deployment
 
-`pnpm build` → `pnpm deploy`（= `wrangler deploy`，锁在 devDependencies；wrangler.jsonc 指向 ./dist；未知路径服用 404.html）。robots.txt / sitemap.xml / rss.xml / search-index.json / llms.txt / katex.min.css(+fonts/) 由预渲染阶段生成到 dist/；根目录不要放静态文件（走 `public/`）。
+`pnpm build` → `pnpm deploy`（= `wrangler deploy`，锁在 devDependencies；wrangler.jsonc 指向 ./dist；未知路径服用 404.html）。robots.txt / sitemap.xml / rss.xml / search-index.json / llms.txt / manifest.json / katex.min.css(+fonts/) 由预渲染阶段生成到 dist/；根目录不要放静态文件（走 `public/`）。
+
+**自动部署（GitHub Actions）**：push 到 main 自动跑 `.github/workflows/deploy.yml` —— `pnpm install --frozen-lockfile` → `pnpm run ci`（lint + tsc + build 门禁）→ `pnpm run deploy`；同分支并发部署互斥（新提交顶掉旧的），也可在 Actions 页手动触发。仓库 Secrets 需配 `CLOUDFLARE_API_TOKEN`（"Edit Cloudflare Workers" 模板）与 `CLOUDFLARE_ACCOUNT_ID`（wrangler.jsonc 未写 account_id，CI 必须显式给）。锁定文口令走 `BLOG_SECRET_<NAME>`：fail-closed 意味着**加了锁定文而 CI 没配对应 Secret 会直接构建失败**——新增锁定文时同步在 Secrets 配好并在 build 步骤透传（workflow 头注有操作说明）。

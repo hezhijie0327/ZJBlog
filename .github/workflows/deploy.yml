@@ -1,0 +1,57 @@
+# 自动构建 + 部署：push 到 main 即跑与本地一致的质量门禁（lint + tsc +
+# build，`pnpm run ci`），全绿后用锁在 devDependencies 的 wrangler 部署
+# dist/ 到 Cloudflare Workers。也可在 Actions 页手动触发（workflow_dispatch）。
+#
+# 仓库 Secrets 需要配两个（Settings → Secrets and variables → Actions）：
+# - CLOUDFLARE_API_TOKEN：Cloudflare「My Profile → API Tokens」用
+#   "Edit Cloudflare Workers" 模板创建（dist 是纯静态资产，无需 DNS 权限）
+# - CLOUDFLARE_ACCOUNT_ID：Dashboard「Workers & Pages」右栏 Account ID
+#   （wrangler.jsonc 未写 account_id，CI 里必须显式给）
+#
+# 加密博文/旅行（frontmatter `secret: <name>`）的口令走 BLOG_SECRET_<NAME>
+# 环境变量，构建 fail-closed：当前内容没有锁定文所以留空即可；将来加了
+# 锁定文，在 Secrets 里配 BLOG_SECRET_<NAME> 并在 build 步骤的 env 里加
+#   BLOG_SECRET_<NAME>: ${{ secrets.BLOG_SECRET_<NAME }}
+# 否则 CI 构建会按设计直接失败（绝不降级明文）。
+
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# 同一分支只保留一次部署，新提交顶掉在跑的旧部署
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      # pnpm 版本读 package.json 的 packageManager（pnpm@12.6.0）
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      # lint + tsc + build（构建含全部路由预渲染；缺锁定文口令时按 fail-closed 失败）
+      - name: Build (lint + tsc + prerender)
+        run: pnpm run ci
+
+      - name: Deploy to Cloudflare Workers
+        run: pnpm run deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
