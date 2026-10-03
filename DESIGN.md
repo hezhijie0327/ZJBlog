@@ -213,6 +213,7 @@ Shell（min-h-dvh 纵向 flex）
 **响应式**
 
 - 断点用 Tailwind 默认：`sm` 640 / `md` 768 / `lg` 1024 / `xl` 1280；全站以 `sm:` 为主要切换点（移动优先单列），`md/lg/xl` 只做少量布局修正。
+- **Hero 一屏构图（移动端收紧处方，登记）**：Hero `min-h-[calc(100svh-3.5rem)]`、「Scroll down」绝对定位在区块底 —— 桌面双栏天然装得下；移动端纵向堆叠会超一屏、把提示顶出折叠线（读起来像没设计完的长文）。处方：装饰箭头与姓名便签移动端退场（`hidden sm:block`）、纸片拼贴缩幅（w-280 / 头像 128 / p-6）、纵向节奏减档（pt-12 pb-14 / gap-8 / kicker mb-4 / motto mt-5 / CTA mt-8），`sm:` 起逐项恢复桌面值 —— 提示稳定落在折叠线。按 svh 余量弹性缩放拼贴属专项设计，不在样式层硬凑。
 - 触控目标基线：按钮 `h-10`（40px）、图标钮 `size-9`（36px）、导航 `h-14`（56px）；更小的命中区必须用 padding 补足（先例：脚注返回符 ≥24px、地图针脚透明命中盘 r=24 用户单位）。
 - 移动端导航折叠为抽屉（`grid-rows 0fr↔1fr` 过渡，§8）；Hero 大字与分镜条在 `sm` 降档（§4 层级表的 `sm:` 处方）。
 - **旅行地图的移动端妥协（登记）**：地图 viewBox 固定 1280×484，手机视口 ~310px 时屏上标注 = 单位值 × 容器宽/1280 —— 标签以 `max-width: 640px` 媒体查询放大单位字号（13→30）补偿，图例 `<sm` 隐藏让控制钮单行。理想方案（slice 裁切出更高地图 + 控制器 toUser/clamp 按可见子矩形补偿 + reset 语义改为「适配全图」）是一次控制器坐标系的专项改造，不在样式层解决 —— 改前必须连同手势数学一起设计。
@@ -333,7 +334,7 @@ src/
 | 组成 | 契约 |
 |---|---|
 | manifest | `display: standalone`；`background_color` / `theme_color` 锁**固定浅色基准 `#faf9f6`**（同 §2.2/§2.3 规则：启动画面与安装横幅不随 UI 主题翻转）；图标矩阵按 §2.2 资产矩阵 —— favicon.svg（any）+ `icon-192/512`（透明底整幅，any）+ `maskable-512`（实底 + 80% 安全区，即 apple-touch 配方放到 512） |
-| Service Worker | 必须落在**作用域根** `/sw.js`（子目录会让 scope 收窄、控不住页面）；**刻意免缓存**的直通 worker：GET 导航请求网络直通，失败回 503 离线兜底页 —— 构建资产已是哈希文件名 + immutable 长缓存，worker 再缓存一层只会在部署后复活陈旧 bundle（「重建了但页面还在跑旧代码」这类 bug 的半衰期会被拉长一个量级）；缓存策略是后续的显式 opt-in，不许顺手加。worker 本体响应 `Cache-Control: no-cache`（更新随下次加载生效）+ `Service-Worker-Allowed: /`（显式备案作用域） |
+| Service Worker | 必须落在**作用域根** `/sw.js`（子目录会让 scope 收窄、控不住页面）；**刻意免缓存**的直通 worker：GET 导航请求网络直通，失败回 503 离线兜底页 —— 构建资产已是哈希文件名 + immutable 长缓存，worker 再缓存一层只会在部署后复活陈旧 bundle（「重建了但页面还在跑旧代码」这类 bug 的半衰期会被拉长一个量级）；缓存策略是后续的显式 opt-in，不许顺手加。导航 fetch 带短延迟重试（[300ms, 900ms]）再落兜底 —— iOS 独立壳冷启动有已知 WebKit flake（设备在线但网络栈未就绪，首导航 fetch 立刻 reject），重试即恢复；兜底页带「重试」按钮，明暗双档落 §3 token 现值。worker 本体响应 `Cache-Control: no-cache`（更新随下次加载生效）+ `Service-Worker-Allowed: /`（显式备案作用域） |
 | 注册时机 | `load` 事件之后注册、失败静默 —— 安装层绝不挡启动、绝不产生用户可见错误；dev 不注册（残留 worker 会干扰后续 dev 会话） |
 | 安装入口 | 自有按钮承接 `beforeinstallprompt`（事件派发早于水合 —— 模块导入时挂监听存槽，UI 挂载后订阅），**只在可安装时渲染**：SSR 与水合初帧都不渲染、已在 standalone 壳（本机已装）不渲染、拒绝后 sessionStorage 记会话级静默 —— 零水合分歧、零打扰；`prompt()` 一次性消费，`appinstalled` 即清槽隐藏；入口统一收敛到自有按钮，监听里 `preventDefault` 压掉浏览器自带横幅。iOS 无此事件、按钮永不出现 —— 系统「分享 → 添加到主屏幕」就是入口，不做占位与指引噪音 |
 | theme-color | SSR 输出 light/dark **双 meta**（`media="(prefers-color-scheme: …)"`，auto 模式零 JS 原生跟随系统，含 OS 实况翻转）；用户显式选择时由 pre-paint 内联脚本收敛为单枚已解析值，此后 `applyThemeStyle` 每次翻调色板同步更新（安装后的 PWA 标题栏与页面同色交叉淡化） |

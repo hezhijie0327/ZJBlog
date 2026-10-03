@@ -31,14 +31,15 @@ export function IndexPage({ data }: { data: HomeData }) {
   return (
     <div className="min-h-full">
       {/* Hero：首屏占满整个视口（对标 justin3go），内容垂直居中；扣除 sticky 导航高度（h-14），
-          否则区块底缘会超出折叠线 */}
+          否则区块底缘会超出折叠线。移动端走收紧构图让 Scroll down 回到折叠线（§9 处方）：
+          装饰箭头/姓名便签退场，纸片拼贴缩幅，纵向节奏减档 —— sm: 起恢复桌面值 */}
       <section
-        className="container relative mx-auto flex min-h-[calc(100svh-3.5rem)] items-center px-4 pb-16 pt-20 sm:pb-20 sm:pt-24"
+        className="container relative mx-auto flex min-h-[calc(100svh-3.5rem)] items-center px-4 pb-14 pt-12 sm:pb-20 sm:pt-24"
         ref={heroRef}
       >
-        <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-14 lg:flex-row lg:items-center lg:justify-between lg:gap-8">
+        <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-8 sm:gap-14 lg:flex-row lg:items-center lg:justify-between lg:gap-8">
           <div className="max-w-3xl">
-            <p className="animate-fade-up mb-6 flex items-center gap-2 font-mono text-[11px] tracking-[0.24em] text-ink-3">
+            <p className="animate-fade-up mb-4 flex items-center gap-2 font-mono text-[11px] tracking-[0.24em] text-ink-3 sm:mb-6">
               <span aria-hidden="true" className="inline-block size-1.5 rounded-full bg-accent-strong" />
               {t("hero.kicker")}
             </p>
@@ -53,10 +54,10 @@ export function IndexPage({ data }: { data: HomeData }) {
                 <span className="relative">{t("hero.headlineAccent")}</span>
               </span>
             </h1>
-            <p className="animate-fade-up mt-6 border-l-2 border-accent-strong pl-4 font-serif text-sm italic leading-relaxed text-ink-2 [animation-delay:120ms] sm:text-base">
+            <p className="animate-fade-up mt-5 border-l-2 border-accent-strong pl-4 font-serif text-sm italic leading-relaxed text-ink-2 [animation-delay:120ms] sm:mt-6 sm:text-base">
               {t("hero.motto")}
             </p>
-            <div className="animate-fade-up mt-10 flex flex-wrap items-center gap-3 [animation-delay:180ms]">
+            <div className="animate-fade-up mt-8 flex flex-wrap items-center gap-3 [animation-delay:180ms] sm:mt-10">
               {/* 撕边纸条入口：金黄纸条 + 纸面次条，交错歪斜；锚点滚到本页对应 section */}
               {/* biome-ignore lint/a11y/useValidAnchor: 页内 section 导航，保留 hash 深链，滚动由 jumpToSection 接管 */}
               <a
@@ -83,10 +84,10 @@ export function IndexPage({ data }: { data: HomeData }) {
                 {t("home.cta.blogs")}
               </a>
             </div>
-            {/* 手绘箭头（纯装饰） */}
+            {/* 手绘箭头（纯装饰）：移动端退场 —— 首屏预算让给拼贴与滚动提示 */}
             <svg
               aria-hidden="true"
-              className="animate-fade-up mt-6 ml-24 w-28 -rotate-3 text-accent-strong [animation-delay:240ms]"
+              className="animate-fade-up mt-6 ml-24 hidden w-28 -rotate-3 text-accent-strong [animation-delay:240ms] sm:block"
               fill="none"
               viewBox="0 0 120 40"
             >
@@ -102,29 +103,32 @@ export function IndexPage({ data }: { data: HomeData }) {
           </div>
 
           {/* 纸片拼贴（纯装饰）：撕边便签 + 胶带 + 头像 + 姓名便签。
-              全端可见；max-w-full 防窄屏横向溢出 */}
+              全端可见；max-w-full 防窄屏横向溢出。移动端缩幅（w-280 / 头像 128 /
+              p-6），姓名便签退场 */}
           <div aria-hidden="true" className="relative shrink-0 select-none">
-            <div className="absolute -top-9 right-3 rotate-[7deg] rounded-sm border border-line bg-bg px-4 py-2.5 font-mono text-[10px] uppercase leading-relaxed tracking-[0.18em] text-ink-3 shadow-card">
+            <div className="absolute -top-9 right-3 hidden rotate-[7deg] rounded-sm border border-line bg-bg px-4 py-2.5 font-mono text-[10px] uppercase leading-relaxed tracking-[0.18em] text-ink-3 shadow-card sm:block">
               {t("site.author")} · {t("hero.noteBirthday")}
               <br />
               {t("hero.noteTagline")}
             </div>
             {/* 胶带放在 .paper-note 外层：撕边 clip-path 会裁掉子元素，
                 贴纸悬在纸外的角会被剪没；旋转由外层统一承载 */}
-            <div className="relative mt-4 w-[340px] max-w-full rotate-2">
+            <div className="relative mt-4 w-[280px] max-w-full rotate-2 sm:w-[340px]">
               <Tape className="-top-3 left-9 w-24 -rotate-6 bg-accent-soft/80" />
               <Tape className="-top-2 right-8 w-20 rotate-[5deg] bg-accent-soft/60" />
-              <div className="paper-note p-10">
+              <div className="paper-note p-6 sm:p-10">
                 <img
                   alt=""
-                  className="mx-auto size-44 rounded-full object-cover ring-1 ring-line"
+                  className="mx-auto size-32 rounded-full object-cover ring-1 ring-line sm:size-44"
                   fetchPriority="high"
                   height={176}
                   loading="eager"
                   src="/avatar.jpg"
                   width={176}
                 />
-                <p className="mt-7 text-center font-serif text-2xl italic text-ink-2">{t("hero.noteHello")}</p>
+                <p className="mt-4 text-center font-serif text-xl italic text-ink-2 sm:mt-7 sm:text-2xl">
+                  {t("hero.noteHello")}
+                </p>
               </div>
             </div>
           </div>
