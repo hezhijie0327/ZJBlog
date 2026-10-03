@@ -105,6 +105,31 @@ Sitemap: ${siteConfig.url}/sitemap.xml
 `;
 }
 
+/** PWA manifest（DESIGN.md §18）：安装为独立应用所需的元数据。颜色锁固定
+ *  浅色基准 #faf9f6（同 §2.2 品牌资产规则：启动画面/安装横幅不随 UI 主题
+ *  翻转）；图标矩阵 = favicon.svg（any）+ 192/512 透明栅格（any）+
+ *  maskable-512（固定浅底 + 80% 安全区，Android 圆形遮罩裁底不裁字形）。 */
+export function generateManifest(): string {
+  const manifest = {
+    name: siteConfig.title,
+    short_name: siteConfig.title,
+    description: siteConfig.description,
+    id: "/",
+    start_url: "/",
+    scope: "/",
+    display: "standalone",
+    background_color: "#faf9f6",
+    theme_color: "#faf9f6",
+    icons: [
+      { src: "/favicon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" },
+      { src: "/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+      { src: "/maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+    ],
+  };
+  return `${JSON.stringify(manifest, null, 2)}\n`;
+}
+
 export function generateSearchIndex(): string {
   const { blogs, projects } = loadContent();
   const items: SearchItem[] = [

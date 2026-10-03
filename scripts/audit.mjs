@@ -85,17 +85,21 @@ function serveStatic(dir, port) {
     // 与生产边缘一致的长缓存（哈希文件名的构建资产，immutable）
     const cacheControl = pathname.startsWith("/assets/")
       ? "public, max-age=31536000, immutable"
-      : "public, max-age=300";
+      : pathname === "/sw.js"
+        ? "no-cache" // 与 public/_headers 一致：worker 更新随下次加载生效
+        : "public, max-age=300";
     const type = MIME[extname(filePath)] ?? "application/octet-stream";
     // 生产 CDN 会对文本类资源做压缩，审计环境保持一致（优先 brotli，回退 gzip）
     const acceptEncoding = req.headers["accept-encoding"] ?? "";
-    const compressible = /^(text\/|application\/(json|xml|javascript))/.test(type) && body.length > 1024;
+    const compressible = /^(text\/|application\/(json|xml|javascript|manifest\+json))/.test(type) && body.length > 1024;
     const br = compressible && acceptEncoding.includes("br");
     const gz = compressible && !br && acceptEncoding.includes("gzip");
     const out = br ? brotliCompressSync(body) : gz ? gzipSync(body) : body;
     res.writeHead(200, {
       "Content-Type": type,
       "Cache-Control": cacheControl,
+      // 与 public/_headers 一致：显式备案 worker 作用域根（PWA 门禁据此核验）
+      ...(pathname === "/sw.js" ? { "Service-Worker-Allowed": "/" } : {}),
       ...(br ? { "Content-Encoding": "br", Vary: "Accept-Encoding" } : {}),
       ...(gz ? { "Content-Encoding": "gzip", Vary: "Accept-Encoding" } : {}),
     });
@@ -215,7 +219,7 @@ async function main() {
     ARCHIVE_ROOT,
     `${new Date().toISOString().replace(/[:.]/g, "-")}${MOBILE ? "-mobile" : "-desktop"}`,
   );
-  /** @type {{ form_factor: string, pages: Record<string, Record<string, number>> }} */
+  /** @type {{ form_factor: string, pages: Record<string, Record<string, number>>, pwa?: { name: string, ok: boolean }[] }} */
   const scores = { form_factor: MOBILE ? "mobile" : "desktop", pages: {} };
 
   try {
@@ -340,6 +344,51 @@ async function main() {
           }
         }
       }
+    }
+
+    // PWA 安装性检查：Lighthouse v10+ 移除了 pwa 类别，安装层契约（DESIGN.md
+    // §18）直接对审计源站核验 —— manifest standalone + 声明的图标尺寸 +
+    // maskable + 作用域根的 worker + 图标全部可达；任一失败门禁不通过，
+    // 结果随 scores.json 归档。
+    /** @type {{ name: string, ok: boolean }[]} */
+    const pwaChecks = [];
+    /** @param {string} name */
+    const pass = (name) => pwaChecks.push({ name, ok: true });
+    /** @param {string} name */
+    const fail = (name) => pwaChecks.push({ name, ok: false });
+    try {
+      /** @type {{ display?: string, icons?: Array<{ src: string, sizes?: string, purpose?: string }> }} */
+      const manifest = await (await fetch(`${BASE}/manifest.json`)).json();
+      manifest.display === "standalone" ? pass("manifest display=standalone") : fail("manifest display=standalone");
+      Array.isArray(manifest.icons) && manifest.icons.length > 0
+        ? pass("manifest icons declared")
+        : fail("manifest icons declared");
+      (manifest.icons ?? []).some((icon) => (icon.sizes ?? "").split(" ").includes("192x192"))
+        ? pass("icon 192x192")
+        : fail("icon 192x192");
+      (manifest.icons ?? []).some((icon) => (icon.sizes ?? "").split(" ").includes("512x512"))
+        ? pass("icon 512x512")
+        : fail("icon 512x512");
+      (manifest.icons ?? []).some((icon) => (icon.purpose ?? "").includes("maskable"))
+        ? pass("maskable icon")
+        : fail("maskable icon");
+      const worker = await fetch(`${BASE}/sw.js`);
+      worker.ok && (worker.headers.get("service-worker-allowed") ?? "").includes("/")
+        ? pass("service worker at scope root")
+        : fail("service worker at scope root");
+      for (const icon of manifest.icons ?? []) {
+        const iconResp = await fetch(new URL(icon.src, `${BASE}/`));
+        iconResp.ok ? pass(`icon resolves: ${icon.src}`) : fail(`icon resolves: ${icon.src}`);
+      }
+    } catch (error) {
+      fail(`pwa checks threw: ${String(error).slice(0, 120)}`);
+    }
+    const pwaOk = pwaChecks.every((check) => check.ok);
+    failed = failed || !pwaOk;
+    scores.pwa = pwaChecks;
+    console.log("\nPWA installability");
+    for (const check of pwaChecks) {
+      console.log(`  ${check.ok ? "✓" : "✗"} ${check.name}`);
     }
 
     await mkdir(runDir, { recursive: true });

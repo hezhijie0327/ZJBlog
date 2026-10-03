@@ -21,6 +21,7 @@ const GENERATED_FILES: Record<string, { fn: string; type: string }> = {
   "/search-index.json": { fn: "generateSearchIndex", type: "application/json; charset=utf-8" },
   "/llms.txt": { fn: "generateLlms", type: "text/plain; charset=utf-8" },
   "/llms-full.txt": { fn: "generateLlmsFull", type: "text/plain; charset=utf-8" },
+  "/manifest.json": { fn: "generateManifest", type: "application/manifest+json; charset=utf-8" },
 };
 
 /** Dev 中间件：页面请求走与生产一致的 SSR 渲染（ssrLoadModule 复用 tools/ssr.tsx），

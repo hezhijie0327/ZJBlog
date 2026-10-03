@@ -11,7 +11,7 @@ import path from "node:path";
 import { renderToString } from "react-dom/server";
 import { App } from "../src/app.tsx";
 import { siteConfig } from "../src/config/site.ts";
-import { THEME_BOOTSTRAP } from "../src/lib/theme.ts";
+import { THEME_BOOTSTRAP, THEME_COLOR_DARK, THEME_COLOR_LIGHT } from "../src/lib/theme.ts";
 import {
   type AnyPageData,
   isBlogPostData,
@@ -35,6 +35,7 @@ import { TravelsPage } from "../src/pages/TravelsPage.tsx";
 import {
   generateLlms,
   generateLlmsFull,
+  generateManifest,
   generateRobots,
   generateRss,
   generateSearchIndex,
@@ -298,13 +299,16 @@ export async function renderRoute(rawPath: string, assets?: AssetUrls): Promise<
 <html lang="zh">
   <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="${THEME_COLOR_LIGHT}">
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="${THEME_COLOR_DARK}">
     <title>${escapeHtml(g.title)}</title>
     <meta name="description" content="${escapeHtml(g.description)}">
     ${canonical}
     ${ogTags}
     ${jsonLdTag}
+    <link rel="manifest" href="/manifest.json">
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="shortcut icon" href="/favicon.png" type="image/png">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -348,6 +352,7 @@ export async function prerenderAll(): Promise<void> {
     ["search-index.json", generateSearchIndex()],
     ["llms.txt", generateLlms()],
     ["llms-full.txt", generateLlmsFull()],
+    ["manifest.json", generateManifest()],
   ];
   for (const [name, content] of staticFiles) {
     writeFileSync(path.join(DIST_DIR, name), content);

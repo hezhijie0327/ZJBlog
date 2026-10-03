@@ -75,7 +75,7 @@ export function StoryBar({ sections }: { sections: StorySection[] }) {
   return (
     <nav
       aria-label={t("home.storybar")}
-      className="sticky top-14 z-40 hidden border-b border-line bg-bg/95 backdrop-blur-md md:block"
+      className="sticky top-[calc(3.5rem+env(safe-area-inset-top))] z-40 hidden border-b border-line bg-bg/95 backdrop-blur-md md:block"
     >
       <div className="container mx-auto flex h-11 items-center justify-between gap-4 px-4">
         <span className="flex shrink-0 items-center gap-2 font-mono text-[11px] tracking-[0.18em] text-ink-3">

@@ -23,3 +23,10 @@
 
 /robots.txt
   Content-Type: text/plain; charset=utf-8
+
+# PWA 安装层（DESIGN.md §18）：worker 本体禁缓存 —— 更新随下次加载生效，
+# 不 Ride CDN 长缓存；声明作用域根（/sw.js 的默认 max scope 已是 /，
+# 此头是显式备案，审计门禁据此核验）。
+/sw.js
+  Cache-Control: no-cache
+  Service-Worker-Allowed: /

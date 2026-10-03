@@ -26,3 +26,13 @@ if (container) {
     hydrateRoot(container, <App initialData={data} />);
   })();
 }
+
+/* PWA 安装层（DESIGN.md §18）：直通 worker（离线兜底、刻意免缓存）让
+   manifest 可安装。load 之后注册 —— 安装层绝不挡启动；失败静默（无痕
+   模式等场景没有 worker 也一切照常）；dev 不注册，避免残留 worker 干扰
+   后续 dev 会话。 */
+if (import.meta.env.PROD && "serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    void navigator.serviceWorker.register("/sw.js").catch(() => {});
+  });
+}

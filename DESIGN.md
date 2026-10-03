@@ -7,7 +7,7 @@
 > | 文件 | 读者 | 定义 |
 > |---|---|---|
 > | `AGENTS.md` | 编码 agent | 项目怎么建（架构、命令、开发门禁） |
-> | `DESIGN.md` | 设计 agent + 人 | 界面长什么样（§1–11），附家族工程契约（§12–17） |
+> | `DESIGN.md` | 设计 agent + 人 | 界面长什么样（§1–11），附家族工程契约（§12–18） |
 
 ---
 
@@ -48,7 +48,7 @@
 | 一个字形基元 | 产品签名图形做单笔画圆头描边：viewBox 100 下 stroke-width 14 —— 16px 下轮廓仍清晰 |
 | 品牌句号 | 右下角一枚实心圆点（(85,85) r=7）收尾，全家族统一记忆点 |
 | 色 | 金渐变 `#f5c84c → #e09f0a`（`--accent-strong` 族），**透明底** —— 明暗背景直接可用，无需双版本 |
-| 资产矩阵 | `favicon.svg`（主）→ `favicon.png`（兜底）→ `apple-touch-icon.png`（180，**实底 + 安全边距**；实底用固定浅色基准 `#faf9f6`，同 §2.3） |
+| 资产矩阵 | `favicon.svg`（主）→ `favicon.png`（兜底）→ `apple-touch-icon.png`（180，**实底 + 安全边距**；实底用固定浅色基准 `#faf9f6`，同 §2.3）→ PWA 栅格：`icon-192.png` / `icon-512.png`（**透明底整幅**）+ `maskable-512.png`（**实底 + 80% 安全区**，Android 圆形遮罩裁底不裁字形）——配方与声明契约见 §18 |
 
 新产品的字形先在上表登记再落码（§17）；禁止脱离本语言私造图形。
 
@@ -304,7 +304,7 @@ src/
 1. `tsc --noEmit` 零错误（strict + noUncheckedIndexedAccess）
 2. `biome check` 零错误
 3. 生产构建成功
-4. **Lighthouse 门禁**：全站每页，**桌面端与移动端**都跑；Accessibility / Best Practices 以 **100 为基准**；鼓励登记自定义 Lighthouse 类别（如 Agentic Browsing）并以 100 为基准；Performance 与 SEO 的阈值由各产品在门禁脚本中**记录并维持**（豁免页 —— 如 robots.txt disallow 的路径 —— 在脚本中显式置空并注明理由）。门禁脚本两种已知形态：本地静态服务器镜像生产 CDN（**brotli 优先**、缓存、/cdn-cgi/trace、404 语义；headless Chrome 连跑多页不稳，每 4 页自动重启浏览器），或驱动自身 dev 实例离线跑分（夹具引擎）
+4. **Lighthouse 门禁**：全站每页，**桌面端与移动端**都跑；Accessibility / Best Practices 以 **100 为基准**；鼓励登记自定义 Lighthouse 类别（如 Agentic Browsing）并以 100 为基准；Performance 与 SEO 的阈值由各产品在门禁脚本中**记录并维持**（豁免页 —— 如 robots.txt disallow 的路径 —— 在脚本中显式置空并注明理由）。门禁脚本两种已知形态：本地静态服务器镜像生产 CDN（**brotli 优先**、缓存、/cdn-cgi/trace、404 语义；headless Chrome 连跑多页不稳，每 4 页自动重启浏览器），或驱动自身 dev 实例离线跑分（夹具引擎）。**PWA 安装性检查**（§18）作为门禁脚本的独立步骤直连审计源站核验 —— Lighthouse v10+ 已移除 pwa 类别，manifest / 图标矩阵 / 作用域根 worker 任一不达标即整体 FAIL，结果随 scores.json 归档
 5. 浏览器目标 `baseline 2022, not dead`
 6. 可访问性硬规则：焦点环、aria-label、aria-current、reduced-motion、装饰元素 aria-hidden；**正文半透明前景色（color-mix 带 alpha）会让对比度无法判定而挂审计** —— 关键文字显式 token 实色；内容页固定色值（`<font color>`/`bgcolor`）物理上无法在亮暗两套调色板同时达标，演示场景一律以代码块展示
 7. **水合一致性**：凡参与 SSR 的排序/文案禁止依赖运行时 locale（`localeCompare` 的 collation 在 Node 与浏览器 ICU 不同 → React #418 水合不匹配），用 codepoint 比较
@@ -317,6 +317,7 @@ src/
 - [ ] 页面骨架对齐 §9（Shell/导航/页脚），组件命名对齐 §12
 - [ ] 路由按 §13 契约（预渲染 + fetch-and-swap）或证明更优方案
 - [ ] 品牌资产按 §2 产出：品牌标 favicon 矩阵（SVG 主 + PNG 兜底 + apple-touch）与 OG 分享卡
+- [ ] PWA 层按 §18 接入：manifest（standalone + 图标矩阵）、作用域根免缓存 SW、theme-color 双 meta、`viewport-fit=cover` 安全区、16px 触控地板；门禁脚本含安装性检查
 - [ ] 接入 Lighthouse 门禁脚本并设阈值（§15 实况）；包管理器单一 lockfile 并在 §12 记录
 - [ ] README/AGENTS 注明「遵循 DESIGN.md」
 
@@ -324,3 +325,18 @@ src/
 
 - 新片段/新 token 必须先更新本文档再落码；文档与实现不一致按 bug 处理。
 - 每节末尾如标注「现值取自实现」，实现变更时同步更新该节，保持 §11 速查块与 §4 层级表可用作 agent 的唯一事实来源。
+
+## 18. PWA 契约（standalone 适配）
+
+产品安装为独立应用所需的**最小安装层**：让 manifest 可安装、让安装后的壳像原生产品（浏览器 UI 随调色板、不顶刘海、不触发 iOS 聚焦缩放），**不引入运行时缓存策略**。ZJSearch 试点（2026-10）、ZJBlog 跟进；衍生产品照此接入（§16）。
+
+| 组成 | 契约 |
+|---|---|
+| manifest | `display: standalone`；`background_color` / `theme_color` 锁**固定浅色基准 `#faf9f6`**（同 §2.2/§2.3 规则：启动画面与安装横幅不随 UI 主题翻转）；图标矩阵按 §2.2 资产矩阵 —— favicon.svg（any）+ `icon-192/512`（透明底整幅，any）+ `maskable-512`（实底 + 80% 安全区，即 apple-touch 配方放到 512） |
+| Service Worker | 必须落在**作用域根** `/sw.js`（子目录会让 scope 收窄、控不住页面）；**刻意免缓存**的直通 worker：GET 导航请求网络直通，失败回 503 离线兜底页 —— 构建资产已是哈希文件名 + immutable 长缓存，worker 再缓存一层只会在部署后复活陈旧 bundle（「重建了但页面还在跑旧代码」这类 bug 的半衰期会被拉长一个量级）；缓存策略是后续的显式 opt-in，不许顺手加。worker 本体响应 `Cache-Control: no-cache`（更新随下次加载生效）+ `Service-Worker-Allowed: /`（显式备案作用域） |
+| 注册时机 | `load` 事件之后注册、失败静默 —— 安装层绝不挡启动、绝不产生用户可见错误；dev 不注册（残留 worker 会干扰后续 dev 会话） |
+| theme-color | SSR 输出 light/dark **双 meta**（`media="(prefers-color-scheme: …)"`，auto 模式零 JS 原生跟随系统，含 OS 实况翻转）；用户显式选择时由 pre-paint 内联脚本收敛为单枚已解析值，此后 `applyThemeStyle` 每次翻调色板同步更新（安装后的 PWA 标题栏与页面同色交叉淡化） |
+| 安全区 | `viewport-fit=cover` 露出 `env(safe-area-inset-*)`：sticky 页头 `padding-top: env(safe-area-inset-top)`（毛玻璃延伸进状态栏区）、`body padding-bottom: env(safe-area-inset-bottom)`（页尾让出 Home 指示条）；导航之下的次级 sticky 面（分镜条/TOC/侧栏）与锚点 `scroll-margin-top` 的偏移一律 `calc(原值 + env(safe-area-inset-top))`。非刘海/浏览器标签页环境 `env()` 为 0，视觉零变化 |
+| 触控地板 | `@media (pointer: coarse)` 下可编辑控件（input/select/textarea）字号 **≥16px** —— iOS 对聚焦的更小字号控件整页自动放大，破坏 standalone 布局；桌面维持设计字号不动 |
+
+**审计**：安装性检查（standalone / 图标 192+512+maskable / worker 在作用域根且带 `Service-Worker-Allowed` / 逐图标可达）是门禁脚本的独立步骤，直连审计源站核验并随 scores.json 归档（§15.4）—— 不跑 Lighthouse 也能单独核验这层契约。

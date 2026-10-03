@@ -46,7 +46,10 @@ export function TableOfContents({ items }: { items: TocItem[] }) {
   }
 
   return (
-    <nav aria-label={t("post.toc")} className="sticky top-20 max-h-[calc(100dvh-6rem)] overflow-y-auto py-2">
+    <nav
+      aria-label={t("post.toc")}
+      className="sticky top-[calc(5rem+env(safe-area-inset-top))] max-h-[calc(100dvh-6rem-env(safe-area-inset-top))] overflow-y-auto py-2"
+    >
       <p className={cn(EYEBROW, "mb-3")}>{t("post.toc")}</p>
       <ul className="space-y-1 border-l border-line">
         {items.map((item) => {

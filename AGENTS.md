@@ -58,11 +58,11 @@ src/
 tools/
 ├── content.ts           # 构建期内容管线：frontmatter + 编译 HTML + TOC + needsKatex/图片尺寸注入
 ├── payloads.ts          # 路由 → payload（含 title/description/OG）
-├── generators.ts        # rss/sitemap/robots/search-index/llms/llms-full 生成器
+├── generators.ts        # rss/sitemap/robots/search-index/llms/llms-full/manifest 生成器
 └── ssr.tsx              # SSR 整页组装（dev 中间件与预渲染共用；含 KaTeX 按需注入）
 scripts/
 ├── prerender.mjs        # 预渲染全部路由 + 落盘静态资源到 dist/
-└── audit.mjs            # Lighthouse 双端门禁（本地静态服务器镜像生产 CDN：压缩、缓存、404 语义）
+└── audit.mjs            # Lighthouse 双端门禁（本地静态服务器镜像生产 CDN：压缩、缓存、404 语义、sw.js 头）+ PWA 安装性检查
 ```
 
 ## Content
@@ -75,6 +75,15 @@ scripts/
 - 中文 slug：URL 用 `encodeURIComponent`，磁盘/查找用解码后的原始 slug（content.ts 已处理）。
 - **旅行（/travels/）**：`content/travels/*.md`（place/coords [lng,lat]/endDate/companion couple|solo/cover/link + 正文故事），frontmatter `secret` 可上锁（详情锁屏 + 封面/独占图加密，针脚与地名/日期保持公开纪念层）。/travels/ 的地图由 `tools/travelMap.ts` 构建期投影 world-atlas（110m 主图 + 10m 市内细节）为**单份内联 SVG**（存 `#travel-map` DOM，page-data 经 slimForClient 剥离、pageData.ts 回填；画布尺寸走 types.ts 的 `TRAVEL_MAP_SIZE` 契约）；市内旅行（经纬距离 ≤0.7°）在主图聚合为「城市 ×N」组合针脚，10m 细节层按成员 bbox 裁选烘进主图并带 `data-threshold`，倍率达标才淡入（组合针脚同倍率反向隐藏）；逐站点亮有纯 CSS 初始编排（.travel-map.lit + --seq，global.css）；「重放」是 JS 镜头跟拍（useMapZoom 的 flyTo 逐站飞行：聚合站推进到市/区视角点亮成员，单站 pop，data-stops 编排由构建期下发、城市站携带 id 供成员回查点亮序号；动画用 setTimeout 驱动，后台标签页不卡死；重放后地图停留在 .on 点亮态，不回挂 .lit）。地图支持缩放/平移（TravelsPage 的 useMapZoom：滚轮/双指/拖拽/双击/按钮；初始视野自动适配针脚包围盒，针脚与标签经 calc(1/var(--map-zoom)) 反缩放保持恒定大小，线条 non-scaling-stroke；四个控制按钮必须 aria-label）。SVG 的 aria-label 构建期为中文基准，客户端水合后按当前 UI 语言校正（`travel.mapLabel`，同复制按钮模式）；针脚 `<title>`/聚合标签属内容层中文基准（i18n 白名单）。页面 kind = `travels`/`travel`。
 - **加密博文/旅行**：frontmatter 加 `secret: <name>`（→ 环境变量 `BLOG_SECRET_<NAME>`，查 process.env → `.env.local` → `.env`；`.env*` 已 gitignore，模板见 `.env.example`）。构建期用 Argon2id（64MiB/t3/p1，参数随信封存档）+ AES-256-GCM 把正文 HTML+TOC 加密进 `post.locked` 信封（`tools/crypto.ts` 加密、`src/lib/locked.ts` 解密，解锁态仅会话内存、刷新即重锁）。**fail-closed：缺口令或口令 <8 字符直接构建失败，绝不降级明文**。锁定文的正文/toc/summary/description 不进任何 payload，且从 RSS / sitemap / search-index / llms.txt / llms-full.txt 排除，页面 noindex、跳过 JSON-LD；列表仅标题 + 锁标。**独占图加密**：只被锁定文引用的图片构建期加密为 `<路径>.<slug>.bin` 并删除 dist 明文（`tools/lockedImages.ts`，sharp→webp 后复用该文密钥，IV 表随正文信封存档；dev 中间件明文 404、现算 .bin；.bin 文件名用**裸 slug**，客户端 `unlockPost(cacheKey, …, assetSlug)` 把缓存命名空间键与资产名分离——混用会让 .bin 请求永远 404）；被公开内容共享的图无法加密、保持明文并告警——prerender 落 `.locked-shared-images.json` 清单、compress-images 据此跳过转换保留原扩展名文件（信封密文里的引用改写不到，原图被删则解锁后共享图 404；清单读后即删不进发布物）；私密照片必须用加密文独占的文件；密文唯一防线是口令强度（建议 ≥16 字符）。图片引用表以 `<kind>:<slug>` 命名空间为键（blogs/travels 同名 slug 互不覆盖）；同名 slug 的两篇加密文独占同一图会撞 .bin 资产名，构建期直接报错要求改 slug。
+
+## PWA（standalone 适配）
+
+安装层契约见 **DESIGN.md §18**（ZJSearch 试点、本站跟进），实现落点：
+
+- **manifest**：`tools/generators.ts` 的 `generateManifest()`（siteConfig 单一来源），预渲染落盘 + dev 中间件同构伺服（vite.config.ts `GENERATED_FILES`）；颜色锁固定浅色基准 `#faf9f6`，图标矩阵见 `public/`（favicon.svg + icon-192/512 + maskable-512，sharp 从 favicon.svg 栅格化，配方在 §2.2/§18）。
+- **Service Worker**：`public/sw.js` 直通 worker（GET 导航网络直通 + 503 离线兜底页），**刻意免缓存** —— 静态资产已 immutable、worker 缓存只会在部署后复活陈旧 bundle；缓存策略是后续显式 opt-in。头（`Cache-Control: no-cache` + `Service-Worker-Allowed: /`）在 `public/_headers`，audit 静态服务器镜像同一头。`main.tsx` 在 `load` 后注册（仅 `import.meta.env.PROD`、失败静默）。
+- **theme-color**：SSR 输出 light/dark 双 meta（media 查询）；显式主题由 `THEME_BOOTSTRAP` 预 paint 收敛为单枚，`applyThemeStyle` 翻调色板时同步（`src/lib/theme.ts`，色值常量 `THEME_COLOR_LIGHT/DARK` 单一来源）。
+- **standalone 布局**：`viewport-fit=cover`（ssr.tsx）+ `.app-bar`（Navigation）顶部安全区 inset + body 底部 inset；导航之下的次级 sticky 面（StoryBar/TOC/BlogsPage 侧栏）与 `[id]` 的 `scroll-margin-top` 偏移一律 `calc(原值 + env(safe-area-inset-top))` —— 新增 sticky 面照此办理。触控地板：`@media (pointer: coarse)` 下 input/select/textarea 16px（iOS 聚焦缩放地板，base.css）。
 
 ## Conventions
 

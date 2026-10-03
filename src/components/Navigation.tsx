@@ -77,7 +77,7 @@ export function Navigation() {
   }, [href]);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-line/80 bg-bg/80 backdrop-blur-md">
+    <header className="app-bar sticky top-0 z-50 border-b border-line/80 bg-bg/80 backdrop-blur-md">
       <div className="container mx-auto px-4">
         <div className="flex h-14 items-center justify-between gap-3">
           {/* Logo（纯文字字标 + 品牌句号，头像只在 Hero 纸片与署名卡出现） */}

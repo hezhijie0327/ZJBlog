@@ -62,7 +62,30 @@
   }
 }
 
-/* 带锚点的目标预留 sticky 头部高度，避免标题被遮。 */
+/* 带锚点的目标预留 sticky 头部高度，避免标题被遮（安全区一并计入）。 */
 [id] {
-  scroll-margin-top: 4.5rem;
+  scroll-margin-top: calc(4.5rem + env(safe-area-inset-top));
+}
+
+/* ── PWA standalone 适配（DESIGN.md §18）──────────────────────────────
+   viewport-fit=cover 露出刘海安全区：sticky 页头抬到状态栏之下（毛玻璃
+   延伸进系统 UI 区），页尾让出 Home 指示条。非刘海/非 standalone 环境
+   env() 为 0，视觉零变化。 */
+
+.app-bar {
+  padding-top: env(safe-area-inset-top);
+}
+
+body {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* 触控设备：可编辑控件不低于 16px —— iOS 对聚焦的更小字号控件会整页
+   自动放大（命令面板搜索框等为 text-sm=14px）；桌面维持设计字号。 */
+@media (pointer: coarse) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
 }

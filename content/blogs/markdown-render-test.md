@@ -1,7 +1,7 @@
 ---
 title: Markdown 渲染测试
 description: 以 CommonMark、GFM 标准为基础的全量 Markdown 语法渲染测试，覆盖标题、列表、表格、代码块、数学公式与 GFM 扩展。
-date: 2023-06-01
+date: 2026-09-02
 category: 技术
 tags:
   - Markdown
@@ -19,15 +19,15 @@ tags:
 
 这原本是一篇 Typora 下使用 Markdown 语法的案例实践分享，最早创建于 2021 年 11 月之前，于 2023 年 6 月大改。本篇文章使用 Markdown 标记语法编写而成，汇聚了常用 Markdown 语法标注。对于不同目标人群有不同的作用：
 
-* 对于 Markdown 学习者。可以获取文章源码（Github 仓库地址在下面），并使用你的本地编辑器打开。通过对比标记语言与渲染结果直接学习。如果你不喜欢这种 MarkDown 学习方式，你可以参考 GitHub 学习相关 Markdown 规范：[基本撰写和格式语法 - GitHub 文档](https://docs.github.com/zh/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax)
-* 对于其他人。这篇文章包含不同标准 Markdown 语法，你可以在任何 Markdown 编辑器打开以测试其渲染效果。
-	* 比如说——你。你使用什么方式看到这篇文章，就了解到你所用的软件对 Markdown 语言的支持情况。如果你通过我的博客打开，那么你看到的就是 Hexo 渲染后的结果（至少目前时是这样）。
-	* 比如说——我，笔记重度依赖。我需要对比本地编辑器的渲染器与 Hexo 各类渲染器和插件对 Markdown 的支持程度，以培养合适的写作习惯，加强核心工作流的可移植性。
+- 对于 Markdown 学习者。可以获取文章源码（Github 仓库地址在下面），并使用你的本地编辑器打开。通过对比标记语言与渲染结果直接学习。如果你不喜欢这种 MarkDown 学习方式，你可以参考 GitHub 学习相关 Markdown 规范：[基本撰写和格式语法 - GitHub 文档](https://docs.github.com/zh/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax)
+- 对于其他人。这篇文章包含不同标准 Markdown 语法，你可以在任何 Markdown 编辑器打开以测试其渲染效果。
+  - 比如说——你。你使用什么方式看到这篇文章，就了解到你所用的软件对 Markdown 语言的支持情况。如果你通过我的博客打开，那么你看到的就是 Hexo 渲染后的结果（至少目前时是这样）。
+  - 比如说——我，笔记重度依赖。我需要对比本地编辑器的渲染器与 Hexo 各类渲染器和插件对 Markdown 的支持程度，以培养合适的写作习惯，加强核心工作流的可移植性。
 
 文章目前可预览的在线版本：
 
-* Hexo 渲染网页：[Markdown渲染测试 | 半方池水半方田 (uuanqin.top)](https://uuanqin.top/p/3c4a82e6/)。源文件直接通过 Hexo 渲染生成的静态网页。
-* Github 仓库： https://github.com/uuanqin/Markdown-Grammar-Rendering-Test 。源文件的副本，不定期与 Hexo 本地同步。
+- Hexo 渲染网页：[Markdown渲染测试 | 半方池水半方田 (uuanqin.top)](https://uuanqin.top/p/3c4a82e6/)。源文件直接通过 Hexo 渲染生成的静态网页。
+- Github 仓库： https://github.com/uuanqin/Markdown-Grammar-Rendering-Test 。源文件的副本，不定期与 Hexo 本地同步。
 
 ## Markdown 标准
 
@@ -67,17 +67,15 @@ tags:
 
 ### 三级标题（类 Atx 形式）
 
-一级标题（类 Setext 形式）
-==
+# 一级标题（类 Setext 形式）
 
-二级标题（类 Setext 形式）
---
+## 二级标题（类 Setext 形式）
 
 【提示】Obsidian 支持类 Setext 形式的标题，请在浏览模式下查看。
 
-*斜体（星号表示）*  _斜体（下划线表示）_
+_斜体（星号表示）_ _斜体（下划线表示）_
 
-**粗体（星号表示）** __粗体（下划线表示）__
+**粗体（星号表示）** **粗体（下划线表示）**
 
 > 引言
 >
@@ -95,21 +93,19 @@ tags:
 
 【提示】Obsidian 中有序列表有区别。
 
-* 网状列表
+- 网状列表
+  1. 元素 1
+  2. 元素 2
 
-    1. 元素 1
-    2. 元素 2
-
-* 网状列表
-
-    - 使用横线
-    * 使用星号
+- 网状列表
+  - 使用横线
+  * 使用星号
 
 [链接（方括号后加圆括号）](http://b.org)
 
 [带参考的链接 1][1] 链接外文字 [带参考链接 2][1] 链接外文字
 
-[1]:http://b.org
+[1]: http://b.org
 
 链接悬停提示写法：[Title](https://a.com "hint")
 
@@ -127,7 +123,6 @@ tags:
 # 代码块（三个反引号包裹）
 ```
 
-
     代码块（四个空格开头）
     代码块（紧挨上一行）
 
@@ -139,9 +134,7 @@ tags:
 
 星号式下划线：
 
-***
-
-
+---
 
 # GitHub Flavored Markdown（GFM）
 
@@ -163,28 +156,30 @@ GitHub Flavored Markdown, often shortened as GFM, is the dialect of Markdown tha
 
 ~~删除线（两条波浪线）~~
 
-**粗体和嵌入 _ 斜体 _**   两个星号内下划线括住。【提示】Obsidian 支持内嵌斜体，请在浏览模式打开。
+**粗体和嵌入 _ 斜体 _** 两个星号内下划线括住。【提示】Obsidian 支持内嵌斜体，请在浏览模式打开。
 
-***全部粗体和斜体（三个星号）***
+**_全部粗体和斜体（三个星号）_**
 
 使用<sub>下标</sub>
 
 使用<sup>上标</sup>
 
-+ 加号创建的无序列表
+- 加号创建的无序列表
 
 任务列表展示：
 
 - [x] 任务列表
 - [ ] 任务列表
 
-表情符号（使用冒号括住） :+1:   :smile:【提示】Obsidian 不支持，但是可以直接输入😯
+表情符号（使用冒号括住） :+1: :smile:【提示】Obsidian 不支持，但是可以直接输入😯
 
 脚注。使用此括号 [^11] 语法为您的内容 [^12] 添加脚注。
 
 [^11]: My reference.
-[^12]: To add line breaks within a footnote, prefix new lines with 2 spaces.
-  This is a second line. （然而 Typora 不支持这种方式换行）
+
+[^12]:
+    To add line breaks within a footnote, prefix new lines with 2 spaces.
+    This is a second line. （然而 Typora 不支持这种方式换行）
 
 【提示】Obsidian 会把脚注自动放到页面后。
 
@@ -192,19 +187,19 @@ GitHub Flavored Markdown, often shortened as GFM, is the dialect of Markdown tha
 
 以下符号可以转义（[Daring Fireball: Markdown Syntax Documentation](https://daringfireball.net/projects/markdown/syntax)）
 
-\\   backslash
+\\ backslash
 
-\`   backtick
+\` backtick
 
-\*   asterisk
+\* asterisk
 
-\_   underscore
+\_ underscore
 
-\{\}  curly braces
+\{\} curly braces
 
-\[\]  square brackets
+\[\] square brackets
 
-\(\)  parentheses
+\(\) parentheses
 
 支持 Markdown 的隐藏渲染：
 
@@ -222,20 +217,20 @@ GitHub Flavored Markdown, often shortened as GFM, is the dialect of Markdown tha
 
 可以在表格中使用格式，例如链接、内联代码块和文本样式。
 
-| First Header  | Second Header |
-| ------------- | ------------- |
-| Content Cell  | Content **Cell**  |
-| [Content Cell](https://docs.github.com/zh/get-started/writing-on-github/working-with-advanced-formatting/organizing-information-with-tables)  | *Content* Cell  |
-| `Content Cell`  | ***Content*** Cell  |
+| First Header                                                                                                                                 | Second Header      |
+| -------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
+| Content Cell                                                                                                                                 | Content **Cell**   |
+| [Content Cell](https://docs.github.com/zh/get-started/writing-on-github/working-with-advanced-formatting/organizing-information-with-tables) | _Content_ Cell     |
+| `Content Cell`                                                                                                                               | **_Content_** Cell |
 
 可以通过在标题行中连字符的左侧、右侧或两侧添加冒号 ` :`，来靠左、靠右或居中对齐列中的文本。
 
-若要包含竖线 ` | ` 作为单元格中的内容，请在竖线前使用 ` \`
+若要包含竖线 `|` 作为单元格中的内容，请在竖线前使用 ` \`
 
 | Left-aligned | Center-aligned | Right-aligned |
-| :---         |     :---:      |          ---: |
-| git status   | git status     | git status    |
-| git diff     | `       | git diff \|     |
+| :----------- | :------------: | ------------: |
+| git status   |   git status   |    git status |
+| git diff     |       `        |   git diff \| |
 
 ### 折叠部分
 
@@ -298,11 +293,26 @@ graph TD;
         "type": "Polygon",
         "coordinates": [
           [
-              [-90,35],
-              [-90,30],
-              [-85,30],
-              [-85,35],
-              [-90,35]
+            [
+              -90,
+              35
+            ],
+            [
+              -90,
+              30
+            ],
+            [
+              -85,
+              30
+            ],
+            [
+              -85,
+              35
+            ],
+            [
+              -90,
+              35
+            ]
           ]
         ]
       }
@@ -315,8 +325,14 @@ graph TD;
 {
   "type": "Topology",
   "transform": {
-    "scale": [0.0005000500050005, 0.00010001000100010001],
-    "translate": [100, 0]
+    "scale": [
+      0.0005000500050005,
+      0.00010001000100010001
+    ],
+    "translate": [
+      100,
+      0
+    ]
   },
   "objects": {
     "example": {
@@ -324,25 +340,83 @@ graph TD;
       "geometries": [
         {
           "type": "Point",
-          "properties": {"prop0": "value0"},
-          "coordinates": [4000, 5000]
+          "properties": {
+            "prop0": "value0"
+          },
+          "coordinates": [
+            4000,
+            5000
+          ]
         },
         {
           "type": "LineString",
-          "properties": {"prop0": "value0", "prop1": 0},
-          "arcs": [0]
+          "properties": {
+            "prop0": "value0",
+            "prop1": 0
+          },
+          "arcs": [
+            0
+          ]
         },
         {
           "type": "Polygon",
-          "properties": {"prop0": "value0",
-            "prop1": {"this": "that"}
+          "properties": {
+            "prop0": "value0",
+            "prop1": {
+              "this": "that"
+            }
           },
-          "arcs": [[1]]
+          "arcs": [
+            [
+              1
+            ]
+          ]
         }
       ]
     }
   },
-  "arcs": [[[4000, 0], [1999, 9999], [2000, -9999], [2000, 9999]],[[0, 0], [0, 9999], [2000, 0], [0, -9999], [-2000, 0]]]
+  "arcs": [
+    [
+      [
+        4000,
+        0
+      ],
+      [
+        1999,
+        9999
+      ],
+      [
+        2000,
+        -9999
+      ],
+      [
+        2000,
+        9999
+      ]
+    ],
+    [
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        9999
+      ],
+      [
+        2000,
+        0
+      ],
+      [
+        0,
+        -9999
+      ],
+      [
+        -2000,
+        0
+      ]
+    ]
+  ]
 }
 ```
 
@@ -385,7 +459,7 @@ endsolid
 
 ### 数学表达式
 
-内联表达式：This sentence uses `$` delimiters to show math inline:  $\sqrt{3x-1}+(1+x)^2$
+内联表达式：This sentence uses `$` delimiters to show math inline: $\sqrt{3x-1}+(1+x)^2$
 
 要以块的形式添加数学表达式，请启动一个新行，并使用两个美元符号 `$$` 分隔表达式。
 
@@ -401,11 +475,11 @@ $$
 
 表示美元符号：
 
-* 在数学表达式内，在显式 `$` 之前添加一个 `\` 符号。
-  * This expression uses `\$` to display a dollar sign: $\sqrt{\$4}$
-* 在数学表达式之外，但在同一行上，在显式 `$` 两边使用 span 标记。
-	* To split <span>$</span>100 in half, we calculate $​100/2$
-	* 【提示】Typora 不支持。
+- 在数学表达式内，在显式 `$` 之前添加一个 `\` 符号。
+  - This expression uses `\$` to display a dollar sign: $\sqrt{\$4}$
+- 在数学表达式之外，但在同一行上，在显式 `$` 两边使用 span 标记。
+  - To split <span>$</span>100 in half, we calculate $​100/2$
+  - 【提示】Typora 不支持。
 
 如果你还想学习更多，请看 [GitHub Flavored Markdown Spec](https://github.github.com/gfm/)
 
@@ -425,12 +499,18 @@ $$
 
 分割线使用三个以上符号（最后一个使用了标签）。符号中间可以插入空格。
 
-***
-* * *
------
-- - -
-___
-_ _ _
+---
+
+---
+
+---
+
+---
+
+---
+
+---
+
 <hr />
 
 <kbd>Esc</kbd>
@@ -474,7 +554,7 @@ Underline is powered by raw HTML.
 
 支持下划线：`<u>下划线</u>` becomes <u>下划线</u>.
 
-支持上下标（在偏好设置中设置）：H~2~O  X^2^
+支持上下标（在偏好设置中设置）：H~2~O X^2^
 
 支持高亮：==highlight==
 
@@ -484,12 +564,12 @@ Obsidian 是一个基于 Markdown 进行记录的知识库软件，特点在于�
 
 Obsidian 努力让 Obsidian 的语法不偏离正统的 Markdown 语法太多。总的来看，Obsidian 的语法大多还是基于 CommonMark，包括了一些 GitHub Flavored Markdown（GFM）和 LaTeX，以及 Obsidian**特有的**语法。
 
-|Syntax|Description|
-|---|---|
-|**\[\[ \]\]**|[Internal links](https://help.obsidian.md/Linking+notes+and+files/Internal+links)|
-|**\!\[\[ \]\]**|[Embedding files](https://help.obsidian.md/Linking+notes+and+files/Embedding+files)|
-|`%%`|[Comments](https://help.obsidian.md/Editing+and+formatting/Basic+formatting+syntax#Comments)|
-|`> [!note]`|[Callouts](https://help.obsidian.md/Editing+and+formatting/Callouts)|
+| Syntax          | Description                                                                                  |
+| --------------- | -------------------------------------------------------------------------------------------- |
+| **\[\[ \]\]**   | [Internal links](https://help.obsidian.md/Linking+notes+and+files/Internal+links)            |
+| **\!\[\[ \]\]** | [Embedding files](https://help.obsidian.md/Linking+notes+and+files/Embedding+files)          |
+| `%%`            | [Comments](https://help.obsidian.md/Editing+and+formatting/Basic+formatting+syntax#Comments) |
+| `> [!note]`     | [Callouts](https://help.obsidian.md/Editing+and+formatting/Callouts)                         |
 
 提示：为防止其他插件影响，Embedding files 的示例含转义字符。
 
@@ -497,8 +577,8 @@ Obsidian doesn't support Markdown syntax or blank lines within HTML blocks.
 
 参考：
 
-* [格式化你的笔记 - Obsidian 中文帮助 - Obsidian Publish](https://publish.obsidian.md/help-zh/使用指南/格式化你的笔记)
-* [Obsidian Flavored Markdown - Obsidian Help](https://help.obsidian.md/Editing+and+formatting/Obsidian+Flavored+Markdown)
+- [格式化你的笔记 - Obsidian 中文帮助 - Obsidian Publish](https://publish.obsidian.md/help-zh/使用指南/格式化你的笔记)
+- [Obsidian Flavored Markdown - Obsidian Help](https://help.obsidian.md/Editing+and+formatting/Obsidian+Flavored+Markdown)
 
 ## Internal links 内部链接
 
@@ -686,7 +766,7 @@ Markdown 风格的嵌入，使用 **\!\[AltText\|100x100\]\(https://url/to/image
 > [!info]
 > 默认标题
 > Here's a callout block.
-> It supports **Markdown**, *Wikilinks and embeds*!
+> It supports **Markdown**, _Wikilinks and embeds_!
 >
 > 无序列表：
 >
@@ -698,6 +778,7 @@ Markdown 风格的嵌入，使用 **\!\[AltText\|100x100\]\(https://url/to/image
 
 > [!tip] 自定义标题
 > 公式渲染：
+>
 > $$
 > r+v-e=2
 > $$
@@ -711,11 +792,13 @@ Markdown 风格的嵌入，使用 **\!\[AltText\|100x100\]\(https://url/to/image
 > [!cite] 标题内图片：![图片链接](/images/markdown-test/favicon.png)图片后文字
 
 > [!question] Can callouts be nested?
+>
 > > [!todo] Yes!, they can.
-> > > [!example]+  You can even use multiple layers of nesting.
+> >
+> > > [!example]+ You can even use multiple layers of nesting.
+> > >
 > > > > [!cite]- 折叠尝试
 > > > > 折叠内容
-
 
 ## 其他
 
@@ -754,9 +837,17 @@ Microsoft Learn 还支持自定义 Markdown 扩展。
 
 ## HTML 支持情况
 
-
 ```html
-<iframe height='265' scrolling='no' title='Fancy Animated SVG Menu' src='http://codepen.io/jeangontijo/embed/OxVywj/?height=265&theme-id=0&default-tab=css,result&embed-version=2' frameborder='no' allowtransparency='true' allowfullscreen='true' style='width: 100%;'></iframe>
+<iframe
+  height="265"
+  scrolling="no"
+  title="Fancy Animated SVG Menu"
+  src="http://codepen.io/jeangontijo/embed/OxVywj/?height=265&theme-id=0&default-tab=css,result&embed-version=2"
+  frameborder="no"
+  allowtransparency="true"
+  allowfullscreen="true"
+  style="width: 100%;"
+></iframe>
 ```
 
 【提示】站点审计要求零第三方依赖，这里以代码块展示 iframe 语法，不做真实外站嵌入。
@@ -775,24 +866,26 @@ Microsoft Learn 还支持自定义 Markdown 扩展。
 
 使用<kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>A</kbd>快速打开 QQ 截屏工具，这里使用了 `<kbd>` 标签
 
-这是<sub>下标</sub>   这是<sup>上标</sup>    换行标签<br>换行了
+这是<sub>下标</sub> 这是<sup>上标</sup> 换行标签<br>换行了
 
 标签：
 
-<em>强调的内容 (好像和斜体差不多)</em> [^斜体]   <strong>语气更强 (粗体？)</strong>[^加粗]    <code>代码 scanf()</code>    <var>变量</var>    <cite>引用</cite>
+<em>强调的内容 (好像和斜体差不多)</em> [^斜体] <strong>语气更强 (粗体？)</strong>[^加粗] <code>代码 scanf()</code> <var>变量</var> <cite>引用</cite>
 
 ### 字体、颜色和大小
 
-<b>粗体文本</b>    <i>斜体文本</i>    <big>大号字体</big>    <small>小号字体</small>    <tt>等宽文本</tt>  <u>下划线</u>
+<b>粗体文本</b> <i>斜体文本</i> <big>大号字体</big> <small>小号字体</small> <tt>等宽文本</tt> <u>下划线</u>
 
-<font face="黑体">黑体</font>  <font face="微软雅黑">微软雅黑</font>  <font face="STCAIYUN">华文彩云</font>  <font face="华文行楷" >华文行楷</font>  <font face="时尚中黑" >时尚中黑</font>  （我猜你电脑里装有什么字体就能用什么字体）
+<font face="黑体">黑体</font> <font face="微软雅黑">微软雅黑</font> <font face="STCAIYUN">华文彩云</font> <font face="华文行楷" >华文行楷</font> <font face="时尚中黑" >时尚中黑</font> （我猜你电脑里装有什么字体就能用什么字体）
 
 <mark>黄色高亮</mark>
 
 颜色演示（裸色值不随站点主题明暗切换、无法两端同时满足对比度门禁，改为代码块展示）：
 
 ```html
-<font color=#00ffff size=3>#00ffff</font>   <font color=gray size=3>gray 色</font>    <font color=#0099ff size=5 face="黑体">#0099ff size=5 黑体</font>
+<font color="#00ffff" size="3">#00ffff</font>
+<font color="gray" size="3">gray 色</font>
+<font color="#0099ff" size="5" face="黑体">#0099ff size=5 黑体</font>
 ```
 
 <a href='#color'>附录：颜色名列表</a>
@@ -816,6 +909,7 @@ content
 <span id = "jump_two">跳转到这里 2</span>
 
 ### 表格
+
 <table><tbody>
     <tr>
         <th rowspan="3">我占了三行</th>
@@ -849,7 +943,7 @@ content
 
 ### 特殊符号
 
-&copy;  &trade;  &amp;  &lt;  &gt;  &pound; &yen; &euro; &reg; &plusmn; &sect;  X&sup2; Y&sup3; &frac34; &laquo; &raquo; 37.2&ordm;C
+&copy; &trade; &amp; &lt; &gt; &pound; &yen; &euro; &reg; &plusmn; &sect; X&sup2; Y&sup3; &frac34; &laquo; &raquo; 37.2&ordm;C
 
 ## Mermaid 图示例
 
@@ -893,6 +987,7 @@ A[方形] --> B(圆角)
     王五->李四: 你怎么样?
     李四-->王五: 很好!
 ```
+
 ### 甘特图
 
 ```mermaid
@@ -916,7 +1011,6 @@ A[方形] --> B(圆角)
         压力测试                               :after a1  , 20h
         测试报告                               : 48h
 ```
-
 
 ## sequence 图示例
 
@@ -952,19 +1046,20 @@ Note right of C: 没人陪我玩
 
 流程图代码分两块，上面一块是创建你的流程（创建元素），然后隔一行，创建流程的走向 (连接元素)。
 
-* 创建流程（元素）：tag=>type: content:>url
-  * tag 是流程图中的标签，在第二段连接元素时会用到。名称可以任意，一般为流程的英文缩写和数字的组合。
-  * type 用来确定标签的类型，`=>` 后面表示类型。由于标签的名称可以任意指定，所以要依赖 type 来确定标签的类型（start、end、operation、subroutine、condition、inputoutput）
-  * content 是流程图文本框中的描述内容，`:` 后面表示内容，中英文均可。特别注意，**冒号与文本之间一定要有个空格**
-  * url 是一个连接，与框框中的文本相绑定，`:>` 后面就是对应的 url 链接，点击文本时可以通过链接跳转到 url 指定页面
-* 指向流程 (连接元素)：标识（类别）->下一个标识
-  * 使用 -> 来连接两个元素
-  * 对于 condition 类型，有 yes 和 no 两个分支，如示例中的 cond(yes) 和 cond(no)
-  * 每个元素可以制定分支走向，默认向下，也可以用 right 指向右边，如示例中 cond2(yes,right)。
+- 创建流程（元素）：tag=>type: content:>url
+  - tag 是流程图中的标签，在第二段连接元素时会用到。名称可以任意，一般为流程的英文缩写和数字的组合。
+  - type 用来确定标签的类型，`=>` 后面表示类型。由于标签的名称可以任意指定，所以要依赖 type 来确定标签的类型（start、end、operation、subroutine、condition、inputoutput）
+  - content 是流程图文本框中的描述内容，`:` 后面表示内容，中英文均可。特别注意，**冒号与文本之间一定要有个空格**
+  - url 是一个连接，与框框中的文本相绑定，`:>` 后面就是对应的 url 链接，点击文本时可以通过链接跳转到 url 指定页面
+- 指向流程 (连接元素)：标识（类别）->下一个标识
+  - 使用 -> 来连接两个元素
+  - 对于 condition 类型，有 yes 和 no 两个分支，如示例中的 cond(yes) 和 cond(no)
+  - 每个元素可以制定分支走向，默认向下，也可以用 right 指向右边，如示例中 cond2(yes,right)。
 
 【提示】Obsidian 不支持。
 
 ### 标准流程图（横向）
+
 ```flow
 st=>start: 开始框
 op=>operation: 处理框
@@ -978,6 +1073,7 @@ cond(no)->sub1(right)->op
 ```
 
 ### 标准流程图
+
 ```flow
 st=>start: 开始框
 op=>operation: 处理框

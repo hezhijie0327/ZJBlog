@@ -54,7 +54,7 @@ export function BlogsPage({ data }: { data: BlogsData }) {
         {/* 右栏：最近文章（xl 宽屏 sticky 跟随） */}
         {recent.length > 0 && (
           <aside className="hidden w-60 shrink-0 xl:block">
-            <div className="sticky top-20">
+            <div className="sticky top-[calc(5rem+env(safe-area-inset-top))]">
               <p className={cn(EYEBROW, "mb-3")}>{t("blog.rail")}</p>
               <ul className="space-y-3 border-l border-line">
                 {recent.map((blog) => (
