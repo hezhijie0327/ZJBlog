@@ -6,15 +6,21 @@
 // page-data 会让文档体积翻倍，因此 page-data 里不含它们 —— 单份存于 DOM，
 // 首帧从当前文档读回、SPA 换页时从 fetch 到的文档解析（见 attachProseHtml）。
 
-import { type AnyPageData, isBlogPostData, isProjectData, isTravelsData } from "@/lib/types.ts";
+import { type AnyPageData, isBlogPostData, isProjectData, isTravelData, isTravelsData } from "@/lib/types.ts";
 
-/** 单份存于 DOM 的字段就地注回 payload。加密博文跳过：锁屏页没有正文
- *  DOM，锁定 payload 永远不该被回填。 */
+/** 单份存于 DOM 的字段就地注回 payload。加密博文/旅行跳过：锁屏页没有
+ *  正文 DOM，锁定 payload 永远不该被回填。 */
 function attachProseHtml(doc: Document, data: AnyPageData): AnyPageData {
   if (isBlogPostData(data) && data.post.contentHtml === undefined && data.post.locked === undefined) {
     const html = doc.querySelector(".prose")?.innerHTML;
     if (html !== undefined) {
       return { ...data, post: { ...data.post, contentHtml: html } };
+    }
+  }
+  if (isTravelData(data) && data.trip.contentHtml === undefined && data.trip.locked === undefined) {
+    const html = doc.querySelector(".prose")?.innerHTML;
+    if (html !== undefined) {
+      return { ...data, trip: { ...data.trip, contentHtml: html } };
     }
   }
   if (isTravelsData(data) && data.mapSvg === undefined) {
