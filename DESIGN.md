@@ -156,6 +156,22 @@
 
 新 UI **先找片段，没有再新增**，禁止在组件里裸写长串类名。
 
+### 5.1 共享 Markdown 渲染词汇（AI 生成内容）
+
+两家产品渲染 AI 生成内容（ZJBlog 构建期管线 `tools/content.ts`、zjsearch 客户端 `lib/markdownParts.tsx`）用**同一套词汇**，prompt 侧只教真实可渲染的语法 —— 家族共享契约，改这里先于改任何一侧实现（§17）：
+
+| 词汇 | 语法 | 实现 |
+|---|---|---|
+| GFM 全套 | 表格 / 任务列表 / 删除线 / 自动链接 / 脚注 | `remark-gfm` |
+| 高亮 | `==文本==` | `micromark-extension-mark` → `<mark>`（token 配色） |
+| Callouts | `> [!type] 标题`（`-` 默认折叠 / `+` 默认展开；别名归一十类别，正典见 ZJBlog `tools/callouts.ts`） | remark 插件家族共享；类别 → 语义 token（ok/warning/danger/accent/中性） |
+| 定义列表 / emoji 短代码 | `remark-deflist` / `remark-emoji` | 同 |
+| 数学 | `$...$` / `$$...$$`（LaTeX once-only） | `remark-math` + `rehype-katex` |
+| 图表 | ```mermaid fence（**含 xychart 柱状/折线图** —— mermaid ≥12 的注册名，旧 `xychart-beta` 已移除），含标点的节点标签加引号 | mermaid 12 惰性渲染 |
+
+**有意不共享**：`rehype-raw`（博客内容作者所有、可透传原生 HTML；AI 生成内容一律**禁止 raw HTML** —— 信任模型差异）、PlantUML（外部渲染服务，mermaid 已覆盖）、Shiki 代码高亮（zjsearch 体积预算；代码块纯 mono 呈现）。
+
+
 ## 6. 空间与层级（Layout Principles & Depth）
 
 - **间距刻度**：Tailwind 默认 4px 基数，不自造刻度；纵向节奏统一由片段承载，不逐页散写 —— `SECTION`（`px-4 py-14 sm:py-20`）、`SECTION_DETAIL`（`py-12 sm:py-16`）、`LIST_ROW`（`px-5 py-4 sm:px-6`）。
