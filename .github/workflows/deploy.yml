@@ -9,10 +9,11 @@
 #   （wrangler.jsonc 未写 account_id，CI 里必须显式给）
 #
 # 加密博文/旅行（frontmatter `secret: <name>`）的口令走 BLOG_SECRET_<NAME>
-# 环境变量，构建 fail-closed：当前内容没有锁定文所以留空即可；将来加了
-# 锁定文，在 Secrets 里配 BLOG_SECRET_<NAME> 并在 build 步骤的 env 里加
-#   BLOG_SECRET_<NAME>: ${{ secrets.BLOG_SECRET_<NAME }}
-# 否则 CI 构建会按设计直接失败（绝不降级明文）。
+# 环境变量，构建 fail-closed：CI 里没有本地随机生成的豁免（那只属于测试名
+# demo），缺配置直接失败。在 Secrets 里配好 BLOG_SECRET_<NAME> 即被 build
+# 步骤自动透传（已列在 env 里，未配置的 Secret 展开为空、语义同缺配置）。
+# 测试页 locked-demo 的 BLOG_SECRET_DEMO 也要固定，否则 CI 构建会失败
+# （绝不降级明文）。
 
 name: Deploy
 
@@ -47,6 +48,9 @@ jobs:
       # lint + tsc + build（构建含全部路由预渲染；缺锁定文口令时按 fail-closed 失败）
       - name: Build (lint + tsc + prerender)
         run: pnpm run ci
+        env:
+          # 锁定文口令：Secrets 配好即生效；未配置的展开为空 → 构建按 fail-closed 失败
+          BLOG_SECRET_DEMO: ${{ secrets.BLOG_SECRET_DEMO }}
 
       - name: Deploy to Cloudflare Workers
         run: pnpm run deploy

@@ -9,7 +9,10 @@
 // 口令供给：frontmatter `secret: <name>` → 环境变量 BLOG_SECRET_<NAME>
 // （name 大写化）。查找顺序 process.env → 仓库根 .env.local → .env
 // （.env* 均已 gitignore）。**缺失即构建失败（fail-closed）**，绝不静默
-// 降级为明文。
+// 降级为明文。唯一例外是测试名 `demo`（加密自检页）：本地构建缺配置时
+// 随机生成临时口令并打印在构建输出里（每次构建都不同，仅方便本地自测）；
+// CI（process.env.CI）下不适用，缺配置照旧失败 —— 正式口令在 GitHub
+// Secrets 固定。
 //
 // KDF：Argon2id（OWASP 密码存储当前首选，内存困难，实质性抬高 GPU/ASIC
 // 离线爆破成本）。参数取 OWASP 建议档的加强版（64 MiB / t=3 / p=1 /
@@ -31,6 +34,19 @@ const SECRET_NAME_PATTERN = /^[a-z0-9][a-z0-9_-]*$/;
 
 function envNameForSecret(name: string): string {
   return `BLOG_SECRET_${name.toUpperCase()}`;
+}
+
+/** 测试专用 secret 名：本地构建缺配置时随机生成临时口令（仅此一名豁免
+ *  fail-closed）。CI 环境不豁免 —— 正式口令必须在 GitHub Secrets 固定。 */
+const EPHEMERAL_SECRET_NAME = "demo";
+
+/** 本次构建内已生成的临时口令（同名共用一把，保证多篇 demo 文与独占图
+ *  密钥一致；新构建重新生成，密文随之更新）。 */
+const ephemeralPasswords = new Map<string, string>();
+
+/** 24 字符 URL 安全随机口令（base64url，144 bit 熵）。 */
+function randomPassword(): string {
+  return randomBytes(18).toString("base64url");
 }
 
 /** .env 文件解析（十几行覆盖自身用例：KEY=VALUE / # 注释 / 成对引号），
@@ -82,6 +98,15 @@ export function loadSecret(name: string, context: string): string {
     }
   }
   if (password === undefined || password === "") {
+    if (name === EPHEMERAL_SECRET_NAME && !process.env.CI) {
+      // 测试页豁免：本地随机口令仅存在于本次构建进程，打印出来供解锁自测。
+      const generated = ephemeralPasswords.get(name) ?? randomPassword();
+      ephemeralPasswords.set(name, generated);
+      console.log(`[crypto] ${context}: secret: ${name} 未配置口令 —— 本地构建已随机生成临时口令（每次构建都不同）：`);
+      console.log(`[crypto] ┃ 解锁口令 >>> ${generated} <<<`);
+      console.log(`[crypto] ┃ 固定口令请写入 .env 的 ${envName}；CI 必须在 GitHub Secrets 配置，否则构建失败`);
+      return generated;
+    }
     throw new Error(
       `[crypto] ${context}: 标记了 secret: ${name}，但找不到口令 —— 请设置环境变量 ${envName}` +
         `（或写入仓库根 .env / .env.local，均已 gitignore）。构建拒绝在无口令时产出明文。`,
