@@ -10,10 +10,11 @@
 #
 # 加密博文/旅行（frontmatter `secret: <name>`）的口令走 BLOG_SECRET_<NAME>
 # 环境变量，构建 fail-closed：CI 里没有本地随机生成的豁免（那只属于测试名
-# demo），缺配置直接失败。在 Secrets 里配好 BLOG_SECRET_<NAME> 即被 build
-# 步骤自动透传（已列在 env 里，未配置的 Secret 展开为空、语义同缺配置）。
-# 测试页 locked-demo 的 BLOG_SECRET_DEMO 也要固定，否则 CI 构建会失败
-# （绝不降级明文）。
+# demo），缺配置直接失败。本 workflow 仅手动触发——生产构建跑在 Cloudflare
+# Workers Builds（push 自动），口令在 Dashboard → Build → Variables and
+# Secrets 固定（Secret 类型即注入构建 env）。手动 dispatch 时在此配 GitHub
+# Secrets 即被 build 步骤自动透传（未配置的 Secret 展开为空、语义同缺配置），
+# 否则构建会按设计直接失败（绝不降级明文）。
 
 name: Deploy
 
