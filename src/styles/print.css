@@ -31,7 +31,17 @@
     --ok: initial;
     --shadow-card: initial;
     --shadow-pop: initial;
+    --code-bg: initial;
+    --code-fg: initial;
     color-scheme: light;
+  }
+
+  /* 代码高亮切回浅色主题：prose.css 的 .dark 切换在打印下会输出暗色文字
+     （shiki 双主题变量），浅色纸面上不可读——打印一律取 --shiki-light */
+  .dark .prose .code-card pre,
+  .dark .prose .code-card span,
+  .dark .prose .code-card pre span {
+    color: var(--shiki-light);
   }
 
   * {
@@ -167,9 +177,18 @@
   --ok: initial;
   --shadow-card: initial;
   --shadow-pop: initial;
+  --code-bg: initial;
+  --code-fg: initial;
   color-scheme: light;
   /* 调色板交叉淡化不得拖泥带水地过渡进纸面 */
   transition: none;
+}
+
+/* 代码高亮切回浅色主题（同 @media print 块） */
+.print-preview.dark .prose .code-card pre,
+.print-preview.dark .prose .code-card span,
+.print-preview.dark .prose .code-card pre span {
+  color: var(--shiki-light);
 }
 
 .print-preview .print-hide,

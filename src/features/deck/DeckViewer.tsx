@@ -131,6 +131,11 @@ const HOST_CSS = `
   .deck-root [data-deck-chrome] {
     display: none !important;
   }
+  /* 打印纸面永远浅色：代码高亮强制回 shiki light 变量 */
+  .dark .deck-root .marpit section pre,
+  .dark .deck-root .marpit section pre span {
+    color: var(--shiki-light) !important;
+  }
   .deck-root .deck-stage {
     aspect-ratio: auto !important;
     overflow: visible !important;
@@ -185,6 +190,11 @@ const HOST_CSS = `
 }
 .print-preview .deck-root .deck-canvas section[data-slide-hidden] {
   display: block !important;
+}
+/* 预览纸面永远浅色：代码高亮强制回 shiki light 变量 */
+.print-preview.dark .deck-root .marpit section pre,
+.print-preview.dark .deck-root .marpit section pre span {
+  color: var(--shiki-light) !important;
 }
 `;
 
