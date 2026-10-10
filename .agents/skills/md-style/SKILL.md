@@ -28,7 +28,13 @@ description: Use when writing or editing any article in this blog (content/blogs
 
 ### deck（Marpit）方言边界
 
-deck 是 markdown-it 系独立管线，**站内扩展不生效**：Callouts、`==mark==`、`$数学$`、mermaid/geojson/stl fence、emoji 短码、脚注、任务清单都不可用；可用的是 CommonMark + GFM 表格/删除线 + raw HTML + 上述 Marpit 指令。页题用 `#`（播放器自动降为 h2）；`deck: true` 与 `secret` 不可组合（构建期直接报错）。写完过 `pnpm build` 看构建输出即可验证。
+deck 是 markdown-it 系独立管线，**站内扩展不生效**：Callouts、`==mark==`、`$数学$`、mermaid/geojson/stl fence、emoji 短码、脚注、任务清单都不可用；可用的是 CommonMark + GFM 表格/删除线 + raw HTML + 上述 Marpit 指令。页题用 `#`（播放器自动降为 h2）；`---`/`***`/`___` **全部是分页符**（不存在水平分隔线，需要分隔感用 raw `<hr>` 或留白）；`deck: true` 与 `secret` 不可组合（构建期直接报错）。写完过 `pnpm build` 看构建输出即可验证。
+
+### deck 布局与图片修饰符
+
+- **只用 Marpit 原生语法，主题不发明布局 class**。纯 Marpit 没有双栏/分栏（`bg right/left` 分栏背景与多层 `![bg]` 叠加是 Marp Core 语法、不可用）——确需特殊布局时，用原生 `style:` 指令或 `<style>` 元素在 deck 内自带 CSS
+- 图片修饰符 `![w:260]` / `![h:180]` 控制显示尺寸；`![bg fit]` 背景完整放入（默认 cover 裁剪）
+- 图片主题层限高 480px（防顶出 720px 画布被裁）
 
 ## 按阅读体验选能力（核心）
 

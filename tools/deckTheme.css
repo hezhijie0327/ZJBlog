@@ -130,6 +130,38 @@ section kbd {
   padding: 0.1em 0.5em;
 }
 
+/* 行内标签（raw HTML）：<mark>/<u>/<del>/<sup>/<sub> */
+section mark {
+  background: var(--highlight-bg);
+  color: var(--ink);
+  border-radius: 6px;
+  padding: 0 0.15em;
+}
+
+section u {
+  text-decoration: underline;
+  text-decoration-color: var(--accent-strong);
+  text-underline-offset: 4px;
+}
+
+section del {
+  color: var(--ink-3);
+}
+
+section sup,
+section sub {
+  font-size: 0.7em;
+}
+
+/* raw <hr>（markdown 层的 ---/*** 全是分页符，分隔线只能显式写 HTML） */
+section hr {
+  height: 3px;
+  border: none;
+  border-radius: 2px;
+  background: var(--line);
+  margin: 1em 0;
+}
+
 /* 代码块（deck.ts 构建期已重高亮为 shiki 双主题变量；亮态默认值在此，
  * 暗态切换在 DeckViewer 宿主 CSS） */
 section pre {
@@ -182,6 +214,9 @@ td {
 
 img {
   max-width: 100%;
+  /* 幻灯片画布定高：图片不许把内容顶出 720px（超出部分会被裁掉） */
+  max-height: 480px;
+  object-fit: contain;
   border-radius: 12px;
 }
 

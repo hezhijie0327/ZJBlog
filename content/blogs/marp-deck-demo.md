@@ -36,12 +36,14 @@ Marpit 方言 · 构建期编译 · 客户端零依赖
 - `style:` —— 全局样式微调，本文的**金色加粗**就是它上的色
 
 | 指令 | 作用域 | 作用 |
-| --- | --- | --- |
+| --- | :---: | --- |
 | `_class: lead` | 仅本页 | 标题页居中变体 |
 | `_paginate: skip` | 仅本页 | 本页不计页码 |
 | `_color` / `_backgroundColor` | 仅本页 | 文字 / 底色反转变体 |
 | `_header` / `_footer` | 仅本页 | 页眉 / 页脚 |
 | `headingDivider` | 全局 | 按标题自动切页 |
+
+上表「作用域」列居中——GFM 对齐语法（`:---:`）直接可用。
 
 <!-- 备注示例：这一页汇总指令体系。局部指令加 _ 前缀只作用于当前页；
 去掉前缀则从本页起持续生效。 -->
@@ -88,12 +90,33 @@ deck.slides.forEach((slide, i) => {
 
 # 站内图片自动带固有尺寸
 
-![普通图](/images/couple-demo.jpg)
+![w:520](/images/couple-demo.jpg) ![w:260](/images/couple-demo.jpg)
 
-构建期注入 width/height（unsized-images 审计零扣分）；站内图换页、
-解锁、嵌入场景都走同一条 contentHtml 通道。
+`w:` / `h:` 修饰符控制显示尺寸；所有站内图构建期注入 width/height
+固有尺寸（unsized-images 审计零扣分），换页、解锁、嵌入场景都走同一条
+contentHtml 通道。
 
 <!-- 备注：这里放了一张真实图片，验收时确认灯箱不拦截幻灯片内的图。 -->
+
+# 行内标签与分隔线
+
+<!-- _class: cols -->
+
+raw HTML 行内标签都有主题样式：<mark>mark 高亮</mark>、<u>下划线</u>、
+<del>删除线</del>、上标 X<sup>2</sup> 与下标 H<sub>2</sub>O。
+
+右栏演示 raw `<hr>`——markdown 层的 `---` / `***` 是分页符，
+分隔线只能显式写 HTML：
+
+<hr>
+
+# 背景图 fit 模式
+
+![bg fit](/images/couple-demo.jpg)
+
+`![bg fit]` 以 contain 方式完整放入页面（不裁剪、留白居中）；
+默认 `![bg]()` 是 cover 铺满裁剪。多层 `![bg]` 叠加与
+`bg right/left` 分栏是 Marp Core 语法，本站不可用——分栏用布局变体。
 
 # 暗色变体页
 

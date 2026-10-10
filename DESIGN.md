@@ -121,6 +121,7 @@
 | 界面正文 | `text-sm`（说明性文字 `text-xs`） | 全站默认 |
 | 元信息 | `META` 片段（mono `text-xs`） | 日期/计数/键位 |
 | 长文正文 | `.prose`（Tailwind Typography 默认刻度，衬线正文 + 衬线标题） | `prose.css`；颜色全走 `--tw-prose-*` → token 映射 |
+| 幻灯片页题 | px 定尺（构建期主题 `tools/deckTheme.css`，按标题降级后的真实层级）：`#`→h2 60 / `##`→h3 44 / `###`→h4 32 / lead 76 | deck 画布（§5.2） |
 | 装饰水印 | `text-6xl font-black`（`text-accent/20` 或 `.hollow-text`） | 纯装饰，必须 `aria-hidden` |
 
 - 标题一律衬线 + `tracking-tight`；界面正文一律 sans —— 两套排印轨道不混用。
@@ -170,6 +171,22 @@
 | 图表 | ```mermaid fence（**含 xychart 柱状/折线图** —— mermaid ≥12 的注册名，旧 `xychart-beta` 已移除），含标点的节点标签加引号 | mermaid 12 惰性渲染 |
 
 **有意不共享**：`rehype-raw`（博客内容作者所有、可透传原生 HTML；AI 生成内容一律**禁止 raw HTML** —— 信任模型差异）、PlantUML（外部渲染服务，mermaid 已覆盖）、Shiki 代码高亮（zjsearch 体积预算；代码块纯 mono 呈现）。
+
+### 5.2 幻灯片画布与播放器（deck）
+
+deck 文（frontmatter `deck: true` 或正文 marp fence）的视觉契约：构建期主题 `tools/deckTheme.css` 是**纯 token 消费方**——颜色与字体全走 §3/§4 变量，deck 随站点明暗交叉淡化，不设独立配色。marpit 会把主题选择器 scoping 到 `div.marpit > section`，因此主题 CSS 只写亮态默认值，`.dark` 祖先切换（含 shiki 双主题）一律放 DeckViewer 宿主 CSS。
+
+| 词汇 | 处方 |
+|---|---|
+| 画布 | 1280×720 px 定尺 + transform 缩放（`tan(atan2(100cqw, 1280px))` 纯 CSS 求容器比），圆角 16px + `--line` 描边 + `--shadow-card`，底 `--surface`、字 `--ink` |
+| 页题层级 | 按 §4 幻灯片行（降级后层级，勿按源码层级写主题——h1 规则全是死规则） |
+| 播放器 chrome | 复用 `ICON_BTN` / `CHIP` / `META` 片段（无新片段）；控制条始终渲染——挂载后插入控件同样计入布局位移 |
+| 全屏 | 状态驱动样式（`[data-fullscreen]`，**不用 `:fullscreen` 伪类**——webview/预览环境的原生 API 半残：resolve 但视图不展开、事件不派发）；fixed 覆盖层 `z-index` 压过 app-bar，padding 按 `max(24px, env(safe-area-inset-*))` 内收（§18 延伸）；原生 promise 拒绝/不可用自动回落伪全屏 |
+| 触控 | 舞台 `touch-action: pan-y`：横滑翻页归播放器、纵滚归页面 |
+| 动效 | 换页 `deck-slide-in` 0.28s ease（§8 轨道；reduced-motion 全局收敛） |
+| 布局边界 | 主题**不发明布局语法**：纯 Marpit 无双栏/分栏（`bg right/left` 与多层 `![bg]` 是 Marp Core 语法、不可用）。需要特殊布局时作者用**原生** `style:` 指令或 `<style>` 元素在 deck 内自带 CSS（随文件走、不依赖主题） |
+| 行内标签与图片 | `<mark>`（`--highlight-bg`）/`<kbd>`/`<u>`（accent 下划线）/`<del>`（ink-3）/上下标有主题样式（样式归主题，标签是原生 HTML）；图片修饰符 `w:`/`h:`/`bg fit` 可用，图片 `max-height: 480px` 防顶出画布 |
+| 无 JS | `<noscript>` 样式（`DECK_NOSCRIPT_CSS`）展开全页堆叠，`zoom` 布局缩放（transform 不参与布局，父级拿不到实际高度） |
 
 
 ## 6. 空间与层级（Layout Principles & Depth）
