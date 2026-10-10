@@ -102,12 +102,26 @@ const HOST_CSS = `
 }
 `;
 
+/** 无 JS 兜底：默认逐页形态把后续页裁剪在 16:9 舞台外，这里在无 JS 时把
+ *  画布展开为完整堆叠视图。由 tools/ssr.tsx 逐页条件注入 <head> 的
+ *  <noscript><style>（JS 可用时 head 里的 noscript 内容不生效）。
+ *  HOST_CSS 在 body 内晚于 head 生效，覆盖需要 !important；zoom 用布局缩放
+ *  替代 transform（transform 不参与布局，展开后父级无法获得实际高度）。 */
+export const DECK_NOSCRIPT_CSS = `
+.deck-root .deck-stage { aspect-ratio: auto !important; overflow: visible !important; }
+.deck-root .deck-canvas { position: static !important; transform: none !important; zoom: var(--deck-scale); }
+.deck-root .deck-canvas section + section { border-top: 1px solid var(--line) !important; }
+.deck-root [data-deck-chrome] { display: none !important; }
+`;
+
 export function DeckViewer({ html, css, embedded = false }: DeckViewerProps) {
   const t = useT();
-  // 初始即堆叠形态（与 SSR 一致 → 零 CLS）；逐页模式由用户手势进入
-  // （翻页按钮 / 滑动 / #N 深链）。控制条也始终渲染——挂载后才插入会把
-  // 下方内容顶下去，同样计入布局位移。
-  const [mode, setMode] = useState<"paged" | "stacked">("stacked");
+  // 默认逐页形态：SSR 直接渲染 16:9 舞台（画布含全部幻灯片、overflow 裁剪
+  // 只露第一页），水合前后视觉零变化 → 零 CLS；无 JS 场景由 head 里的
+  // <noscript> 样式（DECK_NOSCRIPT_CSS，ssr.tsx 条件注入）揭示堆叠视图。
+  // mounted 前画布保持全量 blob（与 SSR 同形，水合安全），之后逐页只渲染当前页。
+  const [mode, setMode] = useState<"paged" | "stacked">("paged");
+  const [mounted, setMounted] = useState(false);
   const [active, setActive] = useState(0);
   const [showNotes, setShowNotes] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
@@ -134,29 +148,14 @@ export function DeckViewer({ html, css, embedded = false }: DeckViewerProps) {
     [total],
   );
 
-  // 进入逐页模式（用户手势或 #N 深链；深链带来的布局变化是用户显式意图）
-  const enterPaged = useCallback(
-    (slide?: number | ((prev: number) => number)) => {
-      interacted.current = true;
-      setMode("paged");
-      if (slide !== undefined) {
-        setActive((prev) => {
-          const target = typeof slide === "function" ? slide(prev) : slide;
-          return Math.max(0, Math.min(total - 1, target));
-        });
-      }
-    },
-    [total],
-  );
-
-  // #N 深链：只在首次挂载消费（整篇模式）
+  // 挂载升级 + #N 深链消费（整篇模式）：舞台尺寸固定，换页内容不产生位移
   useEffect(() => {
+    setMounted(true);
     if (total === 0 || embedded) {
       return;
     }
     const initial = parseSlideHash(window.location.hash);
     if (initial !== null) {
-      setMode("paged");
       setActive(Math.min(initial, total - 1));
     }
   }, [embedded, total]);
@@ -298,7 +297,7 @@ export function DeckViewer({ html, css, embedded = false }: DeckViewerProps) {
         }}
         ref={stageRef}
       >
-        {mode === "paged" ? (
+        {mounted && mode === "paged" ? (
           <div
             aria-label={t("deck.slideN", { m: total, n: active + 1 })}
             aria-roledescription={t("deck.slide")}
@@ -306,11 +305,11 @@ export function DeckViewer({ html, css, embedded = false }: DeckViewerProps) {
             className="deck-canvas marpit"
             dangerouslySetInnerHTML={{ __html: current?.slide ?? "" }}
             key={active}
-            ref={canvasRef}
             role="group"
           />
         ) : (
-          // 首帧分支带 data-deck-content：pageData.ts 据此回填 contentHtml
+          // 全量 blob：水合首帧（与 SSR 同形）+ 连续浏览模式；首帧带
+          // data-deck-content，pageData.ts 据此回填 contentHtml
           <div
             className="deck-canvas marpit"
             dangerouslySetInnerHTML={{ __html: html }}
@@ -325,6 +324,7 @@ export function DeckViewer({ html, css, embedded = false }: DeckViewerProps) {
         <div
           className="mt-3 rounded-xl border border-line bg-surface-2 px-4 py-3 text-sm leading-relaxed text-ink-2 [&_p]:m-0 [&_p+p]:mt-1.5"
           dangerouslySetInnerHTML={{ __html: current?.notes ?? "" }}
+          data-deck-chrome
         />
       )}
 
@@ -332,7 +332,7 @@ export function DeckViewer({ html, css, embedded = false }: DeckViewerProps) {
           堆叠模式只留模式切换与全屏；翻页控件随逐页模式出现/消失，
           该位移发生在用户点击 500ms 内，不计入 CLS。 */}
       {total > 0 && (
-        <div className="mt-3 flex items-center gap-1.5">
+        <div className="mt-3 flex items-center gap-1.5" data-deck-chrome>
           {mode === "paged" && (
             <>
               <button
@@ -374,7 +374,7 @@ export function DeckViewer({ html, css, embedded = false }: DeckViewerProps) {
           )}
           <button
             className={cn(CHIP, "transition-colors hover:border-accent hover:text-accent")}
-            onClick={() => (mode === "paged" ? setMode("stacked") : enterPaged())}
+            onClick={() => setMode(mode === "paged" ? "stacked" : "paged")}
             type="button"
           >
             {mode === "paged" ? t("deck.modeStacked") : t("deck.modePaged")}

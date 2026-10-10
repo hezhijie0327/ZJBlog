@@ -11,6 +11,7 @@ import path from "node:path";
 import { renderToString } from "react-dom/server";
 import { App } from "../src/app.tsx";
 import { siteConfig } from "../src/config/site.ts";
+import { DECK_NOSCRIPT_CSS } from "../src/features/deck/DeckViewer.tsx";
 import { THEME_BOOTSTRAP, THEME_COLOR_DARK, THEME_COLOR_LIGHT } from "../src/lib/theme.ts";
 import {
   type AnyPageData,
@@ -293,6 +294,14 @@ export async function renderRoute(rawPath: string, assets?: AssetUrls): Promise<
     .concat(katexLink)
     .join("\n    ");
   const devClient = a.js.startsWith("/src/") ? `<script type="module" src="/@vite/client"></script>` : "";
+  // 幻灯片默认逐页形态把后续页裁剪在 16:9 舞台外；无 JS 时用这份样式展开为
+  // 堆叠视图（head 里的 noscript 内容仅在 JS 不可用时生效，SPA 换页必然有
+  // JS，不需跟随）。样式随 head 送达，避免 body 内 HOST_CSS 覆盖顺序问题
+  // 之外的耦合。
+  const deckNoscript =
+    isBlogPostData(payload) && payload.post.deck
+      ? `<noscript><style data-deck-noscript>${DECK_NOSCRIPT_CSS}</style></noscript>`
+      : "";
   const pageDataJson = JSON.stringify(slimForClient(payload)).replaceAll("<", "\\u003c");
 
   return `<!doctype html>
@@ -315,6 +324,7 @@ export async function renderRoute(rawPath: string, assets?: AssetUrls): Promise<
     <link rel="alternate" type="application/rss+xml" title="${escapeHtml(g.siteName)}" href="/rss.xml">
     ${g.page === "og" ? "" : `<script>${THEME_BOOTSTRAP}</script>`}
     ${cssLinks}
+    ${deckNoscript}
     ${pagePreload(g.page, a)}
     ${devClient}
   </head>

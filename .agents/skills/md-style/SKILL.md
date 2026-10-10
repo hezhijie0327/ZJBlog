@@ -23,7 +23,7 @@ description: Use when writing or editing any article in this blog (content/blogs
 | 折叠 | `<details><summary>` | summary 与内容之间**留空行**，内部 Markdown 才渲染 |
 | HTML 子集 | `<kbd>` `<mark>` `<u>` `<sub>` `<sup>` `<img 带宽高>` | 裸色值、`<font color>`、外站 iframe 禁止（对比度/零第三方审计门禁） |
 | 图片 | `![alt](/images/x.jpg)` | 仅本站路径；构建自动转 webp 并注入宽高 |
-| 幻灯片（整篇） | frontmatter `deck: true` | 正文按 **Marpit 方言**编译：`---` 分页，HTML 注释指令（`<!-- paginate: true -->`、`<!-- _class: lead -->`、`<!-- _backgroundImage: url("…") -->`、`headingDivider` 等），`<!-- 非指令注释 -->` 即演讲者备注。文章页默认连续堆叠浏览，点「逐页播放」/滑动/`#N` 深链进入播放器（键盘 ←→/Home/End、页码、备注、全屏） |
+| 幻灯片（整篇） | frontmatter `deck: true` | 正文按 **Marpit 方言**编译：`---` 分页，HTML 注释指令（`<!-- paginate: true -->`、`<!-- _class: lead -->`、`<!-- _backgroundImage: url("…") -->`、`headingDivider` 等），`<!-- 非指令注释 -->` 即演讲者备注。文章页默认逐页播放器（键盘 ←→/Home/End、滑动、`#N` 深链、备注、全屏），可切连续堆叠浏览 |
 | 幻灯片（嵌入） | ` ```marp ` fence | 正文内嵌一组幻灯片，同款播放器；` ```deck ` 等价 |
 
 ### deck（Marpit）方言边界
