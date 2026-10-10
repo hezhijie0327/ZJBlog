@@ -16,7 +16,7 @@ export function PrintButton({ titleBase }: { titleBase: string }) {
       aria-label={t("post.print")}
       className={cn(ICON_BTN, "print-hide")}
       onClick={() => {
-        startPrintPreview({ closeLabel: t("print.close"), titleBase });
+        startPrintPreview({ closeLabel: t("print.close"), titleBase, wordmark: true });
       }}
       title={t("post.print")}
       type="button"

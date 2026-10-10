@@ -198,6 +198,7 @@ deck 文（frontmatter `deck: true` 或正文 marp fence）的视觉契约：构
 | 预览脸 | 嵌入式 webview 的 print 是静默 no-op（ZJSearch 实测另有幽灵 afterprint）——`startPrintPreview` 先让纸面可见（`body.print-preview` 强制纸面样式上屏 + 关闭芯片 + Esc），双 rAF 后 `window.print()`；真浏览器对话框盖在纸面上方；文件名 = 打印期 `document.title = zjblog_<标题>`（teardown 恢复） |
 | chrome 隐藏 | `.print-hide` 钩子类（本站命名，对位 ZJSearch `.zjs-print-hide`）+ 结构选择器（app-bar/footer/aside）；`.fixed/.sticky → static`；`@media print` 与 `body.print-preview` 两份列表须保持同步（ZJSearch 同款取舍） |
 | 深色 mermaid | 颜色烤进 svg 的组件打印前经文档事件（`blog:print-mermaid-light` / `-restore`）以浅色主题就地重渲染、关闭恢复；外部 Ctrl+P 不走此管线（保持当前主题，已知降级） |
+| 品牌字标 | 文章打印在纸面左上注入品牌字标（`lib/print.ts` 注入 `.print-wordmark`：衬线 20px/600 + 金点 + 分隔线，同 ZJSearch print 文档 wordmark）；deck 幻灯片自带品牌且定高页面不容插入、不注入 |
 | 内容完整 | 画布/正文全量常驻 DOM（deck 换页只逐节切 `hidden`）；打印时隐藏页揭示、代码卡/表格 `break-inside: avoid`、外链 `::after` 展开 href、deck 靠 marpit 自带 `@page 1280×720` + 逐页 break（print.css 的 `@page a4` 只服务文章，级联被 deck 页后置覆盖） |
 | 复制为 Markdown | 构建期为未锁定内容落 `<kind>/<slug>/index.md`（原文保真；锁定文不落盘不渲染按钮——fail-closed）；`compress-images` 改写面含 `.md`；`_headers` 对 `/<kind>/*/index.md` 显式 `text/markdown; charset=utf-8`；`<head>` 带 alternate 直链 |
 

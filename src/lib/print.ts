@@ -14,6 +14,8 @@
 // 广播 blog:print-mermaid-restore 按当前主题恢复。外部 Ctrl+P 不走本管线
 // （图表保持当前主题，属已知降级）。
 
+import { siteConfig } from "@/config/site.ts";
+
 const PREVIEW_CLASS = "print-preview";
 const MERMAID_LIGHT = "blog:print-mermaid-light";
 const MERMAID_RESTORE = "blog:print-mermaid-restore";
@@ -23,10 +25,13 @@ export interface PrintPreviewOptions {
   titleBase: string;
   /** 关闭芯片的 aria-label（调用方携带 i18n 文案） */
   closeLabel: string;
+  /** 纸面顶部注入品牌字标（ZJBlog. + 分隔线，同 ZJSearch print 文档）；
+   *  deck 幻灯片自带品牌且定高页面不容插入，不传即不注入 */
+  wordmark?: boolean;
 }
 
 /** 打开打印预览脸并触发打印。返回 teardown（组件卸载时调用以防挂残留）。 */
-export function startPrintPreview({ titleBase, closeLabel }: PrintPreviewOptions): () => void {
+export function startPrintPreview({ titleBase, closeLabel, wordmark = false }: PrintPreviewOptions): () => void {
   if (document.documentElement.classList.contains(PREVIEW_CLASS)) {
     return () => {};
   }
@@ -42,6 +47,16 @@ export function startPrintPreview({ titleBase, closeLabel }: PrintPreviewOptions
   document.documentElement.classList.add(PREVIEW_CLASS);
   window.scrollTo(0, 0);
   document.dispatchEvent(new CustomEvent(MERMAID_LIGHT));
+
+  // 品牌字标（文章打印）：衬线品牌名 + 金点，压在纸面左上（同 ZJSearch
+  // print 文档的 wordmark）；品牌串来自站点配置，非用户输入，直接内联
+  let wordmarkEl: HTMLDivElement | null = null;
+  if (wordmark) {
+    wordmarkEl = document.createElement("div");
+    wordmarkEl.className = "print-wordmark";
+    wordmarkEl.innerHTML = `${siteConfig.title}<span class="print-wordmark-dot">.</span>`;
+    document.querySelector("main .container")?.prepend(wordmarkEl);
+  }
 
   const chip = document.createElement("button");
   chip.type = "button";
@@ -59,6 +74,7 @@ export function startPrintPreview({ titleBase, closeLabel }: PrintPreviewOptions
     window.removeEventListener("keydown", onKey);
     document.dispatchEvent(new CustomEvent(MERMAID_RESTORE));
     chip.remove();
+    wordmarkEl?.remove();
     document.documentElement.classList.remove(PREVIEW_CLASS);
     document.title = prevTitle;
     window.scrollTo(0, prevScroll);

@@ -188,6 +188,22 @@
   max-width: none !important;
 }
 
+/* 品牌字标（家族契约，同 ZJSearch print 文档左上角 wordmark）：
+   衬线品牌名 + 金点 + 分隔线，预览脸与打印纸面都可见 */
+.print-wordmark {
+  font-family: var(--font-serif);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--ink);
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 24px;
+}
+
+.print-wordmark-dot {
+  color: var(--accent-strong);
+}
+
 /* 关闭芯片（print.ts 注入）：屏幕上的预览退出钮，打印时隐藏 */
 .print-close {
   position: fixed;
