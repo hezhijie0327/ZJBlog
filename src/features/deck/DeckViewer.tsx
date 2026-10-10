@@ -125,13 +125,15 @@ const HOST_CSS = `
 .deck-canvas section[data-slide-hidden] {
   display: none !important;
 }
-/* ── 打印 / 预览纸面：整篇 deck 页的 @page 是 1280×720 横屏（marpit 自带
- * + DECK_PRINT_PAGE_CSS 在 HOST_CSS 之后再声明一次兜底，防 print.css 的
- * @page a4 竖屏意外胜出）——打印时舞台强制撑满纸宽（容器/版心让位），
- * 缩放自然归一为 1，幻灯片一比一满页无白边；chrome 隐藏、隐藏页揭示。
- * 嵌入形态（data-embedded）不走 1280 覆写：它打印时是文章 a4 流的一部分，
- * 保持 zoom 缩放的连续流即可。@media print 与 html.print-preview（预览脸，
- * 见 lib/print.ts / print.css）两份列表保持同步。 ── */
+/* ── 打印 / 预览纸面：**视口无关的等比缩放流**。桌面 Chrome/Edge 按
+ * marpit 自带的 @page 1280×720（横屏）布局，缩放自然归一为 1，幻灯片
+ * 一比一满页；iOS AirPrint 等**不支持 @page size** 的管线里，缩放跟随
+ * 打印布局宽度（cqw 自适应），按用户所选纸张等比排出、一页一条不截断。
+ * 因此不要写死 width: 1280px——布局宽度 ≠ 1280 的管线（iOS 打印即此）
+ * 会横向截断并产生空白页。chrome 隐藏、隐藏页揭示、逐块防裂；
+ * 嵌入形态同规则（zoom 的 cqw 基准本就是所在栏宽）。
+ * @media print 与 html.print-preview（预览脸，见 lib/print.ts / print.css）
+ * 两份列表保持同步。 ── */
 @media print {
   .deck-root [data-deck-chrome] {
     display: none !important;
@@ -148,17 +150,12 @@ const HOST_CSS = `
     border: none;
     box-shadow: none;
     border-radius: 0;
+    /* 缩放后不满纸宽时（非 @page 布局的管线）左右居中 */
+    margin-inline: auto !important;
   }
   .deck-root .deck-canvas {
     position: static !important;
     transform: none !important;
-  }
-  /* 整篇：zoom 归一，1280px 画布一比一满页（@page 1280×720 横屏） */
-  .deck-root:not([data-embedded]) .deck-canvas {
-    zoom: 1 !important;
-  }
-  /* 嵌入：zoom 布局缩放到栏宽，幻灯片作为文章 a4 流的整块连续排印 */
-  .deck-root[data-embedded] .deck-canvas {
     zoom: var(--deck-scale) !important;
   }
   .deck-root .deck-canvas section[data-slide-hidden] {
@@ -172,43 +169,10 @@ const HOST_CSS = `
 .print-preview .deck-root [data-deck-chrome] {
   display: none !important;
 }
-.print-preview .deck-root:not([data-embedded]),
-.print-preview .deck-root:not([data-embedded]) .deck-stage {
-  width: 1280px !important;
-  max-width: none !important;
-  margin-inline: 0 !important;
-}
-.print-preview .deck-root:not([data-embedded]) .deck-stage {
-  aspect-ratio: auto !important;
-  overflow: visible !important;
-  height: auto !important;
-  border: none;
-  box-shadow: none;
-  border-radius: 0;
-}
-.print-preview .deck-root .deck-canvas {
-  position: static !important;
-  transform: none !important;
-}
-.print-preview .deck-root:not([data-embedded]) .deck-canvas {
-  zoom: 1 !important;
-}
-.print-preview .deck-root .deck-canvas section[data-slide-hidden] {
-  display: block !important;
-}
 /* 预览纸面永远浅色：代码高亮强制回 shiki light 变量 */
 .print-preview.dark .deck-root .marpit section pre,
 .print-preview.dark .deck-root .marpit section pre span {
   color: var(--shiki-light) !important;
-}
-`;
-
-/** 整篇 deck 的横屏纸张声明：仅全页播放器注入（嵌入形态若注入会劫持
- * 文章打印的纸张尺寸——renderDeckEmbed 侧已剥 @page，这里同理）。 */
-export const DECK_PRINT_PAGE_CSS = `
-@page {
-  size: 1280px 720px;
-  margin: 0;
 }
 `;
 
@@ -474,8 +438,6 @@ export function DeckViewer({ html, css, embedded = false, needsKatex = false, ti
       tabIndex={embedded ? 0 : undefined}
     >
       <style dangerouslySetInnerHTML={{ __html: HOST_CSS }} />
-      {/* 横屏纸张声明仅整篇模式注入（嵌入态注入会劫持文章打印纸张） */}
-      {!embedded && <style dangerouslySetInnerHTML={{ __html: DECK_PRINT_PAGE_CSS }} />}
       {css && <style dangerouslySetInnerHTML={{ __html: css }} />}
 
       {/* 幻灯片画布：恒为全量 DOM（SSR 同形；data-deck-content 供
