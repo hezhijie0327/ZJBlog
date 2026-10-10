@@ -124,6 +124,18 @@ export const ZH_CN: Record<StringKey, string> = {
   "lightbox.zoomOut": "缩小",
   "lightbox.zoomIn": "放大",
 
+  // 幻灯片（整篇 deck 博文与 ```marp 嵌入共用播放器）
+  "blog.deck": "幻灯片",
+  "deck.slide": "幻灯片",
+  "deck.slideN": "第 {n} 页，共 {m} 页",
+  "deck.prev": "上一页",
+  "deck.next": "下一页",
+  "deck.notes": "演讲者备注",
+  "deck.modeStacked": "连续浏览",
+  "deck.modePaged": "逐页播放",
+  "deck.fullscreen": "全屏放映",
+  "deck.exitFullscreen": "退出全屏",
+
   // 归档
   "archives.empty": "暂无可归档的内容。",
   "archives.unknownYear": "未知",

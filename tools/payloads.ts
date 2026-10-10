@@ -39,6 +39,7 @@ function toBlogListItem(entry: {
   tags: string[];
   readingMinutes: number;
   locked?: LockedContent;
+  deck?: { css: string };
 }): BlogListItem {
   const item: BlogListItem = {
     slug: entry.slug,
@@ -48,6 +49,9 @@ function toBlogListItem(entry: {
     tags: entry.tags,
     readingMinutes: entry.readingMinutes,
   };
+  if (entry.deck) {
+    item.deck = true;
+  }
   // 加密文：description / summary 即内容摘要，任何列表一律不带；仅标记锁
   if (entry.locked) {
     item.locked = true;
@@ -193,7 +197,7 @@ export function buildPayload(pathname: string): AnyPageData {
       const item = toBlogListItem(post);
       // 列表项上的 locked 是布尔标记；文章 payload 上的 locked 是密文信封，
       // 同名不同义，先剥掉标记再按分支组装
-      const { locked: _lockFlag, ...meta } = item;
+      const { locked: _lockFlag, deck: _deckFlag, ...meta } = item;
       // blogs 已按日期倒序：i-1 更新（下一篇），i+1 更旧（上一篇）
       const newer = index > 0 ? blogs[index - 1] : undefined;
       const older = index >= 0 && index < blogs.length - 1 ? blogs[index + 1] : undefined;
@@ -226,6 +230,8 @@ export function buildPayload(pathname: string): AnyPageData {
           contentHtml: post.contentHtml,
           needsKatex: post.needsKatex,
           summary: post.summary,
+          // 整篇幻灯片：css 随 payload（head 不随 SPA 换页），HTML 走 DOM 契约
+          ...(post.deck ? { deck: post.deck } : {}),
           ...(older ? { prev: { slug: older.slug, title: older.title } } : {}),
           ...(newer ? { next: { slug: newer.slug, title: newer.title } } : {}),
         },

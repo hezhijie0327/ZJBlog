@@ -23,6 +23,12 @@ description: Use when writing or editing any article in this blog (content/blogs
 | 折叠 | `<details><summary>` | summary 与内容之间**留空行**，内部 Markdown 才渲染 |
 | HTML 子集 | `<kbd>` `<mark>` `<u>` `<sub>` `<sup>` `<img 带宽高>` | 裸色值、`<font color>`、外站 iframe 禁止（对比度/零第三方审计门禁） |
 | 图片 | `![alt](/images/x.jpg)` | 仅本站路径；构建自动转 webp 并注入宽高 |
+| 幻灯片（整篇） | frontmatter `deck: true` | 正文按 **Marpit 方言**编译：`---` 分页，HTML 注释指令（`<!-- paginate: true -->`、`<!-- _class: lead -->`、`<!-- _backgroundImage: url("…") -->`、`headingDivider` 等），`<!-- 非指令注释 -->` 即演讲者备注。文章页默认连续堆叠浏览，点「逐页播放」/滑动/`#N` 深链进入播放器（键盘 ←→/Home/End、页码、备注、全屏） |
+| 幻灯片（嵌入） | ` ```marp ` fence | 正文内嵌一组幻灯片，同款播放器；` ```deck ` 等价 |
+
+### deck（Marpit）方言边界
+
+deck 是 markdown-it 系独立管线，**站内扩展不生效**：Callouts、`==mark==`、`$数学$`、mermaid/geojson/stl fence、emoji 短码、脚注、任务清单都不可用；可用的是 CommonMark + GFM 表格/删除线 + raw HTML + 上述 Marpit 指令。页题用 `#`（播放器自动降为 h2）；`deck: true` 与 `secret` 不可组合（构建期直接报错）。写完过 `pnpm build` 看构建输出即可验证。
 
 ## 按阅读体验选能力（核心）
 

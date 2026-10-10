@@ -1100,3 +1100,28 @@ Wonderland -> Alice : hello
 Alice -> Bob: hello
 @enduml
 ```
+
+## 嵌入幻灯片（marp fence）
+
+正文中用 ` ```marp ` fence 嵌入一组幻灯片：构建期编译为占位结构，挂载后
+升级为逐页播放器（键盘 / 按钮 / 备注 / 全屏），禁用 JS 时是完整的堆叠视图。
+
+```marp
+<!-- paginate: true -->
+
+# 嵌入示例
+
+<!-- _class: lead -->
+
+一篇文章里的一组幻灯片
+
+---
+
+## 第二页
+
+- 与整篇 deck 同一套主题与播放器
+- `marp` 与 `deck` 两个 fence 名等价
+- 打印本文时不会被劫持纸张尺寸（@page 已剥除）
+
+<!-- 备注只在播放器的便签面板里显示。 -->
+```

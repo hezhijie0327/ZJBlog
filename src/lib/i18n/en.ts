@@ -124,6 +124,18 @@ export const EN = {
   "lightbox.zoomOut": "Zoom out",
   "lightbox.zoomIn": "Zoom in",
 
+  // 幻灯片（整篇 deck 博文与 ```marp 嵌入共用播放器）
+  "blog.deck": "Slides",
+  "deck.slide": "Slide",
+  "deck.slideN": "Slide {n} of {m}",
+  "deck.prev": "Previous slide",
+  "deck.next": "Next slide",
+  "deck.notes": "Speaker notes",
+  "deck.modeStacked": "View all",
+  "deck.modePaged": "Present",
+  "deck.fullscreen": "Fullscreen",
+  "deck.exitFullscreen": "Exit fullscreen",
+
   // 归档
   "archives.empty": "Nothing to archive yet.",
   "archives.unknownYear": "Unknown",

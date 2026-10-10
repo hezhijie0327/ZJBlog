@@ -40,6 +40,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.14",
+    "@marp-team/marpit": "^3.2.3",
     "@tailwindcss/typography": "^0.5.20",
     "@tailwindcss/vite": "^4.3.3",
     "@types/mdast": "^4.0.4",

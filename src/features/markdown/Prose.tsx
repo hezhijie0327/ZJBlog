@@ -9,6 +9,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { Lightbox, type LightboxImage } from "@/components/Lightbox.tsx";
+import { DeckViewer } from "@/features/deck/DeckViewer.tsx";
 import { MermaidRenderer } from "@/features/markdown/MermaidRenderer.tsx";
 import { StlViewer } from "@/features/markdown/StlViewer.tsx";
 import { useT } from "@/lib/i18n.ts";
@@ -47,6 +48,19 @@ export function Prose({ html, needsKatex }: { html: string; needsKatex?: boolean
     for (const el of container.querySelectorAll<HTMLElement>(".mermaid-placeholder")) {
       const root = createRoot(el);
       root.render(<MermaidRenderer chart={el.dataset.chart ?? ""} />);
+      roots.push(root);
+    }
+    // ```marp fence 的嵌入幻灯片（tools/deck.ts 占位结构）：从 DOM 提取构建期
+    // 样式与幻灯片 HTML，交给 DeckViewer 重渲染增强版（无 JS 时占位结构本身
+    // 就是完整堆叠视图）。锁定文解锁注入的明文同样走这里（html 变化重挂）。
+    for (const el of container.querySelectorAll<HTMLElement>(".deck-embed")) {
+      const css = el.querySelector("style[data-deck-css]")?.textContent ?? "";
+      const body = el.querySelector("[data-deck-content]")?.innerHTML ?? "";
+      if (body === "") {
+        continue;
+      }
+      const root = createRoot(el);
+      root.render(<DeckViewer css={css} embedded html={body} />);
       roots.push(root);
     }
     for (const el of container.querySelectorAll<HTMLElement>(".stl-placeholder")) {
@@ -113,6 +127,10 @@ export function Prose({ html, needsKatex }: { html: string; needsKatex?: boolean
     const onClick = (event: MouseEvent) => {
       const target = event.target;
       if (!(target instanceof HTMLImageElement) || !container.contains(target)) {
+        return;
+      }
+      // 嵌入幻灯片内的图片由 DeckViewer 自管（翻页语义），不进全文灯箱
+      if (target.closest(".deck-embed")) {
         return;
       }
       const images = [...container.querySelectorAll("img")];

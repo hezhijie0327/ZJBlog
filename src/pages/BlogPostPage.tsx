@@ -11,7 +11,9 @@ import { PostNav } from "@/components/PostNav.tsx";
 import { TableOfContents } from "@/components/TableOfContents.tsx";
 import { TagList } from "@/components/TagList.tsx";
 import { GiscusComments } from "@/features/comments/GiscusComments.tsx";
+import { DeckViewer } from "@/features/deck/DeckViewer.tsx";
 import { Prose } from "@/features/markdown/Prose.tsx";
+import { cn } from "@/lib/cn.ts";
 import { formatDateISO } from "@/lib/format.ts";
 import { useT } from "@/lib/i18n.ts";
 import { getCachedUnlock, type UnlockedBundle } from "@/lib/locked.ts";
@@ -52,7 +54,8 @@ export function BlogPostPage({ data }: { data: BlogPostData }) {
       </header>
 
       <div className="mx-auto flex max-w-6xl justify-center gap-10">
-        <article className="min-w-0 max-w-3xl flex-1">
+        {/* 幻灯片正文列放宽：16:9 画布在 3xl 里太小 */}
+        <article className={cn("min-w-0 flex-1", post.deck ? "max-w-5xl" : "max-w-3xl")}>
           {post.locked && !unlocked ? (
             /* 锁定文：锁屏即正文位。摘要/目录/评论同属内容，一并隐去 */
             <LockScreen locked={post.locked} onUnlock={setUnlocked} slug={post.slug} />
@@ -66,8 +69,14 @@ export function BlogPostPage({ data }: { data: BlogPostData }) {
                 </div>
               )}
 
-              {/* 正文（加密文 = 解锁后的明文；普通文 = payload 注入） */}
-              <Prose html={html} needsKatex={post.needsKatex} />
+              {/* 正文（加密文 = 解锁后的明文；普通文 = payload 注入）。
+                  整篇幻灯片（frontmatter deck: true）由播放器替代 Prose：
+                  首帧全量堆叠进 DOM（无 JS 可读），挂载后升级逐页播放 */}
+              {post.deck ? (
+                <DeckViewer css={post.deck.css} html={html} />
+              ) : (
+                <Prose html={html} needsKatex={post.needsKatex} />
+              )}
 
               {/* 上一篇 / 下一篇 */}
               <PostNav next={post.next} prev={post.prev} />
@@ -81,8 +90,9 @@ export function BlogPostPage({ data }: { data: BlogPostData }) {
           )}
         </article>
 
-        {/* 目录右栏：宽屏 sticky 跟随；锁定文目录随正文解密后才可用 */}
-        {(unlocked || !post.locked) && (
+        {/* 目录右栏：宽屏 sticky 跟随；锁定文目录随正文解密后才可用。
+            整篇幻灯片无目录（toc 恒空），不渲染右栏 */}
+        {(unlocked || !post.locked) && !post.deck && (
           <aside className="hidden w-60 shrink-0 xl:block">
             <TableOfContents items={toc} />
           </aside>

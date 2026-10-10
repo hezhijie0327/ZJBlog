@@ -1,7 +1,7 @@
 // 文章列表（BlogsPage 与标签筛选页共用）：幽灵日期水印 + 衬线标题 +
 // 元信息 + 摘要 + 标签行。水印为纯装饰（aria-hidden，横向裁切防溢出）。
 
-import { ArrowUpRight, Lock } from "lucide-react";
+import { ArrowUpRight, Lock, Presentation } from "lucide-react";
 import { Link } from "@/components/Shell.tsx";
 import { TagList } from "@/components/TagList.tsx";
 import { formatDateISO } from "@/lib/format.ts";
@@ -35,6 +35,16 @@ export function PostList({ blogs }: { blogs: BlogListItem[] }) {
                     <>
                       <span className="sr-only">（{t("post.locked")}）</span>
                       <Lock aria-hidden="true" className="ml-1.5 inline size-4 align-baseline text-accent-strong" />
+                    </>
+                  )}
+                  {/* 整篇幻灯片角标 */}
+                  {blog.deck && (
+                    <>
+                      <span className="sr-only">（{t("blog.deck")}）</span>
+                      <Presentation
+                        aria-hidden="true"
+                        className="ml-1.5 inline size-4 align-baseline text-accent-strong"
+                      />
                     </>
                   )}
                 </h2>

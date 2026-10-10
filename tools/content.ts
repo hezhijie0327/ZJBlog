@@ -20,13 +20,13 @@ import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
-import { createHighlighter } from "shiki";
 import { type Processor, unified } from "unified";
 import type { Node } from "unist";
 import { visit } from "unist-util-visit";
-import type { LockedContent, TocItem } from "../src/lib/types.ts";
+import type { DeckMeta, LockedContent, TocItem } from "../src/lib/types.ts";
 import { remarkCallouts } from "./callouts";
 import { deriveSecretKeys, encryptBundle, type SecretRef } from "./crypto";
+import { compileDeck, renderDeckEmbed } from "./deck";
 import {
   plantumlFigure,
   renderGeoSvg,
@@ -34,35 +34,11 @@ import {
   translateFlowToMermaid,
   translateSequenceToMermaid,
 } from "./diagrams";
+import { decodeEntities, escapeAttr, escapeHtml } from "./html.ts";
 import { noteImageRefs, sealImagesForPost } from "./lockedImages";
+import { highlightCode } from "./shiki.ts";
 
 const contentDirectory = path.join(process.cwd(), "content");
-
-// shiki 构建期语法高亮：双主题（defaultColor:false 输出 CSS 变量，prose.css
-// 按 html.dark 切换）。两个主题都是 WCAG 高对比变体，且站点代码底色在各自
-// 基准底的有利方向上（浅态更浅 / 暗态更暗），全部语法色 AA 达标 —— 这是
-// 审计门禁对代码文本的硬要求（普通暗色主题在浅暖底上必然失守）。
-const SHIKI_LIGHT = "github-light-high-contrast";
-const SHIKI_DARK = "github-dark-high-contrast";
-const SHIKI_LANGS = [
-  "bash",
-  "typescript",
-  "javascript",
-  "python",
-  "yaml",
-  "go",
-  "dockerfile",
-  "json",
-  "toml",
-  "ini",
-  "css",
-  "batch",
-  "text",
-] as const;
-const highlighter = await createHighlighter({
-  langs: [...SHIKI_LANGS],
-  themes: [SHIKI_LIGHT, SHIKI_DARK],
-});
 
 // ==高亮==（Pandoc/Typora 风格）：micromark 微扩展经标准注入点挂进 remark-parse。
 // 注意 data(key, value) 是整体替换而非追加 —— 必须读出现有列表再 push，
@@ -153,51 +129,11 @@ const processor = unified()
   .use(rehypeExternalLinks, { rel: ["noopener", "noreferrer"], target: "_blank" })
   .use(rehypeStringify);
 
-/** 解码 rehype-stringify 的字符引用（喂给 shiki / TOC 文本前必须还原原文）。
- *  顺序敏感：先解命名/数字实体，最后解 &amp; —— 否则 "&amp;lt;" 会被
- *  二次解码成 "<"。 */
-function decodeEntities(text: string): string {
-  return text
-    .replaceAll("&lt;", "<")
-    .replaceAll("&gt;", ">")
-    .replaceAll("&quot;", '"')
-    .replaceAll("&#39;", "'")
-    .replaceAll("&#x27;", "'")
-    .replaceAll("&#x3C;", "<")
-    .replaceAll("&#x3c;", "<")
-    .replaceAll("&#x26;", "&")
-    .replaceAll("&#x60;", "`")
-    .replaceAll("&amp;", "&");
-}
-
-function escapeAttr(text: string): string {
-  return text.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;");
-}
-
-function escapeHtml(text: string): string {
-  return text.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
-}
-
-/** 目录条目类型 TocItem 与客户端契约同源（src/lib/types.ts）：构建期提取，
- *  id 与 rehype-slug 生成的锚点一致。 */
-
 /** 单个代码块 → code-card HTML（语言标签 + 复制按钮 + shiki 高亮）。
  *  未识别语言回退纯 <pre><code>，不吞内容。 */
 function renderCodeBlock(lang: string, code: string): string {
   const label = lang || "text";
-  let body: string;
-  try {
-    body = highlighter
-      .codeToHtml(code, {
-        lang: label,
-        themes: { light: SHIKI_LIGHT, dark: SHIKI_DARK },
-        defaultColor: false,
-      })
-      .replace(/ tabindex="0"/g, "");
-  } catch {
-    body = `<pre><code>${escapeHtml(code)}</code></pre>`;
-  }
-  return `<div class="code-card" data-lang="${escapeAttr(label)}"><div class="code-card-head"><span class="code-lang">${escapeHtml(label)}</span><button class="copy-code" type="button">复制</button></div>${body}</div>`;
+  return `<div class="code-card" data-lang="${escapeAttr(label)}"><div class="code-card-head"><span class="code-lang">${escapeHtml(label)}</span><button class="copy-code" type="button">复制</button></div>${highlightCode(lang, code)}</div>`;
 }
 
 /** 图示卡外壳：与 code-card 同语言的头部标签（无复制按钮）。 */
@@ -256,6 +192,15 @@ function compileMarkdown(markdown: string): { html: string; toc: TocItem[] } {
         if (lang === "mermaid") {
           return `<div class="mermaid-placeholder" data-chart="${escapeAttr(decoded)}"></div>`;
         }
+        // Marpit 幻灯片（marp / deck fence）：构建期编译为嵌入占位结构，
+        // 数据非法回退普通代码块，不吞内容
+        if (lang === "marp" || lang === "deck") {
+          try {
+            return renderDeckEmbed(compileDeck(decoded));
+          } catch {
+            return renderCodeBlock(lang, decoded);
+          }
+        }
         if (lang) {
           const diagram = renderDiagram(lang, decoded);
           if (diagram !== undefined) {
@@ -303,6 +248,10 @@ export interface BlogEntry {
   toc: TocItem[];
   /** 原始 Markdown 正文（llms-full.txt 用，不进页面 payload） */
   content: string;
+  /** 幻灯片 deck 元信息（frontmatter deck: true 的博文）：css 随 payload 出站
+   *  （head 不随 SPA 换页，样式须可换页注入），幻灯片 HTML 走 contentHtml 的
+   *  DOM 单份契约 */
+  deck?: DeckMeta;
   /** 加密信封（frontmatter.secret 命中时有值）：contentHtml/toc/content 均
    *  不出站（构建内存私有），仅信封随 payload 落盘，客户端解锁后还原 */
   locked?: LockedContent;
@@ -344,6 +293,8 @@ type RawEntry = {
   locked?: LockedContent;
   /** frontmatter secret 名（blogs/travels；密封阶段据此生成信封） */
   secretName?: string;
+  /** 整篇幻灯片（frontmatter deck: true，仅 blogs） */
+  deck?: DeckMeta;
   /** 旅行专属（travels） */
   place?: string;
   coords?: [number, number];
@@ -396,6 +347,7 @@ const FRONTMATTER_KEYS = new Set([
   "draft",
   "summary",
   "secret",
+  "deck",
 ]);
 
 /** travels 专属白名单（body 为故事正文；photo 走正文 Markdown 图片）。 */
@@ -467,7 +419,6 @@ function readEntries(type: "blogs" | "projects" | "travels"): RawEntry[] {
     if (data.draft === true) {
       continue;
     }
-    const compiled = compileMarkdown(content);
     // secret: <name> → 加密内容（blogs/travels；projects 无锁屏 UI）。信封在
     // loadContent 的密封阶段生成 —— 独占图判定需要全站引用图先完成。
     // 口令缺失时 deriveSecretKeys 阶段的 loadSecret 直接抛错，fail-closed。
@@ -480,6 +431,24 @@ function readEntries(type: "blogs" | "projects" | "travels"): RawEntry[] {
           : `[content] ${type}/${slug}.md: secret 需为非空字符串，已忽略`,
       );
     }
+    // deck: true → 整篇幻灯片（Marpit 方言，tools/deck.ts）。与 secret 组合
+    // 直接构建失败：v1 不做幻灯片加密，静默按明文处理违背 fail-closed。
+    const isDeck = data.deck === true;
+    if (data.deck !== undefined && !isDeck) {
+      console.warn(`[content] ${type}/${slug}.md: deck 需为 true，已按普通文章处理`);
+    }
+    if (isDeck && secretName !== undefined) {
+      throw new Error(`[content] ${type}/${slug}.md: deck 与 secret 暂不支持组合（幻灯片不做加密），请去掉其一`);
+    }
+    const deckPost = isDeck ? compileDeck(content) : undefined;
+    const compiled = deckPost
+      ? {
+          html: deckPost.slides.join("\n"),
+          toc: [] as TocItem[],
+          css: deckPost.css,
+          count: deckPost.count,
+        }
+      : compileMarkdown(content);
     // 旅行专属字段：coords 必须是 [lng, lat] 数值对，companion 缺省按情侣同行
     let coords: [number, number] | undefined;
     if (type === "travels") {
@@ -516,6 +485,7 @@ function readEntries(type: "blogs" | "projects" | "travels"): RawEntry[] {
       toc: compiled.toc,
       content,
       secretName,
+      deck: deckPost ? { css: deckPost.css } : undefined,
       place: type === "travels" && typeof data.place === "string" && data.place !== "" ? data.place : undefined,
       coords,
       endDate: type === "travels" ? parseDate(type, slug, data.endDate) : undefined,
@@ -631,6 +601,7 @@ export function loadContent(): ContentIndex {
       needsKatex: entry.needsKatex ?? false,
       toc: entry.toc ?? [],
       content: entry.content ?? "",
+      deck: entry.deck,
       locked: entry.locked,
     });
     const toProject = (entry: RawEntry): ProjectEntry => ({

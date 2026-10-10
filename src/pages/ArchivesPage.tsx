@@ -1,6 +1,6 @@
 // 归档页：按年份分组的全部文章。
 
-import { Lock } from "lucide-react";
+import { Lock, Presentation } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState.tsx";
 import { SectionHeading } from "@/components/SectionHeading.tsx";
 import { Link } from "@/components/Shell.tsx";
@@ -66,6 +66,12 @@ export function ArchivesPage({ data }: { data: ArchivesData }) {
                           <>
                             <span className="sr-only">（{t("post.locked")}）</span>
                             <Lock aria-hidden="true" className="size-3.5 shrink-0 text-accent-strong" />
+                          </>
+                        )}
+                        {blog.deck && (
+                          <>
+                            <span className="sr-only">（{t("blog.deck")}）</span>
+                            <Presentation aria-hidden="true" className="size-3.5 shrink-0 text-accent-strong" />
                           </>
                         )}
                         {blog.category && (

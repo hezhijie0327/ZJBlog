@@ -25,6 +25,15 @@ export interface TocItem {
   depth: 2 | 3;
 }
 
+/** 幻灯片 deck 元信息（frontmatter deck: true 的博文）。css 随 payload 走：
+ *  head 不随 SPA 换页（router 只换 title/description），样式必须可在换页后
+ *  注入；幻灯片 HTML 本体走 contentHtml 的 DOM 单份契约（data-deck-content），
+ *  页数由播放器运行时从 HTML 推导。 */
+export interface DeckMeta {
+  /** marpit 生成的主题样式（scoping 到 div.marpit > section） */
+  css: string;
+}
+
 /** 旅行地图画布的用户坐标尺寸：tools/travelMap.ts 的 viewBox 与客户端
  *  控制器（TravelsPage 缩放/平移的坐标换算）共用，防止两处漂移。 */
 export const TRAVEL_MAP_SIZE = { w: 1280, h: 484 } as const;
@@ -72,6 +81,8 @@ export interface BlogListItem {
   readingMinutes: number;
   /** 加密博文：列表仅公开标题等元信息（description 即内容摘要，绝不公开），正文需密码解锁 */
   locked?: boolean;
+  /** 整篇幻灯片（frontmatter deck: true），列表渲染角标 */
+  deck?: true;
 }
 
 export interface ProjectListItem {
@@ -101,8 +112,9 @@ export interface BlogPostData {
   globals: PageGlobals & { page: "blog-post" };
   /** contentHtml 不进 page-data 脚本（长文会让文档体积翻倍）：正文单份存于
    *  DOM，由启动管道（首帧）与换页管道（fetch 解析）注入后才存在。
-   *  注意 locked 在列表项上是布尔标记、在这里是密文信封，故 Omit 后重定义。 */
-  post: Omit<BlogListItem, "locked"> & {
+   *  注意 locked 在列表项上是布尔标记、在这里是密文信封；deck 在列表项上是
+   *  布尔标记、在这里是 { css } 元信息，均 Omit 后重定义。 */
+  post: Omit<BlogListItem, "locked" | "deck"> & {
     toc: TocItem[];
     contentHtml?: string;
     /** 正文含 KaTeX 公式：页面需加载 katex.min.css（SSR 注入 / Prose 补注） */
@@ -112,6 +124,8 @@ export interface BlogPostData {
     /** 加密信封（有值 = 锁定文）：contentHtml/toc/summary 不出现在 payload，
      *  锁屏解锁后由客户端解密还原正文 */
     locked?: LockedContent;
+    /** 幻灯片 deck 元信息（有值 = 整篇幻灯片，DeckViewer 替代 Prose） */
+    deck?: DeckMeta;
     /** 时间线上更旧 / 更新的一篇（构建期算好；边界为 undefined） */
     prev?: PostNavLink;
     next?: PostNavLink;

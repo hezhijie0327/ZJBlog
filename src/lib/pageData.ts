@@ -11,6 +11,18 @@ import { type AnyPageData, isBlogPostData, isProjectData, isTravelData, isTravel
 /** 单份存于 DOM 的字段就地注回 payload。加密博文/旅行跳过：锁屏页没有
  *  正文 DOM，锁定 payload 永远不该被回填。 */
 function attachProseHtml(doc: Document, data: AnyPageData): AnyPageData {
+  if (
+    isBlogPostData(data) &&
+    data.post.deck !== undefined &&
+    data.post.contentHtml === undefined &&
+    data.post.locked === undefined
+  ) {
+    // 整篇幻灯片：DeckViewer 的标记槽（.prose 是普通文章的选择器，二者互斥）
+    const html = doc.querySelector("[data-deck-content]")?.innerHTML;
+    if (html !== undefined) {
+      return { ...data, post: { ...data.post, contentHtml: html } };
+    }
+  }
   if (isBlogPostData(data) && data.post.contentHtml === undefined && data.post.locked === undefined) {
     const html = doc.querySelector(".prose")?.innerHTML;
     if (html !== undefined) {
