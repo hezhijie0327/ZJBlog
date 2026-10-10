@@ -21,6 +21,9 @@ section {
   line-height: 1.65;
 }
 
+/* 页题层级说明：deck.ts 构建期把标题整体降一级（h1 让给文章题），因此
+ * `#` 页题渲染为 h2、`##` 子标题渲染为 h3——主题按降级后的真实层级配置
+ * 字号（60/44/32），不要按源码层级思维调这里。 */
 h1,
 h2,
 h3,
@@ -34,19 +37,25 @@ h6 {
   color: var(--ink);
 }
 
-h1 {
+h1,
+h2 {
   font-size: 60px;
   margin: 0 0 28px;
 }
 
-h2 {
+h3 {
   font-size: 44px;
   margin: 0 0 24px;
 }
 
-h3 {
+h4 {
   font-size: 32px;
   margin: 0 0 18px;
+}
+
+h5 {
+  font-size: 26px;
+  margin: 0 0 16px;
 }
 
 p {
@@ -107,6 +116,18 @@ section code {
   border: 1px solid var(--line);
   border-radius: 6px;
   padding: 0.08em 0.35em;
+}
+
+/* 键位芯片（raw HTML <kbd>） */
+section kbd {
+  font-family: var(--font-mono);
+  font-size: 0.8em;
+  color: var(--ink);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-bottom-width: 2px;
+  border-radius: 8px;
+  padding: 0.1em 0.5em;
 }
 
 /* 代码块（deck.ts 构建期已重高亮为 shiki 双主题变量；亮态默认值在此，
@@ -180,7 +201,8 @@ section.lead {
   text-align: center;
 }
 
-section.lead h1 {
+section.lead h1,
+section.lead h2 {
   font-size: 76px;
 }
 

@@ -34,12 +34,19 @@ function plgDevServer(): Plugin {
     configureServer(server: ViteDevServer) {
       server.watcher.add("content");
       // content 下的文件变动必须让 SSR 模块失效：loadContent 的索引缓存在
-      // 模块作用域里，不失效的话新增/移动/删除 md 在 dev 里都不生效
+      // 模块作用域里，不失效的话新增/移动/删除 md 在 dev 里都不生效。
+      // vite 6+ 按环境拆分模块图——server.moduleGraph 只覆盖 client，
+      // ssrLoadModule 的缓存挂在 ssr 环境上，两端都要失效（只调前者时
+      // 内容改动在 dev 里永远拿旧编译）。
       const invalidateContent = (file: string) => {
-        if (!file.includes("/content/")) {
+        // watcher 事件在 Windows 下是「相对路径 + 反斜杠」（实测
+        // content\blogs\x.md），规范化后按路径段锚定匹配，避免误伤
+        // mycontent/ 一类目录名
+        if (!/(^|\/)content\//.test(file.replaceAll("\\", "/"))) {
           return;
         }
         server.moduleGraph.invalidateAll();
+        server.environments.ssr.moduleGraph.invalidateAll();
         server.ws.send({ type: "full-reload" });
       };
       server.watcher.on("add", invalidateContent);

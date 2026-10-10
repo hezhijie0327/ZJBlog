@@ -74,7 +74,11 @@ function postProcessSlide(page: string, index: number, notes: readonly string[])
 /** Markdown（Marpit 方言）→ 逐页 HTML + 主题 CSS。渲染错误直接上抛构建失败
  *  （fail-closed，与站内管线的信任模型一致）。 */
 export function compileDeck(markdown: string): DeckResult {
-  const { html: pages, css, comments } = marpit.render(markdown, { htmlAsArray: true });
+  // gray-matter 的 content 以换行开头，而 marpit 的 front-matter 插件要求
+  // 指令块位于文档第 0 个字符——前导空白会让指令块漏解析，`---` 被当成
+  // markdown 渲染（实测产生空页 + 指令段落被 underline 成标题）
+  const source = markdown.replace(/^\s+/, "");
+  const { html: pages, css, comments } = marpit.render(source, { htmlAsArray: true });
   const list = Array.isArray(pages) ? pages : [pages];
   const slides = list.map((page, index) => postProcessSlide(page, index, comments[index] ?? []));
   return { slides, css, count: slides.length };
