@@ -49,7 +49,7 @@ export function GiscusComments() {
   const theme = typeof window === "undefined" ? "" : `${window.location.origin}/giscus-${dark ? "dark" : "light"}.css`;
 
   return (
-    <section className="mt-14 border-t border-line pt-8" ref={containerRef}>
+    <section className="print-hide mt-14 border-t border-line pt-8" ref={containerRef}>
       {/* 文章标题是 h1，评论区是次级章节，用 h2 保持层级连续 */}
       <h2 className="mb-6 flex items-center gap-2 font-serif text-lg font-semibold text-ink">
         <MessageSquare aria-hidden="true" className="size-4 text-ink-3" />

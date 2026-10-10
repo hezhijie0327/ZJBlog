@@ -33,6 +33,7 @@ import { ProjectsPage } from "../src/pages/ProjectsPage.tsx";
 import { SupportPage } from "../src/pages/SupportPage.tsx";
 import { TravelPage } from "../src/pages/TravelPage.tsx";
 import { TravelsPage } from "../src/pages/TravelsPage.tsx";
+import { loadContent } from "./content.ts";
 import {
   generateLlms,
   generateLlmsFull,
@@ -271,6 +272,23 @@ export async function renderRoute(rawPath: string, assets?: AssetUrls): Promise<
   ].join("\n    ");
   const jsonLd = jsonLdFor(payload, pathname);
   const jsonLdTag = jsonLd ? `<script type="application/ld+json">${jsonLd.replaceAll("<", "\\u003c")}</script>` : "";
+  // 原始 Markdown 直链（复制为 Markdown / agent 直取，prerenderAll 落盘
+  // index.md）；锁定文不提供。三种详情页各指自己的 <kind>/<slug>/index.md。
+  const markdownAltHref = (() => {
+    if (isBlogPostData(payload) && payload.post.locked === undefined) {
+      return `${g.siteUrl}/blogs/${encodeURIComponent(payload.post.slug)}/index.md`;
+    }
+    if (isTravelData(payload) && payload.trip.locked === undefined) {
+      return `${g.siteUrl}/travels/${encodeURIComponent(payload.trip.slug)}/index.md`;
+    }
+    if (isProjectData(payload)) {
+      return `${g.siteUrl}/projects/${encodeURIComponent(payload.project.slug)}/index.md`;
+    }
+    return "";
+  })();
+  const markdownAltTag = markdownAltHref
+    ? `<link rel="alternate" type="text/markdown" href="${escapeHtml(markdownAltHref)}">`
+    : "";
   // KaTeX 样式只服务正文深处的公式（首屏不可见），以 print→all 异步技巧
   // 加载避免阻塞首帧（实测 desktop 审计 97→99）；noscript 兜底无 JS 场景。
   // 生产指向拷贝到 dist 的文件，dev 直连 node_modules（/@fs/ 需要 URL 形态
@@ -315,6 +333,7 @@ export async function renderRoute(rawPath: string, assets?: AssetUrls): Promise<
     <title>${escapeHtml(g.title)}</title>
     <meta name="description" content="${escapeHtml(g.description)}">
     ${canonical}
+    ${markdownAltTag}
     ${ogTags}
     ${jsonLdTag}
     <link rel="manifest" href="/manifest.json">
@@ -353,6 +372,30 @@ export async function prerenderAll(): Promise<void> {
 
   // 404 页（wrangler not_found_handling = 404-page 时直接服用）
   writeFileSync(path.join(DIST_DIR, "404.html"), await renderRoute("/__not_found__", assets));
+
+  // 原始 Markdown 导出（「复制为 Markdown」按钮的数据源 + agent 直取的
+  // index.md 直链，<head> 有 alternate 指向）：未锁定内容各落一份原文，
+  // 100% 保真；锁定文不落盘（fail-closed，页面也不渲染按钮）。deck 文
+  // 导出的就是标准 Marp 文档。
+  const markdownTargets: Array<readonly ["blogs" | "projects" | "travels", { slug: string; locked?: unknown }]> = [
+    ...loadContent().blogs.map((entry) => ["blogs", entry] as const),
+    ...loadContent().projects.map((entry) => ["projects", entry] as const),
+    ...loadContent().travels.map((entry) => ["travels", entry] as const),
+  ];
+  let markdownCount = 0;
+  for (const [kind, entry] of markdownTargets) {
+    if (entry.locked !== undefined) {
+      continue;
+    }
+    const sourcePath = path.join(process.cwd(), "content", kind, `${entry.slug}.md`);
+    const filePath = path.join(DIST_DIR, kind, decodeURIComponent(entry.slug), "index.md");
+    mkdirSync(path.dirname(filePath), { recursive: true });
+    writeFileSync(filePath, readFileSync(sourcePath, "utf8"));
+    markdownCount += 1;
+  }
+  if (markdownCount > 0) {
+    console.log(`  exported ${markdownCount} markdown file(s) (index.md)`);
+  }
 
   // 机器可读静态文件
   const staticFiles: Array<[string, string]> = [

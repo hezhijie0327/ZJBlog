@@ -188,6 +188,21 @@ deck 文（frontmatter `deck: true` 或正文 marp fence）的视觉契约：构
 | 行内标签与图片 | `<mark>`（`--highlight-bg`）/`<kbd>`/`<u>`（accent 下划线）/`<del>`（ink-3）/上下标有主题样式（样式归主题，标签是原生 HTML）；图片修饰符 `w:`/`h:`/`bg fit` 可用，图片 `max-height: 480px` 防顶出画布 |
 | 无 JS | `<noscript>` 样式（`DECK_NOSCRIPT_CSS`）展开全页堆叠，`zoom` 布局缩放（transform 不参与布局，父级拿不到实际高度） |
 
+### 5.3 打印 / 导出（家族契约，与 ZJSearch print 管线统一）
+
+「打印 / 存为 PDF」走浏览器打印（`styles/print.css` + `lib/print.ts` 的 `startPrintPreview`），机制与 ZJSearch `client/zjsearch/src/styles/print.css` + `lib/print.ts` 同源（§17：两侧改动须同步）：
+
+| 机制 | 契约 |
+|---|---|
+| 纸面永远浅色 | 色 token 均为 @property 注册色、初值即浅色——`.dark` 覆写用 `--token: initial` 归位，零 hex 复制；特例 `--bg: #ffffff`（暖白贴 @page 白边像污渍）+ `color-scheme: light`；`html { transition: none }` 防交叉淡化渗入快照；`* { print-color-adjust: exact }` |
+| 预览脸 | 嵌入式 webview 的 print 是静默 no-op（ZJSearch 实测另有幽灵 afterprint）——`startPrintPreview` 先让纸面可见（`body.print-preview` 强制纸面样式上屏 + 关闭芯片 + Esc），双 rAF 后 `window.print()`；真浏览器对话框盖在纸面上方；文件名 = 打印期 `document.title = zjblog_<标题>`（teardown 恢复） |
+| chrome 隐藏 | `.print-hide` 钩子类（本站命名，对位 ZJSearch `.zjs-print-hide`）+ 结构选择器（app-bar/footer/aside）；`.fixed/.sticky → static`；`@media print` 与 `body.print-preview` 两份列表须保持同步（ZJSearch 同款取舍） |
+| 深色 mermaid | 颜色烤进 svg 的组件打印前经文档事件（`blog:print-mermaid-light` / `-restore`）以浅色主题就地重渲染、关闭恢复；外部 Ctrl+P 不走此管线（保持当前主题，已知降级） |
+| 内容完整 | 画布/正文全量常驻 DOM（deck 换页只逐节切 `hidden`）；打印时隐藏页揭示、代码卡/表格 `break-inside: avoid`、外链 `::after` 展开 href、deck 靠 marpit 自带 `@page 1280×720` + 逐页 break（print.css 的 `@page a4` 只服务文章，级联被 deck 页后置覆盖） |
+| 复制为 Markdown | 构建期为未锁定内容落 `<kind>/<slug>/index.md`（原文保真；锁定文不落盘不渲染按钮——fail-closed）；`compress-images` 改写面含 `.md`；`_headers` 对 `/<kind>/*/index.md` 显式 `text/markdown; charset=utf-8`；`<head>` 带 alternate 直链 |
+
+**不做**：构建期真 PDF（需 Chromium）、PPTX（marp-cli 同款也只是图片贴片）。
+
 
 ## 6. 空间与层级（Layout Principles & Depth）
 

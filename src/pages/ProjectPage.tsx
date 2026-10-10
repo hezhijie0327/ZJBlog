@@ -3,6 +3,8 @@
 
 import { ArrowUpRight } from "lucide-react";
 import { BackLink } from "@/components/BackLink.tsx";
+import { CopyMarkdownButton } from "@/components/CopyMarkdownButton.tsx";
+import { PrintButton } from "@/components/PrintButton.tsx";
 import { TagList } from "@/components/TagList.tsx";
 import { GiscusComments } from "@/features/comments/GiscusComments.tsx";
 import { Prose } from "@/features/markdown/Prose.tsx";
@@ -34,9 +36,15 @@ export function ProjectPage({ data }: { data: ProjectData }) {
             width={1280}
           />
         )}
-        <h1 className="font-serif text-3xl font-black leading-tight tracking-tight text-ink sm:text-4xl">
-          {project.title}
-        </h1>
+        <div className="flex items-start justify-between gap-4">
+          <h1 className="font-serif text-3xl font-black leading-tight tracking-tight text-ink sm:text-4xl">
+            {project.title}
+          </h1>
+          <div className="flex shrink-0 items-center gap-1 pt-1 print-hide">
+            <CopyMarkdownButton href={`/projects/${encodeURIComponent(project.slug)}/index.md`} />
+            <PrintButton titleBase={project.title} />
+          </div>
+        </div>
         {project.description && (
           <p className="mt-4 max-w-2xl text-base leading-relaxed text-ink-2">{project.description}</p>
         )}

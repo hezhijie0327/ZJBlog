@@ -10,6 +10,7 @@
 @import "./base.css";
 @import "./prose.css";
 @import "./behaviors.css";
+@import "./print.css";
 @plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:where(.dark, .dark *));

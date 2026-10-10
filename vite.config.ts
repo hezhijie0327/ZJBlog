@@ -6,6 +6,7 @@
 // 预渲染把每条路由写成完整 HTML（dist/<route>/index.html），站内导航由
 // fetch-and-swap 路由接管（见 src/lib/router.tsx）。
 
+import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import browserslistToEsbuild from "browserslist-to-esbuild";
@@ -82,6 +83,41 @@ function plgDevServer(): Plugin {
               res.end();
               return;
             }
+          } catch (error) {
+            next(error);
+            return;
+          }
+        }
+        // 导出的原始 Markdown（与生产 index.md 同源同语义）：dev 直接服
+        // content/ 原文；锁定文 404（fail-closed，与 prerender 不落盘一致）
+        const mdMatch = /\/(blogs|projects|travels)\/(.+)\/index\.md$/.exec(path);
+        if (mdMatch) {
+          try {
+            const mod = (await server.ssrLoadModule("/tools/content.ts")) as {
+              loadContent: () => {
+                blogs: Array<{ slug: string; locked?: unknown }>;
+                projects: Array<{ slug: string; locked?: unknown }>;
+                travels: Array<{ slug: string; locked?: unknown }>;
+              };
+            };
+            const kind = mdMatch[1] as "blogs" | "projects" | "travels";
+            let slug = mdMatch[2] ?? "";
+            try {
+              slug = decodeURIComponent(slug);
+            } catch {
+              // 非法编码按原样处理
+            }
+            const entry = mod.loadContent()[kind].find((item) => item.slug === slug);
+            if (!entry || entry.locked !== undefined) {
+              res.statusCode = 404;
+              res.end();
+              return;
+            }
+            const markdown = readFileSync(`content/${kind}/${slug}.md`, "utf8");
+            res.statusCode = 200;
+            res.setHeader("Content-Type", "text/markdown; charset=utf-8");
+            res.end(markdown);
+            return;
           } catch (error) {
             next(error);
             return;

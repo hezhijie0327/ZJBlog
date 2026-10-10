@@ -13,10 +13,11 @@
 // 颜色一律 token。deck 主题 CSS（tools/deckTheme.css 经 marpit scoping）由
 // payload/占位结构带来，在此处一并注入。
 
-import { ChevronLeft, ChevronRight, Maximize, Minimize, StickyNote } from "lucide-react";
+import { ChevronLeft, ChevronRight, Maximize, Minimize, Printer, StickyNote } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/cn.ts";
 import { useT } from "@/lib/i18n.ts";
+import { startPrintPreview } from "@/lib/print.ts";
 import { CHIP, ICON_BTN, META } from "@/lib/styles.ts";
 
 export interface DeckViewerProps {
@@ -26,6 +27,8 @@ export interface DeckViewerProps {
   css?: string;
   /** 嵌入形态：无 #N 深链，键盘只在容器聚焦时生效 */
   embedded?: boolean;
+  /** 打印文件名主体（zjblog_<title>），嵌入场景由调用方给所在文章标题 */
+  titleBase?: string;
 }
 
 interface ParsedSlide {
@@ -112,6 +115,48 @@ const HOST_CSS = `
 .deck-stage {
   touch-action: pan-y;
 }
+/* ── 打印 / 预览纸面：舞台去裁剪、画布全量展开（marpit 自带
+ * @page 1280×720 与逐页 break 接管分页，即「打印为 PDF」）；
+ * chrome 隐藏、隐藏页揭示。@media print 与 body.print-preview（预览脸，
+ * 见 lib/print.ts / print.css）两份列表保持同步。 ── */
+@media print {
+  .deck-root [data-deck-chrome] {
+    display: none !important;
+  }
+  .deck-root .deck-stage {
+    aspect-ratio: auto !important;
+    overflow: visible !important;
+    height: auto !important;
+    border: none;
+    box-shadow: none;
+  }
+  .deck-root .deck-canvas {
+    position: static !important;
+    transform: none !important;
+    zoom: var(--deck-scale);
+  }
+  .deck-root .deck-canvas section[hidden] {
+    display: block !important;
+  }
+}
+.print-preview .deck-root [data-deck-chrome] {
+  display: none !important;
+}
+.print-preview .deck-root .deck-stage {
+  aspect-ratio: auto !important;
+  overflow: visible !important;
+  height: auto !important;
+  border: none;
+  box-shadow: none;
+}
+.print-preview .deck-root .deck-canvas {
+  position: static !important;
+  transform: none !important;
+  zoom: var(--deck-scale);
+}
+.print-preview .deck-root .deck-canvas section[hidden] {
+  display: block !important;
+}
 `;
 
 /** 无 JS 兜底：默认逐页形态把后续页裁剪在 16:9 舞台外，这里在无 JS 时把
@@ -126,14 +171,14 @@ export const DECK_NOSCRIPT_CSS = `
 .deck-root [data-deck-chrome] { display: none !important; }
 `;
 
-export function DeckViewer({ html, css, embedded = false }: DeckViewerProps) {
+export function DeckViewer({ html, css, embedded = false, titleBase }: DeckViewerProps) {
   const t = useT();
   // 默认逐页形态：SSR 直接渲染 16:9 舞台（画布含全部幻灯片、overflow 裁剪
   // 只露第一页），水合前后视觉零变化 → 零 CLS；无 JS 场景由 head 里的
   // <noscript> 样式（DECK_NOSCRIPT_CSS，ssr.tsx 条件注入）揭示堆叠视图。
-  // mounted 前画布保持全量 blob（与 SSR 同形，水合安全），之后逐页只渲染当前页。
+  // 画布恒为全量 DOM：换页只逐节切换 hidden 属性（不重排 innerHTML），
+  // 打印/预览因此任何时刻都拿得到全部页面。
   const [mode, setMode] = useState<"paged" | "stacked">("paged");
-  const [mounted, setMounted] = useState(false);
   const [active, setActive] = useState(0);
   const [showNotes, setShowNotes] = useState(false);
   // 全屏双轨：原生 Fullscreen API 在 webview/预览环境里可能半残（DOM 状态
@@ -164,9 +209,8 @@ export function DeckViewer({ html, css, embedded = false }: DeckViewerProps) {
     [total],
   );
 
-  // 挂载升级 + #N 深链消费（整篇模式）：舞台尺寸固定，换页内容不产生位移
+  // #N 深链消费（整篇模式）：舞台尺寸固定，换页内容不产生位移
   useEffect(() => {
-    setMounted(true);
     if (total === 0 || embedded) {
       return;
     }
@@ -175,6 +219,30 @@ export function DeckViewer({ html, css, embedded = false }: DeckViewerProps) {
       setActive(Math.min(initial, total - 1));
     }
   }, [embedded, total]);
+
+  // 换页 = 对全量 DOM 逐节切换 hidden（打印/预览需要全部页面常驻文档）；
+  // display:none ↔ block 会自动重放 CSS 换页动画。可见节就地补 aria 语义
+  // （画布是 dangerouslySetInnerHTML 的惰性 DOM，无法走 JSX 声明）。
+  // biome-ignore lint/correctness/useExhaustiveDependencies: 显式依赖 html——解锁/换页注入新 blob 后需重放 hidden 与 aria
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) {
+      return;
+    }
+    canvas.querySelectorAll("section").forEach((section, index) => {
+      const isActive = mode === "paged" && index === active;
+      section.toggleAttribute("hidden", mode === "paged" && index !== active);
+      if (isActive) {
+        section.setAttribute("role", "group");
+        section.setAttribute("aria-roledescription", t("deck.slide"));
+        section.setAttribute("aria-label", t("deck.slideN", { m: total, n: index + 1 }));
+      } else {
+        section.removeAttribute("role");
+        section.removeAttribute("aria-roledescription");
+        section.removeAttribute("aria-label");
+      }
+    });
+  }, [mode, active, html, total, t]);
 
   // 翻页后同步 hash（整篇模式）：hash-only replaceState 不触发 router 的
   // popstate 路由（已核实）；深链/hashchange 带来的 active 不回写
@@ -325,7 +393,8 @@ export function DeckViewer({ html, css, embedded = false }: DeckViewerProps) {
       <style dangerouslySetInnerHTML={{ __html: HOST_CSS }} />
       {css && <style dangerouslySetInnerHTML={{ __html: css }} />}
 
-      {/* 幻灯片画布：初始 = 全量堆叠（SSR/无 JS 形态，零 CLS）；逐页由手势进入 */}
+      {/* 幻灯片画布：恒为全量 DOM（SSR 同形；data-deck-content 供
+          pageData.ts 回填 contentHtml），换页由 effect 逐节 hidden */}
       <div
         className="deck-stage"
         onTouchEnd={(event) => {
@@ -344,26 +413,13 @@ export function DeckViewer({ html, css, embedded = false }: DeckViewerProps) {
         }}
         ref={stageRef}
       >
-        {mounted && mode === "paged" ? (
-          <div
-            aria-label={t("deck.slideN", { m: total, n: active + 1 })}
-            aria-roledescription={t("deck.slide")}
-            // marpit 主题 CSS scoping 在 div.marpit > section 下，容器类必须挂
-            className="deck-canvas marpit"
-            dangerouslySetInnerHTML={{ __html: current?.slide ?? "" }}
-            key={active}
-            role="group"
-          />
-        ) : (
-          // 全量 blob：水合首帧（与 SSR 同形）+ 连续浏览模式；首帧带
-          // data-deck-content，pageData.ts 据此回填 contentHtml
-          <div
-            className="deck-canvas marpit"
-            dangerouslySetInnerHTML={{ __html: html }}
-            data-deck-content
-            ref={canvasRef}
-          />
-        )}
+        {/* marpit 主题 CSS scoping 在 div.marpit > section 下，容器类必须挂 */}
+        <div
+          className="deck-canvas marpit"
+          dangerouslySetInnerHTML={{ __html: html }}
+          data-deck-content
+          ref={canvasRef}
+        />
       </div>
 
       {/* 演讲者备注面板：逐页模式下跟随当前页（构建期已转义） */}
@@ -425,6 +481,19 @@ export function DeckViewer({ html, css, embedded = false }: DeckViewerProps) {
             type="button"
           >
             {mode === "paged" ? t("deck.modeStacked") : t("deck.modePaged")}
+          </button>
+          <button
+            aria-label={t("deck.print")}
+            className={ICON_BTN}
+            onClick={() => {
+              // 打印走全量纸面（marpit @page 逐页 break 接管分页）
+              setMode("stacked");
+              startPrintPreview({ closeLabel: t("print.close"), titleBase: titleBase ?? "" });
+            }}
+            title={t("deck.print")}
+            type="button"
+          >
+            <Printer aria-hidden="true" className="size-4" />
           </button>
           <button
             aria-label={fullscreen ? t("deck.exitFullscreen") : t("deck.fullscreen")}

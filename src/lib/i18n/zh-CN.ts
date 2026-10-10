@@ -83,12 +83,17 @@ export const ZH_CN: Record<StringKey, string> = {
   "post.toc": "本页目录",
   "post.copyCode": "复制",
   "post.copied": "已复制",
+  "post.copyMarkdown": "复制为 Markdown",
+  "post.print": "打印 / 存为 PDF",
   "post.summary": "摘要",
   "post.prev": "上一篇",
   "post.next": "下一篇",
   "post.authorBy": "撰文 · {author}",
   "post.licenseNote": "转载请保留署名与链接",
   "post.storynav": "文章导航",
+
+  // 打印预览（家族契约：ZJSearch print 管线同款）
+  "print.close": "关闭预览",
 
   // 旅行（地图 + 明信片墙）
   "travel.eyebrow": "我们的步伐",
@@ -135,6 +140,7 @@ export const ZH_CN: Record<StringKey, string> = {
   "deck.modePaged": "逐页播放",
   "deck.fullscreen": "全屏放映",
   "deck.exitFullscreen": "退出全屏",
+  "deck.print": "打印幻灯片（每页一页）",
 
   // 归档
   "archives.empty": "暂无可归档的内容。",

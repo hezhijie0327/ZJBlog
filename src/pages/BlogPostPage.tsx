@@ -6,8 +6,10 @@ import { Clock } from "lucide-react";
 import { useState } from "react";
 import { AuthorCard } from "@/components/AuthorCard.tsx";
 import { BackLink } from "@/components/BackLink.tsx";
+import { CopyMarkdownButton } from "@/components/CopyMarkdownButton.tsx";
 import { LockScreen } from "@/components/LockScreen.tsx";
 import { PostNav } from "@/components/PostNav.tsx";
+import { PrintButton } from "@/components/PrintButton.tsx";
 import { TableOfContents } from "@/components/TableOfContents.tsx";
 import { TagList } from "@/components/TagList.tsx";
 import { GiscusComments } from "@/features/comments/GiscusComments.tsx";
@@ -39,9 +41,18 @@ export function BlogPostPage({ data }: { data: BlogPostData }) {
       {/* 文章头部：日期 · 阅读时长 · 分类一行，tags 与分类去重。
           页头直接置于 SECTION_DETAIL 容器下：全站标题同一左缘（DESIGN.md §6） */}
       <header className="mb-10 mt-8 border-b border-line pb-8">
-        <h1 className="font-serif text-3xl font-black leading-tight tracking-tight text-ink sm:text-4xl">
-          {post.title}
-        </h1>
+        <div className="flex items-start justify-between gap-4">
+          <h1 className="font-serif text-3xl font-black leading-tight tracking-tight text-ink sm:text-4xl">
+            {post.title}
+          </h1>
+          {/* 导出动作组（icon-only，DESIGN §5.3）；锁定文不提供任何导出 */}
+          {!post.locked && (
+            <div className="flex shrink-0 items-center gap-1 pt-1 print-hide">
+              <CopyMarkdownButton href={`/blogs/${encodeURIComponent(post.slug)}/index.md`} />
+              <PrintButton titleBase={post.title} />
+            </div>
+          )}
+        </div>
         <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 font-mono text-xs text-ink-3">
           {post.date && <time dateTime={post.date}>{formatDateISO(post.date)}</time>}
           <span className="inline-flex items-center gap-1">
@@ -73,7 +84,7 @@ export function BlogPostPage({ data }: { data: BlogPostData }) {
                   整篇幻灯片（frontmatter deck: true）由播放器替代 Prose：
                   首帧全量堆叠进 DOM（无 JS 可读），挂载后升级逐页播放 */}
               {post.deck ? (
-                <DeckViewer css={post.deck.css} html={html} />
+                <DeckViewer css={post.deck.css} html={html} titleBase={post.title} />
               ) : (
                 <Prose html={html} needsKatex={post.needsKatex} />
               )}

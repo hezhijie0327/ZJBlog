@@ -5,7 +5,9 @@
 import { Heart, MapPin, User } from "lucide-react";
 import { useState } from "react";
 import { BackLink } from "@/components/BackLink.tsx";
+import { CopyMarkdownButton } from "@/components/CopyMarkdownButton.tsx";
 import { LockScreen } from "@/components/LockScreen.tsx";
+import { PrintButton } from "@/components/PrintButton.tsx";
 import { GiscusComments } from "@/features/comments/GiscusComments.tsx";
 import { Prose } from "@/features/markdown/Prose.tsx";
 import { formatDateISO } from "@/lib/format.ts";
@@ -29,9 +31,18 @@ export function TravelPage({ data }: { data: TravelData }) {
       <BackLink href="/travels/" label={t("travel.back")} />
 
       <header className="mb-10 mt-8 border-b border-line pb-8">
-        <h1 className="font-serif text-3xl font-black leading-tight tracking-tight text-ink sm:text-4xl">
-          {trip.title}
-        </h1>
+        <div className="flex items-start justify-between gap-4">
+          <h1 className="font-serif text-3xl font-black leading-tight tracking-tight text-ink sm:text-4xl">
+            {trip.title}
+          </h1>
+          {/* 导出动作组；锁定旅行不提供任何导出 */}
+          {!trip.locked && (
+            <div className="flex shrink-0 items-center gap-1 pt-1 print-hide">
+              <CopyMarkdownButton href={`/travels/${encodeURIComponent(trip.slug)}/index.md`} />
+              <PrintButton titleBase={trip.title} />
+            </div>
+          )}
+        </div>
         <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 font-mono text-xs text-ink-3">
           {trip.date && (
             <time dateTime={trip.date}>

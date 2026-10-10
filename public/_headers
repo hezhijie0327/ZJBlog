@@ -24,6 +24,18 @@
 /robots.txt
   Content-Type: text/plain; charset=utf-8
 
+# 导出的原始 Markdown（详情页「复制为 Markdown」数据源 + agent 直取直链）：
+# 同上无文件内编码声明，显式 charset 防中文直开乱码。splat 覆盖三种详情页
+# 的 /<kind>/<slug>/index.md。
+/blogs/*/index.md
+  Content-Type: text/markdown; charset=utf-8
+
+/travels/*/index.md
+  Content-Type: text/markdown; charset=utf-8
+
+/projects/*/index.md
+  Content-Type: text/markdown; charset=utf-8
+
 # PWA 安装层（DESIGN.md §18）：worker 本体禁缓存 —— 更新随下次加载生效，
 # 不 Ride CDN 长缓存；声明作用域根（/sw.js 的默认 max scope 已是 /，
 # 此头是显式备案，审计门禁据此核验）。

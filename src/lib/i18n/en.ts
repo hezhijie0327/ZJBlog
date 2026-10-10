@@ -83,12 +83,17 @@ export const EN = {
   "post.toc": "On this page",
   "post.copyCode": "Copy",
   "post.copied": "Copied",
+  "post.copyMarkdown": "Copy as Markdown",
+  "post.print": "Print / Save as PDF",
   "post.summary": "Summary",
   "post.prev": "Previous",
   "post.next": "Next",
   "post.authorBy": "Written by {author}",
   "post.licenseNote": "keep attribution and link when sharing",
   "post.storynav": "Post navigation",
+
+  // 打印预览（家族契约：ZJSearch print 管线同款）
+  "print.close": "Close preview",
 
   // 旅行（地图 + 明信片墙）
   "travel.eyebrow": "Our Footsteps",
@@ -135,6 +140,7 @@ export const EN = {
   "deck.modePaged": "Present",
   "deck.fullscreen": "Fullscreen",
   "deck.exitFullscreen": "Exit fullscreen",
+  "deck.print": "Print deck (one slide per page)",
 
   // 归档
   "archives.empty": "Nothing to archive yet.",

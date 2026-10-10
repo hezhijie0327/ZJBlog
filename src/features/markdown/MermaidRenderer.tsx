@@ -34,6 +34,9 @@ export function MermaidRenderer({ chart }: MermaidRendererProps) {
   const [printed, setPrinted] = useState(false);
   const visible = scrolled || printed;
   const [theme, setTheme] = useState(() => document.documentElement.classList.contains("dark"));
+  // 打印/预览的纸面是浅色（styles/print.css 家族契约）：lib/print.ts 广播
+  // 事件驱动就地重渲染，关闭时按当前主题恢复
+  const [printLight, setPrintLight] = useState(false);
   const [svg, setSvg] = useState("");
   const [error, setError] = useState("");
 
@@ -45,9 +48,20 @@ export function MermaidRenderer({ chart }: MermaidRendererProps) {
     const onBeforePrint = () => {
       setPrinted(true);
     };
+    const onPrintLight = () => {
+      setPrinted(true);
+      setPrintLight(true);
+    };
+    const onPrintRestore = () => {
+      setPrintLight(false);
+    };
     window.addEventListener("beforeprint", onBeforePrint);
+    document.addEventListener("blog:print-mermaid-light", onPrintLight);
+    document.addEventListener("blog:print-mermaid-restore", onPrintRestore);
     return () => {
       window.removeEventListener("beforeprint", onBeforePrint);
+      document.removeEventListener("blog:print-mermaid-light", onPrintLight);
+      document.removeEventListener("blog:print-mermaid-restore", onPrintRestore);
     };
   }, []);
 
@@ -64,7 +78,7 @@ export function MermaidRenderer({ chart }: MermaidRendererProps) {
           startOnLoad: false,
           securityLevel: "strict",
           fontFamily: "var(--font-sans)",
-          theme: theme ? "dark" : "default",
+          theme: printLight ? "default" : theme ? "dark" : "default",
         });
 
         const id = `mermaid-${++mermaidSeq}`;
@@ -84,7 +98,7 @@ export function MermaidRenderer({ chart }: MermaidRendererProps) {
     return () => {
       mounted = false;
     };
-  }, [visible, chart, theme]);
+  }, [visible, chart, theme, printLight]);
 
   if (error) {
     // 危险文案用 ink/ink-2 保持 AA 对比度，danger 只承担边框语义

@@ -1,0 +1,196 @@
+/* 打印 / 存为 PDF 的纸面 —— 家族契约：与 ZJSearch
+   (client/zjsearch/src/styles/print.css + lib/print.ts) 同机制同语义，
+   契约登记见 DESIGN.md §5.3。
+   纸面永远是浅色主题：色 token 均为 @property 注册色、注册初值即浅色值，
+   深色覆写用 `initial` 归位即可从 tokens.css 单一来源取回浅色，无 hex
+   复制可漂移。特例 --bg：纯白纸面上，应用浅色主题的暖白底贴着 @page
+   白边会像一块黄渍。
+   预览脸（body.print-preview）：嵌入式浏览器里 print 对话框是静默
+   no-op（lib/print.ts 注释），纸面直接可见——浅色强制与 chrome 隐藏
+   两份列表分别与下方 @media print 保持同步（ZJSearch 同款取舍）。 */
+
+@media print {
+  /* ── 纸面永远浅色 ────────────────────────────────────────────── */
+  .dark {
+    --bg: #ffffff;
+    --surface: initial;
+    --surface-2: initial;
+    --line: initial;
+    --ink: initial;
+    --ink-2: initial;
+    --ink-3: initial;
+    --accent: initial;
+    --accent-hover: initial;
+    --accent-strong: initial;
+    --accent-strong-hover: initial;
+    --accent-soft: initial;
+    --accent-contrast: initial;
+    --highlight-bg: initial;
+    --danger: initial;
+    --warning: initial;
+    --ok: initial;
+    --shadow-card: initial;
+    --shadow-pop: initial;
+    color-scheme: light;
+  }
+
+  * {
+    print-color-adjust: exact;
+  }
+
+  /* 调色板交叉淡化不得渗进打印快照：浅色强制在纸上原子生效 */
+  html {
+    transition: none !important;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* ── chrome：纸面上消失（.print-hide 钩子 + 结构选择器） ──────── */
+  .print-hide {
+    display: none !important;
+  }
+
+  .app-bar,
+  footer,
+  aside {
+    display: none !important;
+  }
+
+  /* position-fixed/sticky 家具（返回顶部等）要么消失要么破坏文档流 */
+  .fixed,
+  .sticky {
+    position: static !important;
+  }
+
+  /* ── 内容：完整揭示 ──────────────────────────────────────────── */
+  /* 入场动画不得以 opacity:0 印成白页（含 deck 换页动画，见 DeckViewer） */
+  [class*="animate-"] {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+
+  /* 长文版心放宽到纸面 */
+  main article {
+    max-width: none !important;
+  }
+
+  /* 外链在纸上露出目标（站内锚点不必） */
+  .prose a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.75em;
+    color: var(--ink-3);
+    word-break: break-all;
+  }
+
+  /* 卡片与代码块不跨页断裂；标题不孤行在页尾 */
+  .code-card,
+  pre,
+  .table-scroll,
+  blockquote,
+  img {
+    break-inside: avoid;
+  }
+
+  h1,
+  h2,
+  h3 {
+    break-after: avoid;
+  }
+}
+
+@page {
+  size: a4;
+  margin: 16mm 14mm;
+}
+
+/* deck 页由 payload 内 marpit 自带的 @page 1280×720 后置覆盖（body 内
+   style 晚于本文件的 head 引用，级联天然分工） */
+
+/* ── 预览脸：html.print-preview 时纸面直接上屏（webview 里 print 是
+   no-op，见 lib/print.ts）——下面两份列表与 @media print 保持同步。
+   预览类挂在 <html>（与 .dark 同元素，复合选择器命中）。 ── */
+.print-preview body {
+  background: #ffffff;
+}
+
+/* 预览是纸面：一切屏幕过渡停掉，浅色强制原子生效 */
+.print-preview,
+.print-preview * {
+  transition: none !important;
+}
+
+.print-preview.dark {
+  --bg: #ffffff;
+  --surface: initial;
+  --surface-2: initial;
+  --line: initial;
+  --ink: initial;
+  --ink-2: initial;
+  --ink-3: initial;
+  --accent: initial;
+  --accent-hover: initial;
+  --accent-strong: initial;
+  --accent-strong-hover: initial;
+  --accent-soft: initial;
+  --accent-contrast: initial;
+  --highlight-bg: initial;
+  --danger: initial;
+  --warning: initial;
+  --ok: initial;
+  --shadow-card: initial;
+  --shadow-pop: initial;
+  color-scheme: light;
+  /* 调色板交叉淡化不得拖泥带水地过渡进纸面 */
+  transition: none;
+}
+
+.print-preview .print-hide,
+.print-preview .app-bar,
+.print-preview footer,
+.print-preview aside {
+  display: none !important;
+}
+
+.print-preview .fixed,
+.print-preview .sticky {
+  position: static !important;
+}
+
+.print-preview main article {
+  max-width: none !important;
+}
+
+/* 关闭芯片（print.ts 注入）：屏幕上的预览退出钮，打印时隐藏 */
+.print-close {
+  position: fixed;
+  top: 14px;
+  inset-inline-end: 14px;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 9999px;
+  background: #ffffff;
+  color: var(--ink-2);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 150ms;
+}
+
+.print-close:hover {
+  color: var(--ink);
+}
+
+@media print {
+  .print-close {
+    display: none !important;
+  }
+}
