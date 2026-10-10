@@ -18,7 +18,7 @@ export function PostNav({ prev, next }: { prev?: PostNavLink; next?: PostNavLink
   return (
     <nav
       aria-label={t("post.storynav")}
-      className="mt-12 grid grid-cols-1 gap-3 border-t border-line pt-8 sm:grid-cols-2"
+      className="print-hide mt-12 grid grid-cols-1 gap-3 border-t border-line pt-8 sm:grid-cols-2"
     >
       {prev ? (
         <Link className={cn(cardClass, "group")} href={`/blogs/${prev.slug}/`}>

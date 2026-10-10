@@ -8,7 +8,7 @@ export function AuthorCard() {
   const t = useT();
   const author = t("site.author");
   return (
-    <div className={cn("mt-12 flex items-center gap-4", CARD, "p-5")}>
+    <div className={cn("print-hide mt-12 flex items-center gap-4", CARD, "p-5")}>
       <img
         alt={author}
         className="size-12 rounded-full object-cover ring-1 ring-line"

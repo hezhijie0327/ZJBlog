@@ -74,9 +74,32 @@
     opacity: 1 !important;
   }
 
-  /* 长文版心放宽到纸面 */
+  /* 长文版心放宽到纸面（@page 边距提供留白；deck 页 @page 无边距 +
+     容器去 padding，1280px 画布才能满页不裁） */
   main article {
     max-width: none !important;
+  }
+
+  .container {
+    padding-inline: 0 !important;
+  }
+
+  /* deck 文：页头不印（首页幻灯片就是标题页），容器/正文纵向留白清零——
+     否则 720px 定高的幻灯片会被顶出页面，产生空页或碎页 */
+  main:has(.deck-root) {
+    padding: 0 !important;
+  }
+
+  main:has(.deck-root) .container {
+    padding: 0 !important;
+  }
+
+  main:has(.deck-root) header {
+    display: none !important;
+  }
+
+  body {
+    padding-bottom: 0 !important;
   }
 
   /* 外链在纸上露出目标（站内锚点不必） */
