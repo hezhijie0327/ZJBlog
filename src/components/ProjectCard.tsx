@@ -63,14 +63,14 @@ export function ProjectCard({ project, index, heading: Heading }: ProjectCardPro
         {project.image ? (
           <img
             alt={project.title}
-            className="aspect-[16/10] w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+            className="aspect-[2/1] w-full object-cover transition-transform duration-500 group-hover:scale-[1.03] sm:aspect-[16/10]"
             height={360}
             loading="lazy"
             src={project.image}
             width={640}
           />
         ) : (
-          <div className="project-cover relative flex h-40 flex-col items-center justify-center gap-1 transition-transform duration-500 group-hover:scale-[1.03]">
+          <div className="project-cover relative flex h-32 flex-col items-center justify-center gap-1 transition-transform duration-500 group-hover:scale-[1.03] sm:h-40">
             <span aria-hidden="true" className="font-serif text-6xl font-black leading-none text-accent/20">
               {shortName.charAt(0)}
             </span>
@@ -79,7 +79,7 @@ export function ProjectCard({ project, index, heading: Heading }: ProjectCardPro
         )}
       </div>
 
-      <div className="flex flex-1 flex-col p-5">
+      <div className="flex flex-1 flex-col p-4 sm:p-5">
         <div className="mb-2.5 flex items-center gap-2 font-mono text-xs text-ink-3">
           <span>{String(index + 1).padStart(2, "0")}</span>
           <span aria-hidden="true" className="h-3 w-px bg-line" />

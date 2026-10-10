@@ -417,7 +417,7 @@ export function TravelsPage({ data }: { data: TravelsData }) {
             </div>
 
             {/* 明信片墙 */}
-            <div className="mt-16 grid gap-x-8 gap-y-14 sm:grid-cols-2">
+            <div className="mt-16 grid gap-x-8 gap-y-10 sm:grid-cols-2 sm:gap-y-14">
               {data.trips.map((trip, index) => (
                 <Postcard
                   index={index}
@@ -462,7 +462,7 @@ function Postcard({ index, onPreview, trip }: { index: number; onPreview: () => 
             <button aria-label={trip.title} className="block w-full cursor-zoom-in" onClick={onPreview} type="button">
               <img
                 alt={trip.title}
-                className="aspect-[16/10] w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                className="aspect-[2/1] w-full object-cover transition-transform duration-500 group-hover:scale-[1.03] sm:aspect-[16/10]"
                 height={360}
                 loading="lazy"
                 src={trip.cover}
@@ -470,9 +470,9 @@ function Postcard({ index, onPreview, trip }: { index: number; onPreview: () => 
               />
             </button>
           ) : (
-            <div aria-hidden="true" className="project-cover aspect-[16/10] w-full" />
+            <div aria-hidden="true" className="project-cover aspect-[2/1] w-full sm:aspect-[16/10]" />
           )}
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             <div className="flex items-center justify-between gap-3">
               <span className="font-mono text-xs text-ink-3">
                 {trip.date && formatDateISO(trip.date)}
@@ -506,7 +506,10 @@ function Postcard({ index, onPreview, trip }: { index: number; onPreview: () => 
                 {trip.title}
               </Link>
             </h2>
-            {trip.summary && <p className="mt-2 text-sm leading-relaxed text-ink-2">{trip.summary}</p>}
+            {/* 摘要移动端裁 3 行：行程类长摘要会把明信片撑过一屏（桌面双列保持全文） */}
+            {trip.summary && (
+              <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-ink-2 sm:line-clamp-none">{trip.summary}</p>
+            )}
             {trip.link && (
               <Link
                 className={cn(
