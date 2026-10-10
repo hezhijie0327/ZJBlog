@@ -115,8 +115,7 @@ export function Navigation() {
             })}
           </nav>
 
-          {/* 右侧操作区（搜索/主题/语言 + 小屏菜单）：GitHub 与 RSS 的入口
-              在首页联系版块，顶栏不再重复 */}
+          {/* 右侧操作区（搜索/主题/语言 + 小屏菜单） */}
           <div className="flex items-center gap-0.5">
             <button
               aria-label={t("nav.search")}

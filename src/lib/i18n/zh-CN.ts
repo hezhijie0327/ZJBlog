@@ -60,15 +60,22 @@ export const ZH_CN: Record<StringKey, string> = {
   "home.moreProjects": "更多项目",
   "home.viewAllProjects": "查看全部项目",
   "home.viewAllPosts": "查看全部文章",
+  "home.viewAllTravels": "查看全部旅行",
+  "home.viewAllArchives": "查看全部归档",
+  "home.travels.title": "旅行足迹",
+  "home.travels.en": "Travel",
+  "home.archives.title": "归档",
+  "home.archives.en": "Archives",
   "home.emptyPosts": "还没有文章，敬请期待。",
   "home.contact.title": "打个招呼。",
   "home.contact.en": "SAY HELLO",
-  "home.contact.desc": "对项目或文章有想法？来 GitHub 找我，或通过 RSS 订阅更新。",
+  "home.contact.desc": "对项目或文章有想法？来 GitHub 找我，或通过 RSS 订阅更新；也欢迎请我喝杯咖啡。",
   "home.storybar": "页面章节",
 
   // 计数
   "count.projects": "共 {n} 个",
   "count.posts": "共 {n} 篇",
+  "count.travels": "共 {n} 次",
   "count.nPosts": "{n} 篇",
 
   // 博客

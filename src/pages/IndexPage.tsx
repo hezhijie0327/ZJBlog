@@ -1,6 +1,7 @@
-// 首页：Hero + 精选项目（starred 优先）+ 最新文章 + 联系（GitHub / RSS）。
+// 首页：Hero + 精选项目 + 最新文章 + 旅行足迹 + 归档 + 打个招呼（GitHub / RSS / 支持）。
+// 章节顺序与顶部导航一致：项目 / 博客 / 旅行 / 归档 / 支持。
 
-import { ArrowDown, ArrowRight, ArrowUpRight, Lock, Presentation, Rss } from "lucide-react";
+import { ArrowDown, ArrowRight, ArrowUpRight, Coffee, Lock, Presentation, Rss } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState.tsx";
 import { GithubIcon } from "@/components/icons.tsx";
 import { ProjectCard } from "@/components/ProjectCard.tsx";
@@ -25,6 +26,17 @@ export function IndexPage({ data }: { data: HomeData }) {
   const featured = ordered.slice(0, featuredProjectCount);
   const moreProjects = ordered.slice(featuredProjectCount, featuredProjectCount + moreProjectsCount);
   const latestBlogs = data.blogs.slice(0, 3);
+  const latestTrips = data.trips.slice(0, 3);
+  // 归档预告：按年聚合全部文章（首页 blogs 已是全量列表），取最近 4 年
+  const yearCounts = new Map<string, number>();
+  for (const blog of data.blogs) {
+    if (!blog.date) {
+      continue;
+    }
+    const year = formatDateISO(blog.date).slice(0, 4);
+    yearCounts.set(year, (yearCounts.get(year) ?? 0) + 1);
+  }
+  const years = [...yearCounts.entries()].sort(([a], [b]) => Number(b) - Number(a)).slice(0, 4);
   // 下滚提示的循环动画只在 Hero 可见时运行（离屏停帧，与 STL 自转同一纪律）
   const { ref: heroRef, inView: heroInView } = useInView<HTMLElement>({ rootMargin: "0px" });
 
@@ -145,7 +157,9 @@ export function IndexPage({ data }: { data: HomeData }) {
         sections={[
           { id: "projects", no: "01", label: t("home.featured.title") },
           { id: "blogs", no: "02", label: t("home.recent.title") },
-          { id: "contact", no: "03", label: t("home.contact.title") },
+          { id: "travels", no: "03", label: t("home.travels.title") },
+          { id: "archives", no: "04", label: t("home.archives.title") },
+          { id: "contact", no: "05", label: t("home.contact.title") },
         ]}
       />
 
@@ -254,9 +268,84 @@ export function IndexPage({ data }: { data: HomeData }) {
         {data.blogs.length > 0 && <ViewAllLink href="/blogs/" label={t("home.viewAllPosts")} />}
       </section>
 
-      {/* 03 联系：GitHub / RSS（参考 justin3go SAY HELLO 的胶囊链接形态） */}
+      {/* 03 旅行足迹：最新 3 次旅行的纸面列表（封面墙留给 /travels/，首页保持轻） */}
+      {latestTrips.length > 0 && (
+        <section className={cn(SECTION, "paper-chapter scroll-mt-28")} id="travels">
+          <SectionHeading
+            en={t("home.travels.en")}
+            hint={t("count.travels", { n: data.trips.length })}
+            index="03"
+            title={t("home.travels.title")}
+          />
+          <div className="relative rotate-[0.35deg]">
+            <Tape className="-top-3 left-16 w-24 rotate-[4deg] bg-accent-soft/80" />
+            <Tape className="-top-2 right-12 w-20 -rotate-6 bg-accent-soft/60" />
+            <div className={cn("paper-note", DIVIDE_LIST)}>
+              {latestTrips.map((trip) => (
+                <Link className={LIST_ROW} href={`/travels/${trip.slug}/`} key={trip.slug}>
+                  {trip.date && (
+                    <time className="shrink-0 font-mono text-xs text-ink-3 sm:text-sm" dateTime={trip.date}>
+                      {formatDateISO(trip.date)}
+                      {trip.endDate && <span className="hidden sm:inline"> – {formatDateISO(trip.endDate)}</span>}
+                    </time>
+                  )}
+                  <span className="min-w-0 flex-1 truncate font-serif text-base font-medium text-ink transition-colors group-hover:text-accent sm:text-lg">
+                    {trip.title}
+                  </span>
+                  {trip.locked && (
+                    <>
+                      <span className="sr-only">（{t("post.locked")}）</span>
+                      <Lock aria-hidden="true" className="size-3.5 shrink-0 text-accent-strong" />
+                    </>
+                  )}
+                  <ArrowUpRight
+                    aria-hidden="true"
+                    className="size-4 shrink-0 text-ink-3 transition-colors group-hover:text-accent"
+                  />
+                </Link>
+              ))}
+            </div>
+          </div>
+          <ViewAllLink href="/travels/" label={t("home.viewAllTravels")} />
+        </section>
+      )}
+
+      {/* 04 归档：最近 4 年的文章年份索引（全量时间线留给 /archives/） */}
+      {years.length > 0 && (
+        <section className={cn(SECTION, "paper-chapter scroll-mt-28")} id="archives">
+          <SectionHeading
+            en={t("home.archives.en")}
+            hint={t("count.posts", { n: data.blogs.length })}
+            index="04"
+            title={t("home.archives.title")}
+          />
+          <div className="relative -rotate-[0.35deg]">
+            <Tape className="-top-3 right-20 w-24 -rotate-2 bg-accent-soft/80" />
+            <Tape className="-top-2 left-14 w-20 rotate-[5deg] bg-accent-soft/60" />
+            <div className={cn("paper-note", DIVIDE_LIST)}>
+              {years.map(([year, count]) => (
+                <Link className={LIST_ROW} href="/archives/" key={year}>
+                  <span className="shrink-0 font-serif text-base font-semibold text-ink transition-colors group-hover:text-accent sm:text-lg">
+                    {year}
+                  </span>
+                  <span className="ml-auto shrink-0 font-mono text-xs text-ink-3">
+                    {t("count.nPosts", { n: count })}
+                  </span>
+                  <ArrowUpRight
+                    aria-hidden="true"
+                    className="size-4 shrink-0 text-ink-3 transition-colors group-hover:text-accent"
+                  />
+                </Link>
+              ))}
+            </div>
+          </div>
+          <ViewAllLink href="/archives/" label={t("home.viewAllArchives")} />
+        </section>
+      )}
+
+      {/* 05 打个招呼：GitHub / RSS / 支持（参考 justin3go SAY HELLO 的胶囊链接形态） */}
       <section className={cn(SECTION, "paper-chapter scroll-mt-28")} id="contact">
-        <SectionHeading en={t("home.contact.en")} index="03" title={t("home.contact.title")} />
+        <SectionHeading en={t("home.contact.en")} index="05" title={t("home.contact.title")} />
         {/* 纸面便签承载联系入口（标题靠左，便签在剩余空间垂直居中）：轻微反向外倾 + 两角胶带 */}
         <div className="relative mx-auto max-w-2xl rotate-[0.4deg]">
           <Tape className="-top-3 left-10 w-24 -rotate-3 bg-accent-soft/80" />
@@ -266,7 +355,7 @@ export function IndexPage({ data }: { data: HomeData }) {
               {t("home.contact.desc")}
             </p>
             <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-              {/* 纸条外链：金色主纸条 + 纸面次条，与 Hero 按钮同一对 */}
+              {/* 纸条入口：金色主纸条（GitHub）+ 纸面次条（RSS / 支持），与 Hero 按钮同语言 */}
               <a
                 className={cn(
                   PAPER_STRIP,
@@ -283,6 +372,11 @@ export function IndexPage({ data }: { data: HomeData }) {
               <a className={cn(PAPER_STRIP, "rotate-1 [--strip:var(--surface)] hover:text-accent")} href="/rss.xml">
                 <Rss aria-hidden="true" className="size-4" />
                 {t("nav.rss")}
+                <ArrowUpRight aria-hidden="true" className="size-3.5 text-ink-3" />
+              </a>
+              <a className={cn(PAPER_STRIP, "rotate-1 [--strip:var(--surface)] hover:text-accent")} href="/support/">
+                <Coffee aria-hidden="true" className="size-4" />
+                {t("nav.support")}
                 <ArrowUpRight aria-hidden="true" className="size-3.5 text-ink-3" />
               </a>
             </div>

@@ -151,6 +151,7 @@ export function buildPayload(pathname: string): AnyPageData {
       globals: globals("home", siteConfig.title, siteConfig.description),
       projects: projectLists,
       blogs: blogLists,
+      trips: travelLists,
     };
   }
   if (pathname === "/blogs/") {

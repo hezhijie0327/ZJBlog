@@ -60,15 +60,22 @@ export const EN = {
   "home.moreProjects": "MORE PROJECTS",
   "home.viewAllProjects": "View all projects",
   "home.viewAllPosts": "View all posts",
+  "home.viewAllTravels": "View all travels",
+  "home.viewAllArchives": "View all archives",
+  "home.travels.title": "Travels",
+  "home.travels.en": "",
+  "home.archives.title": "Archives",
+  "home.archives.en": "",
   "home.emptyPosts": "No posts yet — stay tuned.",
   "home.contact.title": "Say hello.",
   "home.contact.en": "",
-  "home.contact.desc": "Ideas about a project or a post? Find me on GitHub, or subscribe via RSS to follow along.",
+  "home.contact.desc": "Ideas about a project or a post? Find me on GitHub, subscribe via RSS — or buy me a coffee.",
   "home.storybar": "Page sections",
 
   // 计数
   "count.projects": "{n} in total",
   "count.posts": "{n} in total",
+  "count.travels": "{n} in total",
   "count.nPosts": "{n}",
 
   // 博客

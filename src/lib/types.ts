@@ -101,6 +101,8 @@ export interface HomeData {
   globals: PageGlobals & { page: "home" };
   projects: ProjectListItem[];
   blogs: BlogListItem[];
+  /** 首页旅行板块：与 /travels/ 同一份列表（无地图 SVG） */
+  trips: TravelListItem[];
 }
 
 export interface BlogsData {
