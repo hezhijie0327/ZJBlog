@@ -15,8 +15,11 @@
 
 import { ChevronLeft, ChevronRight, Maximize, Minimize, Printer, StickyNote } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createRoot, type Root } from "react-dom/client";
+import { MermaidRenderer } from "@/features/markdown/MermaidRenderer.tsx";
 import { cn } from "@/lib/cn.ts";
 import { useT } from "@/lib/i18n.ts";
+import { ensureKatexStyles } from "@/lib/katex.ts";
 import { startPrintPreview } from "@/lib/print.ts";
 import { CHIP, ICON_BTN, META } from "@/lib/styles.ts";
 
@@ -29,6 +32,8 @@ export interface DeckViewerProps {
   embedded?: boolean;
   /** 打印文件名主体（zjblog_<title>），嵌入场景由调用方给所在文章标题 */
   titleBase?: string;
+  /** 幻灯片含 KaTeX 公式（SPA 换页补注 /katex.min.css，同 Prose） */
+  needsKatex?: boolean;
 }
 
 interface ParsedSlide {
@@ -219,7 +224,7 @@ export const DECK_NOSCRIPT_CSS = `
 .deck-root [data-deck-chrome] { display: none !important; }
 `;
 
-export function DeckViewer({ html, css, embedded = false, titleBase }: DeckViewerProps) {
+export function DeckViewer({ html, css, embedded = false, needsKatex = false, titleBase }: DeckViewerProps) {
   const t = useT();
   // 默认逐页形态：SSR 直接渲染 16:9 舞台（画布含全部幻灯片、overflow 裁剪
   // 只露第一页），水合前后视觉零变化 → 零 CLS；无 JS 场景由 head 里的
@@ -257,6 +262,13 @@ export function DeckViewer({ html, css, embedded = false, titleBase }: DeckViewe
     [total],
   );
 
+  // 幻灯片含 KaTeX 公式：SPA 换页补注 /katex.min.css（head 不随换页换，同 Prose）
+  useEffect(() => {
+    if (needsKatex) {
+      ensureKatexStyles();
+    }
+  }, [needsKatex]);
+
   // #N 深链消费（整篇模式）：舞台尺寸固定，换页内容不产生位移
   useEffect(() => {
     if (total === 0 || embedded) {
@@ -291,6 +303,29 @@ export function DeckViewer({ html, css, embedded = false, titleBase }: DeckViewe
       }
     });
   }, [mode, active, html, total, t]);
+
+  // mermaid 占位容器（tools/deck.ts 产出）：逐个挂 MermaidRenderer 惰性渲染
+  // ——渲染器自带 useInView（display:none 的隐藏页不会触发，翻到即渲染）与
+  // 打印浅色联动（print-mermaid-light/restore 事件），与文章内图表行为一致。
+  // html 变化（解锁/嵌入注入）后旧 root 随 innerHTML 失效，需整组重挂。
+  // biome-ignore lint/correctness/useExhaustiveDependencies: 显式依赖 html——同上
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) {
+      return;
+    }
+    const roots: Root[] = [];
+    for (const el of canvas.querySelectorAll<HTMLElement>(".mermaid-placeholder")) {
+      const root = createRoot(el);
+      root.render(<MermaidRenderer chart={el.dataset.chart ?? ""} />);
+      roots.push(root);
+    }
+    return () => {
+      for (const root of roots) {
+        root.unmount();
+      }
+    };
+  }, [html, total]);
 
   // 翻页后同步 hash（整篇模式）：hash-only replaceState 不触发 router 的
   // popstate 路由（已核实）；深链/hashchange 带来的 active 不回写

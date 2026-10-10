@@ -130,6 +130,100 @@ section kbd {
   padding: 0.1em 0.5em;
 }
 
+/* mermaid 图表（站内同款占位容器，DeckViewer 挂 MermaidRenderer 惰性渲染）：
+   保持 block（flex 会外层 shrink-to-fit，svg 的 width:100% 循环依赖回落
+   300px 默认宽）+ 撑满版心，限高 430px 防顶碎 720px 定高幻灯片 */
+section .mermaid-placeholder {
+  margin: 0 auto 0.8em;
+}
+
+section .mermaid-placeholder svg {
+  width: 100% !important;
+  max-width: none !important;
+  height: auto !important;
+  max-height: 430px !important;
+}
+
+/* Callouts（deckCallouts 移植，类别配色对齐 prose.css 的 token 映射） */
+section .callout {
+  --callout-color: var(--accent-strong);
+  margin: 0 0 0.8em;
+  padding: 16px 22px;
+  border-left: 3px solid var(--callout-color);
+  border-radius: 0 12px 12px 0;
+  background: color-mix(in oklab, var(--callout-color) 7%, var(--surface));
+  font-size: 0.82em;
+}
+
+section .callout > :last-child {
+  margin-bottom: 0;
+}
+
+section .callout-title {
+  font-weight: 600;
+  color: color-mix(in oklab, var(--callout-color) 45%, var(--ink));
+}
+
+section details.callout > .callout-title {
+  cursor: pointer;
+}
+
+section .callout-info,
+section .callout-todo {
+  --callout-color: var(--accent);
+}
+
+section .callout-tip,
+section .callout-success {
+  --callout-color: var(--ok);
+}
+
+section .callout-question,
+section .callout-warning {
+  --callout-color: var(--warning);
+}
+
+section .callout-danger {
+  --callout-color: var(--danger);
+}
+
+section .callout-example {
+  --callout-color: var(--accent-strong);
+}
+
+section .callout-quote {
+  --callout-color: var(--ink-3);
+}
+
+/* KaTeX：块级公式居中限宽，防止溢出画布 */
+section .katex-display {
+  margin: 0.4em 0 0.8em;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+/* 定义列表 */
+section dl {
+  margin: 0 0 0.8em;
+}
+
+section dt {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+section dd {
+  margin: 0 0 0.6em;
+  padding-inline-start: 1.2em;
+  color: var(--ink-2);
+}
+
+/* 任务清单：复选框为纯装饰（构建期 aria-hidden），隐藏原生列表标记 */
+section li:has(> input[type="checkbox"]) {
+  list-style: none;
+  margin-inline-start: -1.1em;
+}
+
 /* 行内标签（raw HTML）：<mark>/<u>/<del>/<sup>/<sub> */
 section mark {
   background: var(--highlight-bg);

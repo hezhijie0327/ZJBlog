@@ -84,7 +84,7 @@ export function BlogPostPage({ data }: { data: BlogPostData }) {
                   整篇幻灯片（frontmatter deck: true）由播放器替代 Prose：
                   首帧全量堆叠进 DOM（无 JS 可读），挂载后升级逐页播放 */}
               {post.deck ? (
-                <DeckViewer css={post.deck.css} html={html} titleBase={post.title} />
+                <DeckViewer css={post.deck.css} html={html} needsKatex={post.needsKatex} titleBase={post.title} />
               ) : (
                 <Prose html={html} needsKatex={post.needsKatex} />
               )}

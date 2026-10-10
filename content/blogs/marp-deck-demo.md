@@ -82,7 +82,7 @@ deck.slides.forEach((slide, i) => {
 
 <!-- _color: "#241d0e" -->
 
-![bg](/images/couple-demo.jpg)
+![bg](/images/deck-demo.jpg)
 
 `![bg]()` 在构建期转为 section 内联背景样式，compress-images 的字符串
 改写会同步把引用换成 webp。浅色插图上用 `_color` 锁深色文字，
@@ -90,7 +90,7 @@ deck.slides.forEach((slide, i) => {
 
 # 站内图片自动带固有尺寸
 
-![w:520](/images/couple-demo.jpg) ![w:260](/images/couple-demo.jpg)
+![w:520](/images/deck-demo.jpg) ![w:260](/images/deck-demo.jpg)
 
 `w:` / `h:` 修饰符控制显示尺寸；所有站内图构建期注入 width/height
 固有尺寸（unsized-images 审计零扣分），换页、解锁、嵌入场景都走同一条
@@ -112,7 +112,7 @@ raw HTML 行内标签都有主题样式：<mark>mark 高亮</mark>、<u>下划�
 
 # 背景图 fit 模式
 
-![bg fit](/images/couple-demo.jpg)
+![bg fit](/images/deck-demo.jpg)
 
 `![bg fit]` 以 contain 方式完整放入页面（不裁剪、留白居中）；
 默认 `![bg]()` 是 cover 铺满裁剪。多层 `![bg]` 叠加与
@@ -133,6 +133,30 @@ raw HTML 行内标签都有主题样式：<mark>mark 高亮</mark>、<u>下划�
 
 `_header` / `_footer` 的值支持 Markdown 加粗；本页顶部与底部的两行
 就是它们，加 `_` 只作用于本页。
+
+# 图表也能上幻灯片
+
+```mermaid
+flowchart LR
+    A[Markdown] -->|deck: true| B[Marpit 编译]
+    B --> C{内容类型}
+    C -->|mermaid| D[站内渲染器]
+    C -->|shiki| E[双主题高亮]
+```
+
+与文章同款语法——` ```mermaid ` fence 走站内渲染管线，
+打印时自动切浅色主题。
+
+# 站内语法同样可用
+
+> [!tip] Callouts 也搬进来了
+> 十类别配色对齐站点 token，打印自动浅色。
+
+- [x] 数学公式：$E = mc^2$
+- [x] 任务清单与 emoji 短码 🎉
+- [ ] 定义列表：术语 : 定义也支持
+
+行内 ==高亮== 与行内公式 $\alpha + \beta$ 照旧可用。
 
 # 键盘翻页试一试
 

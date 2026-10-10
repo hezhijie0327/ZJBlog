@@ -1,7 +1,9 @@
 // 构建期幻灯片编译（Marpit）：整篇 deck 博文（frontmatter deck: true）与普通
 // 正文的 ```marp fence 共用本模块。Marpit 是 markdown-it 系的独立方言——deck
-// 内容不支持站内 unified 管线的扩展（callouts / KaTeX / mermaid 等），产物是
-// 静态 <section> + 主题 CSS，客户端零 Marp 代码（播放器见 features/deck）。
+// 内容不支持的站内扩展见文件尾的「方言边界」注释，已桥接的：mermaid（占位
+// 容器 + 站内渲染器）、数学 KaTeX、callouts、==mark==、emoji、任务清单、
+// 定义列表、sequence/flow（转 mermaid），产物是静态 <section> + 主题 CSS，
+// 客户端零 Marp 代码（播放器见 features/deck）。
 //
 // 产物约定（与 src/features/deck/DeckViewer.tsx、pageData.ts 三方对齐）：
 //   - section 的 id 一律剥掉换成 data-slide（多个 deck 同页会撞 duplicate-id
@@ -13,9 +15,16 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { Marpit } from "@marp-team/marpit";
+import { bareEmoji } from "@mdit/plugin-emoji";
+import { katex } from "@mdit/plugin-katex";
+import { mark } from "@mdit/plugin-mark";
+import { tasklist } from "@mdit/plugin-tasklist";
 import { imageSize } from "image-size";
+import markdownItDeflist from "markdown-it-deflist";
+import { deckCallouts } from "./deckCallouts";
 import deckThemeCss from "./deckTheme.css?raw";
-import { decodeEntities, escapeHtml } from "./html.ts";
+import { translateFlowToMermaid, translateSequenceToMermaid } from "./diagrams";
+import { decodeEntities, escapeAttr, escapeHtml } from "./html.ts";
 import { highlightCode } from "./shiki.ts";
 
 export interface DeckResult {
@@ -27,6 +36,12 @@ export interface DeckResult {
 }
 
 const marpit = new Marpit({ markdown: { html: true } });
+marpit.use(deckCallouts);
+marpit.use(katex);
+marpit.use(mark);
+marpit.use(bareEmoji);
+marpit.use(tasklist);
+marpit.use(markdownItDeflist);
 marpit.themeSet.default = marpit.themeSet.add(deckThemeCss);
 
 /** 站内图注入固有尺寸（src 以 / 开头 → public/ 下的文件）。deck 不走
@@ -49,17 +64,32 @@ function injectLocalImageSizes(html: string): string {
   });
 }
 
-/** 单页后处理：标题降级 → 代码重高亮 → 图片尺寸 → 剥 id 加 data-slide →
- *  注入演讲者备注。 */
+/** 单页后处理：标题降级 → 代码重高亮 / mermaid 占位 → 图片尺寸 → 剥 id 加
+ *  data-slide → 注入演讲者备注。 */
 function postProcessSlide(page: string, index: number, notes: readonly string[]): string {
   let html = page
     // 页面 h1 属文章标题，幻灯片页题从 h2 起
     .replace(/<(\/?)h([1-5])(?=[\s>])/g, (_match, slash: string, level: string) => `<${slash}h${Number(level) + 1}`)
     .replace(
       /<pre><code(?: class="language-([\w#+.-]+)")?>([\s\S]*?)<\/code><\/pre>/g,
-      (_match, lang: string | undefined, code: string) => highlightCode(lang ?? "", decodeEntities(code)),
+      (_match, lang: string | undefined, code: string) => {
+        const decoded = decodeEntities(code);
+        // mermaid 走站内同款占位容器：DeckViewer 挂 MermaidRenderer 惰性渲染，
+        // 打印浅色联动自动生效（语法与文章词汇表一致）
+        if (lang === "mermaid") {
+          return `<div class="mermaid-placeholder" data-chart="${escapeAttr(decoded)}"></div>`;
+        }
+        // Typora sequence/flow：构建期翻译为 mermaid（与文章管线同款转换）
+        if (lang === "sequence" || lang === "flow") {
+          const chart = lang === "sequence" ? translateSequenceToMermaid(decoded) : translateFlowToMermaid(decoded);
+          return `<div class="mermaid-placeholder" data-chart="${escapeAttr(chart)}"></div>`;
+        }
+        return highlightCode(lang ?? "", decoded);
+      },
     );
   html = injectLocalImageSizes(html);
+  // 任务清单复选框纯装饰，补 aria-hidden（与文章管线 compileMarkdown 同款）
+  html = html.replace(/<input((?:(?!aria-hidden)[^>]*)?type="checkbox"[^>]*)>/g, '<input aria-hidden="true"$1>');
   html = html.replace(/^<section\b([^>]*)>/, (_match, attrs: string) => {
     const cleaned = attrs.replace(/\s+id="[^"]*"/g, "");
     return `<section data-slide="${index + 1}"${cleaned}>`;

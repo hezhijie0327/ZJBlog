@@ -76,7 +76,7 @@ image: "/images/cover.jpg" # 封面图，站点根路径；缺省不渲染封面
 | Obsidian Callouts（`> [!note]-` 折叠） | ✅ | 全类别配色映射站点 token |
 | ==高亮==、emoji（`:smile:`）、定义列表、`<mark>`/`<kbd>`/`<u>` | ✅ | 扩展语法 |
 | `<details>` 折叠、raw HTML | ✅ | 展开收起带动画（渐进增强） |
-| 幻灯片（Marpit） | ✅ | 整篇：frontmatter `deck: true`，正文按 Marpit 语法编译，文章页默认逐页播放器（键盘 ←→/Home/End、滑动、页码、`#N` 深链、演讲者备注、全屏——webview 等受限环境自动回落伪全屏），可切连续堆叠浏览；无 JS 时以 noscript 样式展开全页堆叠可读。指令全家桶可用：`headingDivider`（自动切页）、`_class`/`_paginate`/`_color`/`_backgroundColor`/`_header`/`_footer`、`style:` 全局微调；图片修饰符 `w:`/`h:`/`bg fit`。**语法面只用 Marpit 原生**（主题不发明布局 class）：`---`/`***`/`___` 全部是分页符（无水平分隔线语法），双栏/分栏背景（`bg right/left`、多层 `![bg]`）是 Marp Core 语法不可用，特殊布局用原生 `style:`/`<style>` 自带 CSS。嵌入：正文 ```marp fence 内嵌一组幻灯片（同款播放器）。主题色全走站点 token 跟随明暗；代码块 shiki 重高亮、站内图自动注入尺寸。deck 内是 markdown-it 方言——callouts/`==mark==`/KaTeX/mermaid 等站内扩展不生效；`deck: true` 与 `secret` 不可组合（构建报错） |
+| 幻灯片（Marpit） | ✅ | 整篇：frontmatter `deck: true`，正文按 Marpit 语法编译，文章页默认逐页播放器（键盘 ←→/Home/End、滑动、页码、`#N` 深链、演讲者备注、全屏——webview 等受限环境自动回落伪全屏），可切连续堆叠浏览；无 JS 时以 noscript 样式展开全页堆叠可读。指令全家桶可用：`headingDivider`（自动切页）、`_class`/`_paginate`/`_color`/`_backgroundColor`/`_header`/`_footer`、`style:` 全局微调；图片修饰符 `w:`/`h:`/`bg fit`。**语法面只用 Marpit 原生**（主题不发明布局 class）：`---`/`***`/`___` 全部是分页符（无水平分隔线语法），双栏/分栏背景（`bg right/left`、多层 `![bg]`）是 Marp Core 语法不可用，特殊布局用原生 `style:`/`<style>` 自带 CSS。嵌入：正文 ```marp fence 内嵌一组幻灯片（同款播放器）。主题色全走站点 token 跟随明暗；代码块 shiki 重高亮、站内图自动注入尺寸。deck 内是 markdown-it 方言——callouts/`==mark==`/KaTeX 等站内扩展不生效，图表 mermaid 已支持（```mermaid fence 与文章同款）；`deck: true` 与 `secret` 不可组合（构建报错） |
 | Typora 上下标 `H~2~O` / `X^2^` | ❌ | 与 GFM 单波浪删除线冲突（GitHub 同样按删除线渲染），请用 `<sub>`/`<sup>` |
 | OFM wiki 双链 `[[…]]`、`%%注释%%` | 原样展示 | 无目标语义，按字面文本渲染 |
 

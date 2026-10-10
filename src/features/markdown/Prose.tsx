@@ -13,19 +13,7 @@ import { DeckViewer } from "@/features/deck/DeckViewer.tsx";
 import { MermaidRenderer } from "@/features/markdown/MermaidRenderer.tsx";
 import { StlViewer } from "@/features/markdown/StlViewer.tsx";
 import { useT } from "@/lib/i18n.ts";
-
-/** KaTeX 样式按需补注：SSR 只对含公式页注入 katex.min.css；客户端从无公式
- *  页 SPA 换页到含公式页时，head 不换 —— 这里检测并补一次 link（幂等）。 */
-function ensureKatexStyles() {
-  if (document.querySelector("link[data-katex], style[data-katex]")) {
-    return;
-  }
-  const link = document.createElement("link");
-  link.rel = "stylesheet";
-  link.href = "/katex.min.css";
-  link.dataset.katex = "true";
-  document.head.appendChild(link);
-}
+import { ensureKatexStyles } from "@/lib/katex.ts";
 
 export function Prose({ html, needsKatex }: { html: string; needsKatex?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
