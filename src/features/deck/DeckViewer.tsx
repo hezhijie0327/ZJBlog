@@ -87,18 +87,30 @@ const HOST_CSS = `
  * 祖先选择器），暗态切换在此收口 */
 .dark .deck-root .marpit section pre { color: var(--shiki-dark); }
 .dark .deck-root .marpit section pre span { color: var(--shiki-dark); }
-/* 全屏放映：画布居中，控制条留屏 */
-.deck-root:fullscreen {
+/* 全屏放映：由 React 状态（data-fullscreen）驱动样式而非 :fullscreen 伪类
+ * ——webview/预览环境里原生 Fullscreen API 常是「半残」的（DOM 状态进了、
+ * 视图不展开、fullscreenchange 不派发），样式挂在状态上保证任何环境点按钮
+ * 都有可见反应；伪全屏 = fixed 覆盖层，真全屏下同样适用。控制条留屏，
+ * 安全区内收（DESIGN §18）。 */
+.deck-root[data-fullscreen] {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
   display: flex;
   flex-direction: column;
   justify-content: center;
   background: var(--bg);
-  padding: 24px;
+  padding: max(24px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right))
+    max(24px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
   overflow: auto;
 }
-.deck-root:fullscreen .deck-stage {
+.deck-root[data-fullscreen] .deck-stage {
   width: min(100%, calc((100dvh - 48px - 64px) * 16 / 9));
   margin-inline: auto;
+}
+/* 舞台上的横滑交给 JS 翻页，纵滑留给页面滚动 */
+.deck-stage {
+  touch-action: pan-y;
 }
 `;
 
@@ -124,7 +136,11 @@ export function DeckViewer({ html, css, embedded = false }: DeckViewerProps) {
   const [mounted, setMounted] = useState(false);
   const [active, setActive] = useState(0);
   const [showNotes, setShowNotes] = useState(false);
-  const [fullscreen, setFullscreen] = useState(false);
+  // 全屏双轨：原生 Fullscreen API 在 webview/预览环境里可能半残（DOM 状态
+  // 进了但视图不展开、事件不派发），promise 拒绝或不可用时回落伪全屏
+  // （fixed 覆盖层，data-fullscreen 样式），保证按钮在任何环境都有可见反应
+  const [nativeFs, setNativeFs] = useState(false);
+  const [pseudoFs, setPseudoFs] = useState(false);
 
   const rootRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -184,12 +200,26 @@ export function DeckViewer({ html, css, embedded = false }: DeckViewerProps) {
     return () => window.removeEventListener("hashchange", onHashChange);
   }, [embedded, total]);
 
-  // 全屏状态同步（Esc / 系统手势退出也要落回按钮态）
+  // 原生全屏状态同步（Esc / 系统手势退出也要落回按钮态）
   useEffect(() => {
-    const onFullscreenChange = () => setFullscreen(document.fullscreenElement === rootRef.current);
+    const onFullscreenChange = () => setNativeFs(document.fullscreenElement === rootRef.current);
     document.addEventListener("fullscreenchange", onFullscreenChange);
     return () => document.removeEventListener("fullscreenchange", onFullscreenChange);
   }, []);
+
+  // 伪全屏退出：Esc（原生全屏的 Esc 由浏览器自己处理）
+  useEffect(() => {
+    if (!pseudoFs) {
+      return;
+    }
+    const onEsc = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setPseudoFs(false);
+      }
+    };
+    window.addEventListener("keydown", onEsc);
+    return () => window.removeEventListener("keydown", onEsc);
+  }, [pseudoFs]);
 
   // 连续模式：stage 高度 = 缩放后画布实际高度（transform 不参与布局）
   useEffect(() => {
@@ -257,11 +287,27 @@ export function DeckViewer({ html, css, embedded = false }: DeckViewerProps) {
 
   const toggleFullscreen = () => {
     if (document.fullscreenElement) {
-      void document.exitFullscreen();
+      // 乐观置位：fullscreenchange 不派发的环境也要落回按钮态
+      setNativeFs(false);
+      void document.exitFullscreen().catch(() => {});
+      return;
+    }
+    if (pseudoFs) {
+      setPseudoFs(false);
+      return;
+    }
+    const el = rootRef.current;
+    if (el?.requestFullscreen && document.fullscreenEnabled) {
+      el.requestFullscreen().then(
+        () => setNativeFs(true),
+        () => setPseudoFs(true),
+      );
     } else {
-      void rootRef.current?.requestFullscreen();
+      setPseudoFs(true);
     }
   };
+
+  const fullscreen = nativeFs || pseudoFs;
 
   const current = slides[active];
 
@@ -269,6 +315,7 @@ export function DeckViewer({ html, css, embedded = false }: DeckViewerProps) {
     <div
       className="deck-root"
       data-embedded={embedded || undefined}
+      data-fullscreen={fullscreen || undefined}
       data-mode={mode}
       // 嵌入形态：容器可聚焦，键盘翻页不劫持文章滚动；整篇模式走窗口监听
       onKeyDown={embedded ? (event) => onKey(event) : undefined}
