@@ -17,6 +17,7 @@ import { ChevronLeft, ChevronRight, Maximize, Minimize, Printer, StickyNote } fr
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MermaidRenderer } from "@/features/markdown/MermaidRenderer.tsx";
+import { fitVisibleSlides, observeLateContent } from "@/features/deck/deckFit.ts";
 import { cn } from "@/lib/cn.ts";
 import { useT } from "@/lib/i18n.ts";
 import { ensureKatexStyles } from "@/lib/katex.ts";
@@ -247,6 +248,7 @@ export function DeckViewer({ html, css, embedded = false, needsKatex = false, ti
   // 换页 = 对全量 DOM 逐节切换 hidden（打印/预览需要全部页面常驻文档）；
   // display:none ↔ block 会自动重放 CSS 换页动画。可见节就地补 aria 语义
   // （画布是 dangerouslySetInnerHTML 的惰性 DOM，无法走 JSX 声明）。
+  // 切换后对新可见的页跑溢出适配（display:none 页量不出尺寸，翻到即量）。
   // biome-ignore lint/correctness/useExhaustiveDependencies: 显式依赖 html——解锁/换页注入新 blob 后需重放 hidden 与 aria
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -266,7 +268,18 @@ export function DeckViewer({ html, css, embedded = false, needsKatex = false, ti
         section.removeAttribute("aria-label");
       }
     });
+    fitVisibleSlides(canvas);
   }, [mode, active, html, total, t]);
+
+  // 迟到内容（mermaid svg 替换占位符、图片加载）触发的溢出重测——chart
+  // 渲染后原页可能从「装得下」变「装不下」
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) {
+      return;
+    }
+    return observeLateContent(canvas);
+  }, []);
 
   // mermaid 占位容器（tools/deck.ts 产出）：逐个挂 MermaidRenderer 惰性渲染
   // ——渲染器自带 useInView（display:none 的隐藏页不会触发，翻到即渲染）与
