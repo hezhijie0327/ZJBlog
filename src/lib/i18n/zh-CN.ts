@@ -148,6 +148,7 @@ export const ZH_CN: Record<StringKey, string> = {
   "deck.fullscreen": "全屏放映",
   "deck.exitFullscreen": "退出全屏",
   "deck.print": "打印幻灯片（每页一页）",
+  "deck.print.hint": "对话框没弹出？这份预览就是打印内容——用浏览器菜单的「打印」（⌘P / Ctrl+P）输出即可。",
 
   // 归档
   "archives.empty": "暂无可归档的内容。",

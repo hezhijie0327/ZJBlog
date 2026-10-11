@@ -16,8 +16,8 @@
 import { ChevronLeft, ChevronRight, Maximize, Minimize, Printer, StickyNote } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { MermaidRenderer } from "@/features/markdown/MermaidRenderer.tsx";
 import { fitVisibleSlides, observeLateContent } from "@/features/deck/deckFit.ts";
+import { MermaidRenderer } from "@/features/markdown/MermaidRenderer.tsx";
 import { cn } from "@/lib/cn.ts";
 import { useT } from "@/lib/i18n.ts";
 import { ensureKatexStyles } from "@/lib/katex.ts";
@@ -165,10 +165,40 @@ const HOST_CSS = `
   .deck-root .deck-canvas section {
     break-inside: avoid;
     page-break-inside: avoid;
+    /* 一页一 slide：section 定高 720px 与 @page 同框，显式 break 把边界
+       钉死（内容溢出一像素也不并页）；末节 auto 防尾页空白 */
+    break-after: page;
+  }
+  .deck-root .deck-canvas section:last-child {
+    break-after: auto;
   }
 }
 .print-preview .deck-root [data-deck-chrome] {
   display: none !important;
+}
+.print-preview .deck-root .deck-stage {
+  aspect-ratio: auto !important;
+  overflow: visible !important;
+  height: auto !important;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  margin-inline: auto !important;
+}
+.print-preview .deck-root .deck-canvas {
+  position: static !important;
+  transform: none !important;
+  zoom: var(--deck-scale) !important;
+}
+.print-preview .deck-root .deck-canvas section[data-slide-hidden] {
+  display: block !important;
+}
+.print-preview .deck-root .deck-canvas section {
+  break-inside: avoid;
+  break-after: page;
+}
+.print-preview .deck-root .deck-canvas section:last-child {
+  break-after: auto;
 }
 /* 预览纸面永远浅色：代码高亮强制回 shiki light 变量 */
 .print-preview.dark .deck-root .marpit section pre,
@@ -548,7 +578,11 @@ export function DeckViewer({ html, css, embedded = false, needsKatex = false, ti
             onClick={() => {
               // 打印走全量纸面（marpit @page 逐页 break 接管分页）
               setMode("stacked");
-              startPrintPreview({ closeLabel: t("print.close"), titleBase: titleBase ?? "" });
+              startPrintPreview({
+                closeLabel: t("print.close"),
+                hint: t("deck.print.hint"),
+                titleBase: titleBase ?? "",
+              });
             }}
             title={t("deck.print")}
             type="button"

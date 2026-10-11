@@ -247,8 +247,23 @@
   color: var(--ink);
 }
 
+/* webview 提示：print 在嵌入式浏览器里是静默 no-op，纸面即终态——
+   告诉用户用浏览器菜单的「打印」输出这份内容 */
+.print-hint {
+  position: fixed;
+  top: 20px;
+  inset-inline-end: 62px;
+  z-index: 60;
+  max-width: 320px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--ink-2);
+  text-align: end;
+}
+
 @media print {
-  .print-close {
+  .print-close,
+  .print-hint {
     display: none !important;
   }
 }

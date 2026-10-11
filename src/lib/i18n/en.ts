@@ -148,6 +148,8 @@ export const EN = {
   "deck.fullscreen": "Fullscreen",
   "deck.exitFullscreen": "Exit fullscreen",
   "deck.print": "Print deck (one slide per page)",
+  "deck.print.hint":
+    "No print dialog? This preview is the print content — output it from your browser's Print menu (⌘P / Ctrl+P).",
 
   // 归档
   "archives.empty": "Nothing to archive yet.",

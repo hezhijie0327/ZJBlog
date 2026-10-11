@@ -28,10 +28,13 @@ export interface PrintPreviewOptions {
   /** 纸面顶部注入品牌字标（ZJBlog. + 分隔线，同 ZJSearch print 文档）；
    *  deck 幻灯片自带品牌且定高页面不容插入，不传即不注入 */
   wordmark?: boolean;
+  /** 关闭芯片下的弱化提示（嵌入式 webview 里 print 是静默 no-op，纸面即
+   *  终态——提示用户用浏览器菜单的「打印」输出这份内容） */
+  hint?: string;
 }
 
 /** 打开打印预览脸并触发打印。返回 teardown（组件卸载时调用以防挂残留）。 */
-export function startPrintPreview({ titleBase, closeLabel, wordmark = false }: PrintPreviewOptions): () => void {
+export function startPrintPreview({ titleBase, closeLabel, wordmark = false, hint }: PrintPreviewOptions): () => void {
   if (document.documentElement.classList.contains(PREVIEW_CLASS)) {
     return () => {};
   }
@@ -74,6 +77,9 @@ export function startPrintPreview({ titleBase, closeLabel, wordmark = false }: P
     window.removeEventListener("keydown", onKey);
     document.dispatchEvent(new CustomEvent(MERMAID_RESTORE));
     chip.remove();
+    document.querySelectorAll(".print-hint").forEach((el) => {
+      el.remove();
+    });
     wordmarkEl?.remove();
     document.documentElement.classList.remove(PREVIEW_CLASS);
     document.title = prevTitle;
@@ -87,6 +93,12 @@ export function startPrintPreview({ titleBase, closeLabel, wordmark = false }: P
   chip.addEventListener("click", teardown);
   window.addEventListener("keydown", onKey);
   document.body.append(chip);
+  if (hint) {
+    const hintEl = document.createElement("p");
+    hintEl.className = "print-hint print-hide";
+    hintEl.textContent = hint;
+    chip.after(hintEl);
+  }
 
   // 给纸面两帧布局再唤起打印对话框；rAF 在遮挡/后台窗格会被饿死，
   // 并联一个 400ms 定时器竞速兜底，once 守卫防双开
