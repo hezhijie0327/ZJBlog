@@ -22,6 +22,7 @@
   ],
   "dependencies": {
     "@giscus/react": "^3.1.0",
+    "@marp-team/marp-core": "^4.4.0",
     "clsx": "^2.1.1",
     "hash-wasm": "^4.12.0",
     "katex": "^0.18.9",
@@ -40,9 +41,6 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.14",
-    "@marp-team/marpit": "^3.2.3",
-    "@mdit/plugin-emoji": "^1.2.2",
-    "@mdit/plugin-katex": "^1.1.3",
     "@mdit/plugin-mark": "^2.1.2",
     "@mdit/plugin-tasklist": "^1.1.3",
     "@tailwindcss/typography": "^0.5.20",

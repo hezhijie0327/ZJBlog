@@ -1,9 +1,9 @@
-// 构建期幻灯片编译（Marpit）：整篇 deck 博文（frontmatter deck: true）与普通
-// 正文的 ```marp fence 共用本模块。Marpit 是 markdown-it 系的独立方言——deck
-// 内容不支持的站内扩展见文件尾的「方言边界」注释，已桥接的：mermaid（占位
-// 容器 + 站内渲染器）、数学 KaTeX、callouts、==mark==、emoji、任务清单、
-// 定义列表、sequence/flow（转 mermaid），产物是静态 <section> + 主题 CSS，
-// 客户端零 Marp 代码（播放器见 features/deck）。
+// 构建期幻灯片编译（marp-core，Marpit 方言的超集）：整篇 deck 博文
+// （frontmatter deck: true）与普通正文的 ```marp fence 共用本模块。deck 内容
+// 不支持的站内扩展见文件尾的「方言边界」注释，已桥接的：mermaid（占位容器 +
+// 站内渲染器）、数学 KaTeX、callouts、==mark==、emoji、任务清单、定义列表、
+// sequence/flow（转 mermaid），产物是静态 <section> + 主题 CSS，客户端零
+// Marp 代码（播放器见 features/deck）。
 //
 // 产物约定（与 src/features/deck/DeckViewer.tsx、pageData.ts 三方对齐）：
 //   - section 的 id 一律剥掉换成 data-slide（多个 deck 同页会撞 duplicate-id
@@ -14,9 +14,7 @@
 
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { Marpit } from "@marp-team/marpit";
-import { bareEmoji } from "@mdit/plugin-emoji";
-import { katex } from "@mdit/plugin-katex";
+import { Marp } from "@marp-team/marp-core";
 import { mark } from "@mdit/plugin-mark";
 import { tasklist } from "@mdit/plugin-tasklist";
 import { imageSize } from "image-size";
@@ -35,14 +33,44 @@ export interface DeckResult {
   count: number;
 }
 
-const marpit = new Marpit({ markdown: { html: true } });
-marpit.use(deckCallouts);
-marpit.use(katex);
-marpit.use(mark);
-marpit.use(bareEmoji);
-marpit.use(tasklist);
-marpit.use(markdownItDeflist);
-marpit.themeSet.default = marpit.themeSet.add(deckThemeCss);
+// 内核换成 marp-core（数学 KaTeX、emoji 短代码由内核接管，替代手接的
+// @mdit/plugin-katex / plugin-emoji）。构造参数把 marp-core 调高的默认值全部
+// 钉回 Marpit 语义——DeckViewer 与打印契约建立在普通 <section> 流上：
+// inlineSVG 关、breaks/linkify 关、标题不产 id（duplicate-id 审计）、不注入
+// 浏览器 helper <script>；fence 高亮让回 markdown-it 默认形态，由
+// postProcessSlide 统一走站内 shiki（内置 hljs 的 class 形态吃不进高亮桥接
+// 正则）。
+//
+// 双实例：开数学的实例产 HTML；marp-core 只要开着数学就会把整套 KaTeX CSS
+// （@font-face 指向 jsDelivr CDN）追加进渲染 css，而页面级 /katex.min.css 已
+// 按 needsKatex 注入，deck css 不需要也不该重复背它——css 与内容无关，用
+// math:false 的孪生实例空渲染取纯主题 css。工厂保证两实例配置不漂移。
+function createMarp(math: boolean): Marp {
+  const marp = new Marp({
+    inlineSVG: false,
+    looseYAML: false,
+    cssContainerQuery: false,
+    emoji: { shortcode: true, unicode: false },
+    math: math ? "katex" : false,
+    script: false,
+    slug: false,
+    markdown: {
+      html: true,
+      breaks: false,
+      linkify: false,
+      highlight: () => "",
+    },
+  });
+  marp.use(deckCallouts);
+  marp.use(mark);
+  marp.use(tasklist);
+  marp.use(markdownItDeflist);
+  marp.themeSet.default = marp.themeSet.add(deckThemeCss);
+  return marp;
+}
+
+const marp = createMarp(true);
+const marpCssOnly = createMarp(false);
 
 /** 站内图注入固有尺寸（src 以 / 开头 → public/ 下的文件）。deck 不走
  *  rehypeLocalImageSize 的 hast 管线，这里做字符串层等价物；markdown-it 产出
@@ -108,7 +136,8 @@ export function compileDeck(markdown: string): DeckResult {
   // 指令块位于文档第 0 个字符——前导空白会让指令块漏解析，`---` 被当成
   // markdown 渲染（实测产生空页 + 指令段落被 underline 成标题）
   const source = markdown.replace(/^\s+/, "");
-  const { html: pages, css, comments } = marpit.render(source, { htmlAsArray: true });
+  const { html: pages, comments } = marp.render(source, { htmlAsArray: true });
+  const { css } = marpCssOnly.render("");
   const list = Array.isArray(pages) ? pages : [pages];
   const slides = list.map((page, index) => postProcessSlide(page, index, comments[index] ?? []));
   return { slides, css, count: slides.length };
