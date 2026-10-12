@@ -12,6 +12,7 @@ import { PostNav } from "@/components/PostNav.tsx";
 import { PrintButton } from "@/components/PrintButton.tsx";
 import { TableOfContents } from "@/components/TableOfContents.tsx";
 import { TagList } from "@/components/TagList.tsx";
+import { Tape } from "@/components/Tape.tsx";
 import { GiscusComments } from "@/features/comments/GiscusComments.tsx";
 import { DeckViewer } from "@/features/deck/DeckViewer.tsx";
 import { Prose } from "@/features/markdown/Prose.tsx";
@@ -72,11 +73,15 @@ export function BlogPostPage({ data }: { data: BlogPostData }) {
             <LockScreen locked={post.locked} onUnlock={setUnlocked} slug={post.slug} />
           ) : (
             <>
-              {/* 手写摘要卡（frontmatter.summary，可选） */}
+              {/* 手写摘要卡（frontmatter.summary，可选）：文头便签语言（§7）——
+                  撕边纸 + 顶部单胶带 + 确定性微倾，纯阅读面不抢交互位 */}
               {post.summary && (
-                <div className="mb-8 rounded-xl border border-accent/30 bg-accent-soft/40 p-4">
-                  <p className="font-mono text-xs uppercase tracking-[0.18em] text-ink-2">✨ {t("post.summary")}</p>
-                  <p className="mt-1.5 text-sm leading-relaxed text-ink">{post.summary}</p>
+                <div className="relative mb-8 rotate-[0.35deg]">
+                  <Tape className="-top-3 left-8 w-20 -rotate-3 bg-accent-soft/80" />
+                  <div className="paper-note px-5 py-4">
+                    <p className="font-mono text-xs uppercase tracking-[0.18em] text-ink-2">✨ {t("post.summary")}</p>
+                    <p className="mt-1.5 text-sm leading-relaxed text-ink">{post.summary}</p>
+                  </div>
                 </div>
               )}
 

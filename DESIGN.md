@@ -240,6 +240,8 @@ deck 文（frontmatter `deck: true` 或正文 marp fence）的视觉契约：构
 
 变化必须是**确定性**的（按序号轮换），禁止随机数 —— SSR 与客户端水合必须一致。
 
+博客侧同语言消费（2026-10 起）：hero 便签与联系纸条、旅行明信片墙（**有封面 = 拍立得 + 图钉挂绳**——金钉头 + 棉线升向地图卡方向，参考实体旅行照片墙；无封面 = 胶带便签 + 背面粉条角票）、文头手写摘要便签（撕边纸 + 顶部单胶带 + 0.35° 微倾）、文末署名卡（素面撕边 + CC 落款邮戳，信件落款叙事）、404 与全部列表空态告示纸（EmptyState 非 bare 变体，两角对压——ZJSearch `PaperEmpty` 同语言）、`PAPER_STRIP` 作空态/纸条动作。
+
 ZJSearch 侧同语言消费（2026-10 起）：`.paper-note` + 两角胶带作空状态/404/搜索失败框的告示纸、AI 线程「已确认方向」卡的钉住便签与报告 TOC 纸条，`PAPER_STRIP` 作空状态的唯一动作，`.marker-strip` 扫首页问候语的称呼词，`.paper-chapter` 作混合搜索分类块的手绘分隔线，`.hollow-text` + 衬线标题 + 等宽日期作知识库目录行（PostList 的行语言），`PaperEmpty` 组件承载全部告示纸空态；hero 手绘箭头同款移植（`client/zjsearch/src/styles/paper.css` + `components/PaperEmpty.tsx`，片段在 `lib/styles.ts` 同名同语义）。钉卡物理同款上身的还有首页 ask-card（确定性微倾 + 顶边胶带 + 聚焦转正 `focus-within:rotate-0`，箭头/胶带挂在不倾斜的外层上）、常规搜索的两个内容卡（AI Overview 卡与 infobox：单胶带压角 + 交替 ±0.35° 微倾，胶带 `zjs-print-hide`——打印留盒去胶带）；`.paper-postmark` 作报告文档的归档落款（DocumentView 文末 + 知识库 inspector 同款）；线程未找到页入列 `PaperEmpty` 告示纸 + 金 `PAPER_STRIP` 动作；澄清门问询卡入列钉住的问询纸条（`paper-note--blank` 素面撕边 + 两角胶带，对话语义留在纸面上，确认动作是金 `PAPER_STRIP`——LockScreen 解锁按钮同款）。撕边多边形 / 物理规则改动**两侧同步**（§17）。
 
 ## 8. 动效（Motion）

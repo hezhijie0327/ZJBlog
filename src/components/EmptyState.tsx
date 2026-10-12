@@ -1,10 +1,11 @@
 // 空状态：DESIGN.md §9 的共享构成（图标圆盘 + 标题 + 灰字说明 + 可选胶囊动作）。
-// 列表页内用卡片壳 + h2 标题；404 等整页场景用 bare 变体 + h1 页题字号，
+// 列表页内的空态是告示纸（paper-note + 两角胶带，ZJSearch PaperEmpty 同语言，
+// §7）；404 等整页场景用 bare 变体（纸面壳由调用方给）+ h1 页题字号，
 // 复用同一构成而不是各写一套（DESIGN.md §9「404 与空状态同构」）。
 
 import type { ReactNode } from "react";
+import { Tape } from "@/components/Tape.tsx";
 import { cn } from "@/lib/cn.ts";
-import { CARD } from "@/lib/styles.ts";
 
 interface EmptyStateProps {
   /** 顶部图标（渲染进 accent-soft 圆盘，纯装饰） */
@@ -15,15 +16,15 @@ interface EmptyStateProps {
   desc: string;
   /** 底部动作（如返回首页的胶囊链接） */
   action?: ReactNode;
-  /** 去掉卡片壳（整页居中的 404 等场景） */
+  /** 去掉纸面壳（整页居中的 404，纸壳由调用方给） */
   bare?: boolean;
   className?: string;
 }
 
 export function EmptyState({ icon, heading = "h2", title, desc, action, bare = false, className }: EmptyStateProps) {
   const Title = heading;
-  return (
-    <div className={cn(bare ? "text-center" : CARD, !bare && "px-6 py-16", "text-center", className)}>
+  const body = (
+    <>
       {icon && (
         <span
           aria-hidden="true"
@@ -45,6 +46,17 @@ export function EmptyState({ icon, heading = "h2", title, desc, action, bare = f
       )}
       <p className={cn("text-sm text-ink-2", (title || icon) && "mt-1.5")}>{desc}</p>
       {action && <div className="mt-5 flex justify-center">{action}</div>}
+    </>
+  );
+  if (bare) {
+    return <div className={cn("text-center", className)}>{body}</div>;
+  }
+  return (
+    <div className={cn("relative", className)}>
+      {/* 告示纸两角对压（§7：胶带必须是被裁剪元素的兄弟节点） */}
+      <Tape className="-top-3 left-8 w-20 -rotate-3 bg-accent-soft/80" />
+      <Tape className="-top-3 right-8 w-16 rotate-[4deg] bg-accent-soft/60" />
+      <div className="paper-note px-6 py-16 text-center">{body}</div>
     </div>
   );
 }

@@ -441,7 +441,8 @@ export function TravelsPage({ data }: { data: TravelsData }) {
   );
 }
 
-/** 明信片卡：确定性歪斜 + 胶带（ProjectCard 同语言）。封面点击进灯箱，
+/** 明信片卡：确定性歪斜；有封面 = 拍立得（图钉挂绳钉向地图卡方向，参考
+ *  实体旅行照片墙），无封面 = 胶带便签（明信片背面粉条）。封面点击进灯箱，
  *  标题进详情（锁定旅行 = 锁屏），link 指向相关游记。 */
 function Postcard({ index, onPreview, trip }: { index: number; onPreview: () => void; trip: TravelListItem }) {
   const t = useT();
@@ -456,13 +457,31 @@ function Postcard({ index, onPreview, trip }: { index: number; onPreview: () => 
   return (
     <article className="group relative scroll-mt-24" id={trip.slug}>
       <div className={cn("relative", tilt)}>
-        <Tape className={cn("-top-3 h-6 w-24 bg-accent-soft/80", tape)} />
+        {trip.cover ? (
+          // 图钉挂绳：钉头 + 棉线升向墙的上方（首行指向地图卡，后续行钉在
+          // 墙面上）；纯装饰 aria-hidden，升入行间 gap 不占布局
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -top-10 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center"
+          >
+            <span className="size-2.5 rounded-full bg-accent-strong shadow-card ring-2 ring-accent-soft" />
+            <span className="h-8 w-px bg-line" />
+          </div>
+        ) : (
+          <Tape className={cn("-top-3 h-6 w-24 bg-accent-soft/80", tape)} />
+        )}
         <div className={cn(CARD_HOVER, "overflow-hidden")}>
           {trip.cover ? (
-            <button aria-label={trip.title} className="block w-full cursor-zoom-in" onClick={onPreview} type="button">
+            // 拍立得白框：图面内收留边（卡体即相纸厚边）
+            <button
+              aria-label={trip.title}
+              className="block w-full cursor-zoom-in p-2 pb-0"
+              onClick={onPreview}
+              type="button"
+            >
               <img
                 alt={trip.title}
-                className="aspect-[2/1] w-full object-cover transition-transform duration-500 group-hover:scale-[1.03] sm:aspect-[16/10]"
+                className="aspect-[2/1] w-full rounded-[4px] object-cover transition-transform duration-500 group-hover:scale-[1.03] sm:aspect-[16/10]"
                 height={360}
                 loading="lazy"
                 src={trip.cover}
