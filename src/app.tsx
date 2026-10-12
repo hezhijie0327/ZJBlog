@@ -7,9 +7,17 @@ import { LoaderCircle } from "lucide-react";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { CommandPalette } from "@/components/CommandPalette.tsx";
 import { Shell } from "@/components/Shell.tsx";
-import { I18nContext, readLocalePreference, storeLocalePreference, type UiLocale } from "@/lib/i18n.ts";
+import type { StringKey } from "@/lib/i18n/en.ts";
+import {
+  I18nContext,
+  readLocalePreference,
+  storeLocalePreference,
+  translateFor,
+  type UiLocale,
+  useLocale,
+} from "@/lib/i18n.ts";
 import { RouterProvider, useRouter } from "@/lib/router.tsx";
-import type { AnyPageData, SyncPages } from "@/lib/types.ts";
+import type { AnyPageData, PageKind, SyncPages } from "@/lib/types.ts";
 import {
   isArchivesData,
   isBlogPostData,
@@ -45,6 +53,34 @@ function PageFallback() {
       <LoaderCircle aria-hidden="true" className="size-6 animate-spin-slow text-ink-3" />
     </div>
   );
+}
+
+// 标签页标题随 UI 语言的页面：预渲染 document.title 是 zh-CN 基准（globals.title
+// 构建期拼死），EN 偏好用户在水合校正与每次换页后用当前词库重写。只覆盖标题
+// 来自词库的列表/工具页；内容页（文章/旅行/项目详情/标签）标题属作者原文、
+// 首页与 404 两语同文，均保持 payload 原值。
+const PAGE_TITLE_KEYS: Partial<Record<PageKind, StringKey>> = {
+  archives: "page.archives.title",
+  blogs: "page.blogs.title",
+  projects: "page.projects.title",
+  support: "page.support.title",
+  travels: "page.travels.title",
+};
+
+/** 挂在 Router 内的零渲染组件：locale ≠ payload 基准（zh-CN）时重写 document.title。 */
+function DocumentTitleSync() {
+  const { data } = useRouter();
+  const locale = useLocale();
+  useEffect(() => {
+    if (!data || locale === data.globals.locale) {
+      return;
+    }
+    const key = PAGE_TITLE_KEYS[data.globals.page];
+    if (key) {
+      document.title = `${translateFor(locale)(key)} | ${data.globals.siteName}`;
+    }
+  }, [data, locale]);
+  return null;
 }
 
 function Pages({ syncPages }: { syncPages?: SyncPages }) {
@@ -155,6 +191,7 @@ export function App({
   return (
     <I18nContext.Provider value={i18n}>
       <RouterProvider initialData={initialData} onPageData={preloadPage}>
+        <DocumentTitleSync />
         <Shell>
           <Pages syncPages={syncPages} />
         </Shell>
