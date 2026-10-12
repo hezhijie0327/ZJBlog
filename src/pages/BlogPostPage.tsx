@@ -53,7 +53,7 @@ export function BlogPostPage({ data }: { data: BlogPostData }) {
           {!post.locked && (
             <div className="flex shrink-0 items-center gap-1 pt-1 print-hide">
               <CopyMarkdownButton href={`/blogs/${encodeURIComponent(post.slug)}/index.md`} />
-              <PrintButton titleBase={post.title} />
+              <PrintButton titleBase={post.title} wordmark={!post.deck} />
             </div>
           )}
         </div>
@@ -68,9 +68,10 @@ export function BlogPostPage({ data }: { data: BlogPostData }) {
         <TagList className="mt-4" exclude={post.category} linkTags tags={post.tags} />
       </header>
 
-      <div className="mx-auto flex max-w-6xl justify-center gap-10">
-        {/* 幻灯片正文列放宽：16:9 画布在 3xl 里太小 */}
-        <article className={cn("min-w-0 flex-1", post.deck ? "max-w-5xl" : "max-w-3xl")}>
+      {/* deck 不设外壳上限：幻灯片按容器宽自适应缩放（打印时 @page 1280×720
+          下容器恰满宽，zoom=1 一比一满页——上限会把 slide 缩小、页底留空带） */}
+      <div className={cn("mx-auto flex justify-center gap-10", !post.deck && "max-w-6xl")}>
+        <article className={cn("min-w-0 flex-1", !post.deck && "max-w-3xl")}>
           {post.locked && !unlocked ? (
             /* 锁定文：锁屏即正文位。摘要/目录/评论同属内容，一并隐去 */
             <LockScreen locked={post.locked} onUnlock={setUnlocked} slug={post.slug} />
@@ -104,8 +105,11 @@ export function BlogPostPage({ data }: { data: BlogPostData }) {
               {/* 上一篇 / 下一篇 */}
               <PostNav next={post.next} prev={post.prev} />
 
-              {/* giscus 评论（GitHub Discussions，按路径映射）；锁定文解锁后再挂载 */}
-              <GiscusComments />
+              {/* giscus 评论（GitHub Discussions，按路径映射）；锁定文解锁后再挂载。
+                  deck 打印不收评论：打印物 = 幻灯片本身，尾流会多出一张空白页 */}
+              <div className={cn(post.deck && "print-hide")}>
+                <GiscusComments />
+              </div>
             </>
           )}
         </article>

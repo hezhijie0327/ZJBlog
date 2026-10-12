@@ -8,7 +8,14 @@ import { useT } from "@/lib/i18n.ts";
 import { startPrintPreview } from "@/lib/print.ts";
 import { ICON_BTN } from "@/lib/styles.ts";
 
-export function PrintButton({ titleBase }: { titleBase: string }) {
+export function PrintButton({
+  titleBase,
+  wordmark = true,
+}: {
+  titleBase: string;
+  /** deck 页不注入（幻灯片自带品牌且定高页面不容插入——print.ts 同款约定） */
+  wordmark?: boolean;
+}) {
   const t = useT();
 
   return (
@@ -22,7 +29,7 @@ export function PrintButton({ titleBase }: { titleBase: string }) {
           closeLabel: t("print.close"),
           hint: t("print.hint"),
           titleBase,
-          wordmark: true,
+          wordmark,
         });
       }}
       title={t("post.print")}

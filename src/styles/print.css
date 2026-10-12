@@ -219,6 +219,20 @@
   max-width: none !important;
 }
 
+/* deck 三规则的预览脸 twin（与上方 @media print 的 .deck-page 列表同步）：
+   页头不印、容器留白清零——deck 打印物 = 幻灯片本身，预览即所印 */
+.print-preview main:has(.deck-page) {
+  padding: 0 !important;
+}
+
+.print-preview main:has(.deck-page) .container {
+  padding: 0 !important;
+}
+
+.print-preview main:has(.deck-page) header {
+  display: none !important;
+}
+
 /* 外链在纸上露出目标（与 @media print 同名块同步：预览脸必须所见即所印） */
 .print-preview .prose a[href^="http"]::after {
   content: " (" attr(href) ")";
