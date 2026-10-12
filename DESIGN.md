@@ -232,6 +232,8 @@ deck 文（frontmatter `deck: true` 或正文 marp fence）的视觉契约：构
 
 变化必须是**确定性**的（按序号轮换），禁止随机数 —— SSR 与客户端水合必须一致。
 
+ZJSearch 侧同语言消费（2026-10 起）：`.paper-note` + 两角胶带作空状态与 404 的告示纸、AI 线程「已确认方向」卡的钉住便签，`PAPER_STRIP` 作空状态的唯一动作，`.marker-strip` 扫首页问候语的称呼词，`.paper-chapter` 作混合搜索分类块的手绘分隔线，`.hollow-text` + 衬线标题 + 等宽日期作知识库目录行（PostList 的行语言；`client/zjsearch/src/styles/paper.css`，片段在 `lib/styles.ts` 同名同语义）。撕边多边形 / 物理规则改动**两侧同步**（§17）。
+
 ## 8. 动效（Motion）
 
 | 场景 | 动效 |
