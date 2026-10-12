@@ -43,12 +43,13 @@ export const EN = {
   "page.blogs.title": "All Posts",
   "page.blogs.en": "",
   "page.travels.title": "Travel",
-  "page.travels.en": "Travel",
+  "page.travels.en": "",
   "page.archives.title": "Archives",
   "page.archives.en": "",
   "page.projects.title": "Projects",
   "page.projects.en": "",
   "page.support.title": "Support",
+  "page.support.en": "",
 
   // 首页章节
   "home.featured.title": "Featured Projects",

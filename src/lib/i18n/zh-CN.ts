@@ -49,6 +49,7 @@ export const ZH_CN: Record<StringKey, string> = {
   "page.projects.title": "项目",
   "page.projects.en": "Projects",
   "page.support.title": "支持",
+  "page.support.en": "Support",
 
   // 首页章节
   "home.featured.title": "精选项目",

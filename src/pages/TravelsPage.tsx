@@ -470,7 +470,11 @@ function Postcard({ index, onPreview, trip }: { index: number; onPreview: () => 
               />
             </button>
           ) : (
-            <div aria-hidden="true" className="project-cover aspect-[2/1] w-full sm:aspect-[16/10]" />
+            // 无封面是常态：占位只保留一条明信片背面粉条（横线纸纹 + 虚线角票），
+            // 不再撑整个 2:1 画位
+            <div aria-hidden="true" className="project-cover relative h-12 w-full sm:h-14">
+              <span className="absolute right-4 top-1/2 size-7 -translate-y-1/2 rotate-3 rounded-[4px] border border-dashed border-line bg-surface/70" />
+            </div>
           )}
           <div className="p-4 sm:p-6">
             <div className="flex items-center justify-between gap-3">
