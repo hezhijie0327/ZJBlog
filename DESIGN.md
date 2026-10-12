@@ -270,7 +270,7 @@ Shell（min-h-dvh 纵向 flex）
 ```
 
 - 图标按钮必须有 `aria-label`；当前导航项 `aria-current="page"`；全局 `:focus-visible` 焦点环在 base.css（2px `--accent` outline + offset）。
-- 404 与空状态同构：图标圆盘（`accent-soft` 底）+ 标题 + 灰字说明 + 一个胶囊动作 —— `components/EmptyState.tsx` 单一实现（`bare` 变体承载 404 整页居中，`heading="h1"` 取页面 H1 字号）。
+- 404 与空状态同构：图标圆盘（`accent-soft` 底）+ 标题 + 灰字说明 + 一个动作 —— `components/EmptyState.tsx` 单一实现（`bare` 变体承载 404 整页居中，`heading="h1"` 取页面 H1 字号）。404 整页形态是**告示纸**（2026-10 起，ZJSearch 线程未找到同款语言，§7）：`paper-note` 撕边便签 + 两角胶带（挂在不倾斜外层）+ 微倾斜钉住，动作用金 `PAPER_STRIP`（空状态唯一动作契约）。
 
 **响应式**
 

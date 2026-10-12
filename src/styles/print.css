@@ -37,13 +37,9 @@
   }
 
   /* 代码高亮切回浅色主题：prose.css 的 .dark 切换在打印下会输出暗色文字
-     （shiki 双主题变量），浅色纸面上不可读——打印一律取 --shiki-light */
-  .dark .prose .code-card pre,
-  .dark .prose .code-card span,
-  .dark .prose .code-card pre span {
-    color: var(--shiki-light);
-  }
-
+     （shiki 双主题变量），浅色纸面上不可读——打印一律取 --shiki-light。
+     置于文件末尾：本块特异性 (0,3,1) 必须晚于下方分页避免的裸 `pre` (0,0,1)，
+     特异性升序才不挂 noDescendingSpecificity（两块属性不相干，顺序无行为影响）。 */
   * {
     print-color-adjust: exact;
   }
@@ -120,6 +116,11 @@
     word-break: break-all;
   }
 
+  /* 复制按钮是交互件不进纸面（语言标签保留） */
+  .prose .copy-code {
+    display: none;
+  }
+
   /* 卡片与代码块不跨页断裂；标题不孤行在页尾 */
   .code-card,
   pre,
@@ -133,6 +134,15 @@
   h2,
   h3 {
     break-after: avoid;
+  }
+
+  /* 代码高亮切回浅色主题（shiki 双主题变量在打印下必须取浅色一档）——
+     本块特异性 (0,3,1) 晚于上方分页避免的裸 `pre` (0,0,1)，特异性升序；
+     与预览脸的 .print-preview.dark 同名块保持内容同步（见文件头注） */
+  .dark .prose .code-card pre,
+  .dark .prose .code-card span,
+  .dark .prose .code-card pre span {
+    color: var(--shiki-light);
   }
 }
 
@@ -205,6 +215,19 @@
 
 .print-preview main article {
   max-width: none !important;
+}
+
+/* 外链在纸上露出目标（与 @media print 同名块同步：预览脸必须所见即所印） */
+.print-preview .prose a[href^="http"]::after {
+  content: " (" attr(href) ")";
+  font-size: 0.75em;
+  color: var(--ink-3);
+  word-break: break-all;
+}
+
+/* 复制按钮不进纸面（与 @media print 同名块同步） */
+.print-preview .prose .copy-code {
+  display: none;
 }
 
 /* 品牌字标（家族契约，同 ZJSearch print 文档左上角 wordmark）：

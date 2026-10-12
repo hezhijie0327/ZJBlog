@@ -74,7 +74,8 @@ export function LockScreen({
         className="paper-postmark pointer-events-none absolute bottom-6 right-6 z-10 hidden size-20 rotate-12 text-ink-3 sm:grid"
       >
         <Lock className="size-4" />
-        <span className="font-mono text-[8px] tracking-[0.22em]">SEALED</span>
+        {/* 负右距抵消末字母后的 tracking 尾隙，戳文才在圆环里光学居中 */}
+        <span className="-mr-[0.22em] font-mono text-[8px] leading-none tracking-[0.22em]">SEALED</span>
       </div>
 
       <div className="paper-note px-7 pb-10 pt-12 sm:px-10">
