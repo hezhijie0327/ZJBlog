@@ -61,7 +61,7 @@ export function PostList({ blogs }: { blogs: BlogListItem[] }) {
               </div>
 
               {blog.description && (
-                <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-2 sm:text-[15px]">{blog.description}</p>
+                <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-2 sm:text-base">{blog.description}</p>
               )}
 
               <TagList className="mt-3" exclude={blog.category} hoverable tags={blog.tags} />

@@ -51,7 +51,7 @@ export function IndexPage({ data }: { data: HomeData }) {
       >
         <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-8 sm:gap-14 lg:flex-row lg:items-center lg:justify-between lg:gap-8">
           <div className="max-w-3xl">
-            <p className="animate-fade-up mb-4 flex items-center gap-2 font-mono text-[11px] tracking-[0.24em] text-ink-3 sm:mb-6">
+            <p className="animate-fade-up mb-4 flex items-center gap-2 font-mono text-xs tracking-[0.24em] text-ink-3 sm:mb-6">
               <span aria-hidden="true" className="inline-block size-1.5 rounded-full bg-accent-strong" />
               {t("hero.kicker")}
             </p>
@@ -146,7 +146,7 @@ export function IndexPage({ data }: { data: HomeData }) {
           </div>
         </div>
         {/* 底部滚动提示（对标 justin3go「向下滚动」）：纯装饰，锚点跳转交给分镜条 */}
-        <p className="absolute inset-x-0 bottom-5 flex items-center justify-center gap-2 font-mono text-[11px] tracking-[0.2em] text-ink-3">
+        <p className="absolute inset-x-0 bottom-5 flex items-center justify-center gap-2 font-mono text-xs tracking-[0.2em] text-ink-3">
           {t("hero.scrollHint")}
           <ArrowDown aria-hidden="true" className={cn("size-3.5", heroInView && "animate-hint-bob")} />
         </p>
@@ -351,9 +351,7 @@ export function IndexPage({ data }: { data: HomeData }) {
           <Tape className="-top-3 left-10 w-24 -rotate-3 bg-accent-soft/80" />
           <Tape className="-top-3 right-10 w-20 rotate-[4deg] bg-accent-soft/60" />
           <div className="paper-note px-6 py-8 sm:px-10 sm:py-10">
-            <p className="mx-auto max-w-xl text-sm leading-relaxed text-ink-2 sm:text-[15px]">
-              {t("home.contact.desc")}
-            </p>
+            <p className="mx-auto max-w-xl text-sm leading-relaxed text-ink-2 sm:text-base">{t("home.contact.desc")}</p>
             <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
               {/* 纸条入口：金色主纸条（GitHub）+ 纸面次条（RSS / 支持），与 Hero 按钮同语言 */}
               <a

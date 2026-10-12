@@ -74,7 +74,7 @@ export function ProjectCard({ project, index, heading: Heading }: ProjectCardPro
             <span aria-hidden="true" className="font-serif text-6xl font-black leading-none text-accent/20">
               {shortName.charAt(0)}
             </span>
-            <span className="font-mono text-[11px] tracking-[0.18em] text-ink-3">{shortName}</span>
+            <span className="font-mono text-xs tracking-[0.18em] text-ink-3">{shortName}</span>
           </div>
         )}
       </div>

@@ -82,7 +82,7 @@ export function Navigation() {
         <div className="flex h-14 items-center justify-between gap-3">
           {/* Logo（纯文字字标 + 品牌句号，头像只在 Hero 纸片与署名卡出现） */}
           <Link className="group flex items-center" href="/">
-            <span className="whitespace-nowrap font-serif text-2xl font-semibold tracking-tight">
+            <span className="whitespace-nowrap font-serif text-xl font-semibold tracking-tight sm:text-2xl">
               {t("site.brand")}
               {/* 品牌句号（DESIGN.md §2.1）：实心金点收尾，与品牌标句号同色系 */}
               <span

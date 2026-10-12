@@ -360,11 +360,11 @@ export function TravelsPage({ data }: { data: TravelsData }) {
                 <p className={EYEBROW}>{t("travel.eyebrow")}</p>
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                   {/* 图例仅 ≥sm 显示：小屏腾出空间让控制钮一行排布（配色语义由针脚形状自携带） */}
-                  <span className="hidden items-center gap-1.5 font-mono text-[11px] text-ink-2 sm:inline-flex">
+                  <span className="hidden items-center gap-1.5 font-mono text-xs text-ink-2 sm:inline-flex">
                     <Heart aria-hidden="true" className="size-3 fill-accent-strong text-accent-strong" />
                     {t("travel.couple")}
                   </span>
-                  <span className="hidden items-center gap-1.5 font-mono text-[11px] text-ink-2 sm:inline-flex">
+                  <span className="hidden items-center gap-1.5 font-mono text-xs text-ink-2 sm:inline-flex">
                     <User aria-hidden="true" className="size-3 text-accent-strong" />
                     {t("travel.solo")}
                   </span>
@@ -518,7 +518,7 @@ function Postcard({ index, onPreview, trip }: { index: number; onPreview: () => 
               <Link
                 className={cn(
                   PAPER_STRIP,
-                  "-rotate-1 mt-4 h-9 px-4 text-[13px] [--strip:var(--surface)] hover:text-accent",
+                  "-rotate-1 mt-4 h-9 px-4 text-sm [--strip:var(--surface)] hover:text-accent",
                 )}
                 href={trip.link}
               >

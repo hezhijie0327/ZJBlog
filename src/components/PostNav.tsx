@@ -22,7 +22,7 @@ export function PostNav({ prev, next }: { prev?: PostNavLink; next?: PostNavLink
     >
       {prev ? (
         <Link className={cn(cardClass, "group")} href={`/blogs/${prev.slug}/`}>
-          <span className="flex items-center gap-1.5 font-mono text-[11px] text-ink-3">
+          <span className="flex items-center gap-1.5 font-mono text-xs text-ink-3">
             <ArrowLeft aria-hidden="true" className="size-3" />
             {t("post.prev")}
           </span>
@@ -35,7 +35,7 @@ export function PostNav({ prev, next }: { prev?: PostNavLink; next?: PostNavLink
       )}
       {next && (
         <Link className={cn(cardClass, "group text-right")} href={`/blogs/${next.slug}/`}>
-          <span className="flex items-center justify-end gap-1.5 font-mono text-[11px] text-ink-3">
+          <span className="flex items-center justify-end gap-1.5 font-mono text-xs text-ink-3">
             {t("post.next")}
             <ArrowRight aria-hidden="true" className="size-3" />
           </span>

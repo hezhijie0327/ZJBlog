@@ -59,7 +59,7 @@ export function ArchivesPage({ data }: { data: ArchivesData }) {
                             {formatDateISO(blog.date).slice(5)}
                           </time>
                         )}
-                        <span className="min-w-0 flex-1 truncate font-serif text-sm font-medium text-ink transition-colors group-hover:text-accent sm:text-[15px]">
+                        <span className="min-w-0 flex-1 truncate font-serif text-sm font-medium text-ink transition-colors group-hover:text-accent sm:text-base">
                           {blog.title}
                         </span>
                         {blog.locked && (

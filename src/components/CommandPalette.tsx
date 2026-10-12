@@ -342,7 +342,7 @@ export function CommandPalette() {
                       </span>
                     )}
                   </span>
-                  <span className={cn(CHIP, "shrink-0 font-mono text-[11px]")}>{typeLabel[item.type]}</span>
+                  <span className={cn(CHIP, "shrink-0 font-mono text-xs")}>{typeLabel[item.type]}</span>
                   <ArrowUpRight aria-hidden="true" className="size-3.5 shrink-0 text-ink-3" />
                 </button>
               );
@@ -351,7 +351,7 @@ export function CommandPalette() {
         </div>
 
         {/* 底部提示：按键用 kbd 胶囊（sans 栈渲染箭头字形更稳） */}
-        <div className={cn(META, "flex items-center gap-4 border-t border-line px-4 py-2.5 text-[11px]")}>
+        <div className={cn(META, "flex items-center gap-4 border-t border-line px-4 py-2.5 text-xs")}>
           <span className="flex items-center gap-1.5">
             <kbd className={cn(MONO_CHIP, "font-sans")}>↑</kbd>
             <kbd className={cn(MONO_CHIP, "font-sans")}>↓</kbd>

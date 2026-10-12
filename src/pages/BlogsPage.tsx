@@ -63,7 +63,7 @@ export function BlogsPage({ data }: { data: BlogsData }) {
                       className="-ml-px block border-l border-transparent transition-colors hover:border-accent"
                       href={`/blogs/${blog.slug}/`}
                     >
-                      <span className="block font-mono text-[11px] text-ink-3">
+                      <span className="block font-mono text-xs text-ink-3">
                         {blog.date ? formatDateISO(blog.date) : ""}
                       </span>
                       <span className="mt-0.5 block text-sm leading-snug text-ink-2 transition-colors hover:text-ink">

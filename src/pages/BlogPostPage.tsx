@@ -75,7 +75,7 @@ export function BlogPostPage({ data }: { data: BlogPostData }) {
               {/* 手写摘要卡（frontmatter.summary，可选） */}
               {post.summary && (
                 <div className="mb-8 rounded-xl border border-accent/30 bg-accent-soft/40 p-4">
-                  <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-ink-2">✨ {t("post.summary")}</p>
+                  <p className="font-mono text-xs uppercase tracking-[0.18em] text-ink-2">✨ {t("post.summary")}</p>
                   <p className="mt-1.5 text-sm leading-relaxed text-ink">{post.summary}</p>
                 </div>
               )}

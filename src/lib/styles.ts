@@ -40,13 +40,14 @@ export const PAPER_STRIP =
 export const CHIP = "inline-flex items-center rounded-full border border-line px-2.5 py-0.5 text-xs text-ink-2";
 
 /** 等宽小号标签胶囊（键盘提示 / 类型标记） */
-export const MONO_CHIP = `${CHIP} font-mono text-[11px]`;
+export const MONO_CHIP = `${CHIP} font-mono text-xs`;
 
 /** 等宽元信息文字（日期 / 计数 / 键盘提示） */
 export const META = "font-mono text-xs text-ink-3";
 
-/** 眉标（eyebrow）：等宽小号全大写间距标签，用于标题旁的英文点缀与分组小标题 */
-export const EYEBROW = "font-mono text-[11px] uppercase tracking-[0.2em] text-ink-3";
+/** 眉标（eyebrow）：等宽小号全大写间距标签，用于标题旁的英文点缀与分组小标题。
+ *  信息文本字号地板 = 12px（DESIGN.md §4）：eyebrow 虽是点缀但也承载章节名。 */
+export const EYEBROW = "font-mono text-xs uppercase tracking-[0.2em] text-ink-3";
 
 /** 胶带（DESIGN.md §7 纸感装饰）：半透明金底矩形压在纸边之上；
  *  定位 / 旋转 / 透明度由调用方给（两角对压优于单条居中） */

@@ -78,7 +78,7 @@ export function StoryBar({ sections }: { sections: StorySection[] }) {
       className="sticky top-[calc(3.5rem+env(safe-area-inset-top))] z-40 hidden border-b border-line bg-bg/95 backdrop-blur-md md:block"
     >
       <div className="container mx-auto flex h-11 items-center justify-between gap-4 px-4">
-        <span className="flex shrink-0 items-center gap-2 font-mono text-[11px] tracking-[0.18em] text-ink-3">
+        <span className="flex shrink-0 items-center gap-2 font-mono text-xs tracking-[0.18em] text-ink-3">
           <Clapperboard aria-hidden="true" className="size-3.5" />
           {t("home.storybar")}
         </span>

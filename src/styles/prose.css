@@ -23,6 +23,11 @@
   --tw-prose-th-borders: var(--line);
   --tw-prose-td-borders: var(--line);
   font-family: var(--font-serif);
+  /* 中文衬线长文刻度（DESIGN.md §4）：17px/1.8 —— Typography 插件默认
+     16px/1.75 对衬线中文偏小；标题/代码/表格都是 em 刻度，跟着整体放大。
+     与上面的颜色覆盖同理必须保持非分层才压得过插件。 */
+  font-size: 1.0625rem;
+  line-height: 1.8;
 }
 
 .prose :where(a):not(:where([class~="not-prose"] *)) {
@@ -167,7 +172,7 @@
   padding: 0.3rem 0.5rem 0.3rem 1rem;
   border-bottom: 1px solid color-mix(in oklab, var(--line) 55%, transparent);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .prose .code-lang {
