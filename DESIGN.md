@@ -123,6 +123,7 @@
 | 界面正文 | `text-sm`（说明性文字 `text-xs`） | 全站默认 |
 | 元信息 | `META` 片段（mono `text-xs`） | 日期/计数/键位 |
 | 长文正文 | `.prose` 显式刻度 **17px / line-height 1.8**（`1.0625rem`——中文衬线长文，标题/代码/表格为 em 刻度整体跟随；覆盖必须非分层压过 Typography 插件，同 `--tw-prose-*` 颜色覆盖） | `prose.css`；颜色全走 `--tw-prose-*` → token 映射 |
+| 文内标题（MD `#`→`######`） | 六档可辨链（17px 基准实测值）：h1 34 / h2 25.5 / h3 21.3 / h4 19.1 / h5 17 w600 / h6 14.9 w600——h1 收到 2em 防倒挂页题（36px），h4+ 加大、h5/h6 补字重（Typography 默认与正文同号同重完全隐身）；脚注区 0.875em 小于正文 | `prose.css` 显式覆盖 |
 | 幻灯片页题 | px 定尺（构建期主题 `tools/deckTheme.css`，按标题降级后的真实层级）：`#`→h2 60 / `##`→h3 44 / `###`→h4 32 / lead 76 | deck 画布（§5.2） |
 | 装饰水印 | `text-6xl font-black`（`text-accent/20` 或 `.hollow-text`） | 纯装饰，必须 `aria-hidden` |
 

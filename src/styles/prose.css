@@ -41,6 +41,33 @@
   letter-spacing: -0.01em;
 }
 
+/* 文内标题刻度（DESIGN.md §4，2026-10 审计）：Typography 默认五处不可辨/倒挂——
+   h1 2.25em 会大过页题（sm:text-4xl 36px），h4 与正文同号只剩加粗，h5/h6 同号
+   同字重完全隐身。收成六档可辨链：34 → 25.5 → 21.3 → 19.1 → 17 → 14.9。
+   :where 同构插件选择器（零特异性）+ 非分层后置，覆盖手法同上方颜色 token。 */
+.prose :where(h1):not(:where([class~="not-prose"] *)) {
+  font-size: 2em;
+}
+
+.prose :where(h4):not(:where([class~="not-prose"] *)) {
+  font-size: 1.125em;
+}
+
+.prose :where(h5):not(:where([class~="not-prose"] *)) {
+  font-size: 1em;
+  font-weight: 600;
+}
+
+.prose :where(h6):not(:where([class~="not-prose"] *)) {
+  font-size: 0.875em;
+  font-weight: 600;
+}
+
+/* 脚注区小于正文（与表格/代码同为 0.875em 档），排版惯例 */
+.prose :where(.footnotes):not(:where([class~="not-prose"] *)) {
+  font-size: 0.875em;
+}
+
 .prose :where(pre):not(:where([class~="not-prose"] *)) {
   border: 1px solid var(--line);
   font-family: var(--font-mono);
