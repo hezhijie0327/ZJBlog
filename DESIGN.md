@@ -172,6 +172,8 @@
 
 **有意不共享**：`rehype-raw`（博客内容作者所有、可透传原生 HTML；AI 生成内容一律**禁止 raw HTML** —— 信任模型差异）、PlantUML（外部渲染服务，mermaid 已覆盖）、Shiki 代码高亮（zjsearch 体积预算；代码块纯 mono 呈现）。
 
+**编辑排印配方（2026-10 起，zjsearch 侧消费）**：AI 内容（回答 / 报告文档 / 知识库检查器）的 markdown 元素在本词汇之上按本站 prose 的声音渲染 —— 衬线正文与标题（按深度加权 h1 2xl → h4 sm）、琥珀引用条（`--accent-strong` 左条）、发丝线表格（仅行底线、无竖线无底色）、行内代码 surface 底 + `--accent-hover`（AA 安全档）、`==mark==` accent-soft 底、链接 medium + 下划线。配方收敛为一份类串常量（zjsearch `lib/markdownParts.ts` 的 `MD`），两个渲染器（`MarkdownAnswer` / 知识库 `InspectorMarkdown`）共同消费；机器声音面（思考流、工具行、元信息）保持 sans。撕边多边形 / 物理规则同样两侧同步（§17）。
+
 ### 5.2 幻灯片画布与播放器（deck）
 
 deck 文（frontmatter `deck: true` 或正文 marp fence）的视觉契约：构建期主题 `tools/deckTheme.css` 是**纯 token 消费方**——颜色与字体全走 §3/§4 变量，deck 随站点明暗交叉淡化，不设独立配色。marpit 会把主题选择器 scoping 到 `div.marpit > section`，因此主题 CSS 只写亮态默认值，`.dark` 祖先切换（含 shiki 双主题）一律放 DeckViewer 宿主 CSS。
@@ -232,7 +234,7 @@ deck 文（frontmatter `deck: true` 或正文 marp fence）的视觉契约：构
 
 变化必须是**确定性**的（按序号轮换），禁止随机数 —— SSR 与客户端水合必须一致。
 
-ZJSearch 侧同语言消费（2026-10 起）：`.paper-note` + 两角胶带作空状态与 404 的告示纸、AI 线程「已确认方向」卡的钉住便签，`PAPER_STRIP` 作空状态的唯一动作，`.marker-strip` 扫首页问候语的称呼词，`.paper-chapter` 作混合搜索分类块的手绘分隔线，`.hollow-text` + 衬线标题 + 等宽日期作知识库目录行（PostList 的行语言；`client/zjsearch/src/styles/paper.css`，片段在 `lib/styles.ts` 同名同语义）。撕边多边形 / 物理规则改动**两侧同步**（§17）。
+ZJSearch 侧同语言消费（2026-10 起）：`.paper-note` + 两角胶带作空状态/404/搜索失败框的告示纸、AI 线程「已确认方向」卡的钉住便签与报告 TOC 纸条，`PAPER_STRIP` 作空状态的唯一动作，`.marker-strip` 扫首页问候语的称呼词，`.paper-chapter` 作混合搜索分类块的手绘分隔线，`.hollow-text` + 衬线标题 + 等宽日期作知识库目录行（PostList 的行语言），`PaperEmpty` 组件承载全部告示纸空态；hero 手绘箭头同款移植（`client/zjsearch/src/styles/paper.css` + `components/PaperEmpty.tsx`，片段在 `lib/styles.ts` 同名同语义）。撕边多边形 / 物理规则改动**两侧同步**（§17）。
 
 ## 8. 动效（Motion）
 
