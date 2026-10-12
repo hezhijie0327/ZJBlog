@@ -143,6 +143,32 @@
   transform: rotate(-0.5deg);
 }
 
+/* 圆形邮戳（封缄信的 SEALED 戳记；DESIGN.md §7 登记，配方与 zjsearch
+   侧 paper.css 两侧同步 §17）：外圈虚线 + ::before 内圈实线，双环夹住
+   中央的真实元数据文字（日期/标签）——不同于上方的装饰件，邮戳承载
+   信息，不用 aria-hidden。尺寸与确定性旋转由消费方给。本文件其余分件
+   是无层裸 CSS，但邮戳自带 display，必须入 components 层让 utilities
+   （hidden / sm:grid）能覆盖它。 */
+@layer components {
+  .paper-postmark {
+    position: relative;
+    display: grid;
+    place-content: center;
+    gap: 0.125rem;
+    border-radius: 9999px;
+    border: 1px dashed color-mix(in oklab, var(--ink-3) 60%, transparent);
+  }
+
+  .paper-postmark::before {
+    content: "";
+    position: absolute;
+    inset: 0.625rem;
+    border-radius: 9999px;
+    border: 1px solid color-mix(in oklab, var(--ink-3) 50%, transparent);
+    pointer-events: none;
+  }
+}
+
 /* 正文图片灯箱背板（dialog::backdrop 无法用 utilities 命中） */
 .lightbox::backdrop {
   background: var(--scrim);

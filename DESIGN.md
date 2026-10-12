@@ -226,15 +226,16 @@ deck 文（frontmatter `deck: true` 或正文 marp fence）的视觉契约：构
 
 | 元素 | 实现 | 物理规则 |
 |---|---|---|
-| 撕边纸面 `.paper-note` | clip-path 撕边 + 横线纸纹 + 随轮廓 drop-shadow | 平贴会假 —— 微倾斜 ±0.5° 级，方向按位置轮换 |
+| 撕边纸面 `.paper-note` | clip-path 撕边 + 横线纸纹 + 随轮廓 drop-shadow；变体 `--blank` 素面去横线 | 平贴会假 —— 微倾斜 ±0.5° 级，方向按位置轮换；**横线只配静态列表** —— 中段可滚动的交互纸面（zjsearch 澄清门）用 `--blank`，文字滚动才不漂过固定横线 |
 | 撕边纸条 `.paper-strip` | 按钮形态的撕边纸，纸色经 `--strip` 注入 | 主纸条金底（`--accent-strong`），次纸条纸面色；交错 ±1° 歪斜 |
 | 胶带（`TAPE` 片段 + `components/Tape.tsx`） | 半透明 `bg-accent-soft` 矩形，压在纸边之上 | **必须是被裁剪元素（clip-path）的兄弟节点** —— 放在其内部会被撕边裁掉角；两角对压优于单条居中 |
 | 马克笔高亮 `.marker-strip` | 文字下半截的撕边金条 | 只扫过关键字，微歪斜 |
 | 手绘分隔线 `.paper-chapter` | 章节顶部的 1px 细线，rotate -0.4° | 模拟纸页间手账分隔 |
+| 圆形邮戳 `.paper-postmark` | 双环圆戳（外圈虚线 + `::before` 内圈实线），环内承载真实元数据（日期/标签），尺寸与确定性旋转由消费方给（两侧 `global.css` / zjsearch `paper.css` 同配方，zjsearch 侧在 components 层） | **唯一的非 `aria-hidden` 纸感件**：环内是真实信息而非装饰；文档流内使用（不绝对定位遮字），rotate 12° 级盖戳（封缄信 LockScreen 的 SEALED 戳、zjsearch 报告的归档落款） |
 
 变化必须是**确定性**的（按序号轮换），禁止随机数 —— SSR 与客户端水合必须一致。
 
-ZJSearch 侧同语言消费（2026-10 起）：`.paper-note` + 两角胶带作空状态/404/搜索失败框的告示纸、AI 线程「已确认方向」卡的钉住便签与报告 TOC 纸条，`PAPER_STRIP` 作空状态的唯一动作，`.marker-strip` 扫首页问候语的称呼词，`.paper-chapter` 作混合搜索分类块的手绘分隔线，`.hollow-text` + 衬线标题 + 等宽日期作知识库目录行（PostList 的行语言），`PaperEmpty` 组件承载全部告示纸空态；hero 手绘箭头同款移植（`client/zjsearch/src/styles/paper.css` + `components/PaperEmpty.tsx`，片段在 `lib/styles.ts` 同名同语义）。撕边多边形 / 物理规则改动**两侧同步**（§17）。
+ZJSearch 侧同语言消费（2026-10 起）：`.paper-note` + 两角胶带作空状态/404/搜索失败框的告示纸、AI 线程「已确认方向」卡的钉住便签与报告 TOC 纸条，`PAPER_STRIP` 作空状态的唯一动作，`.marker-strip` 扫首页问候语的称呼词，`.paper-chapter` 作混合搜索分类块的手绘分隔线，`.hollow-text` + 衬线标题 + 等宽日期作知识库目录行（PostList 的行语言），`PaperEmpty` 组件承载全部告示纸空态；hero 手绘箭头同款移植（`client/zjsearch/src/styles/paper.css` + `components/PaperEmpty.tsx`，片段在 `lib/styles.ts` 同名同语义）。钉卡物理同款上身的还有首页 ask-card（确定性微倾 + 顶边胶带 + 聚焦转正 `focus-within:rotate-0`，箭头/胶带挂在不倾斜的外层上）、常规搜索的两个内容卡（AI Overview 卡与 infobox：单胶带压角 + 交替 ±0.35° 微倾，胶带 `zjs-print-hide`——打印留盒去胶带）；`.paper-postmark` 作报告文档的归档落款（DocumentView 文末 + 知识库 inspector 同款）；线程未找到页入列 `PaperEmpty` 告示纸 + 金 `PAPER_STRIP` 动作；澄清门问询卡入列钉住的问询纸条（`paper-note--blank` 素面撕边 + 两角胶带，对话语义留在纸面上，确认动作是金 `PAPER_STRIP`——LockScreen 解锁按钮同款）。撕边多边形 / 物理规则改动**两侧同步**（§17）。
 
 ## 8. 动效（Motion）
 

@@ -270,6 +270,13 @@
   filter: drop-shadow(0 10px 18px color-mix(in oklab, var(--ink) 14%, transparent));
 }
 
+/* 素面变体：同一撕边与投影，去掉横线纸纹 —— 横线只配静态列表；
+   中段可滚动的交互纸面（zjsearch 澄清门问询纸条）钉在素面条上，
+   文字滚动才不会漂过固定的横线。 */
+.paper-note--blank {
+  background: var(--surface);
+}
+
 /* 正文图片可点开灯箱（Prose 委托），放大镜光标提示可预览 */
 .prose :where(img):not(:where([class~="not-prose"] *)) {
   cursor: zoom-in;

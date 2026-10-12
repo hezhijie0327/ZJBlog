@@ -67,15 +67,14 @@ export function LockScreen({
       <Tape className="-top-3 left-8 w-24 -rotate-6 bg-accent-soft/80" />
       <Tape className="-top-2 right-8 w-20 rotate-[5deg] bg-accent-soft/60" />
 
-      {/* 圆形邮戳（纯装饰）：右下角盖在信纸上，窄屏收起避让文字 */}
+      {/* 圆形邮戳（DESIGN.md §7 .paper-postmark 共享原语，配方两侧同步）：
+          右下角盖在信纸上，窄屏收起避让文字。锁屏戳是纯装饰，aria-hidden。 */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute bottom-6 right-6 z-10 hidden size-20 rotate-12 place-items-center rounded-full border border-dashed border-ink-3/60 sm:grid"
+        className="paper-postmark pointer-events-none absolute bottom-6 right-6 z-10 hidden size-20 rotate-12 text-ink-3 sm:grid"
       >
-        <div className="grid size-[3.75rem] place-items-center gap-0.5 rounded-full border border-ink-3/50">
-          <Lock className="size-4 text-ink-3" />
-          <span className="font-mono text-[8px] tracking-[0.22em] text-ink-3">SEALED</span>
-        </div>
+        <Lock className="size-4" />
+        <span className="font-mono text-[8px] tracking-[0.22em]">SEALED</span>
       </div>
 
       <div className="paper-note px-7 pb-10 pt-12 sm:px-10">
