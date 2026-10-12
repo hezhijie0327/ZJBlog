@@ -89,11 +89,12 @@ export function BlogPostPage({ data }: { data: BlogPostData }) {
                 <Prose html={html} needsKatex={post.needsKatex} />
               )}
 
+              {/* 署名卡（信件落款）在翻页导航之前：落款属于本文，PostNav 是
+                  走向下一篇的门（nav 自带 mt-12 + 分隔线承接节奏） */}
+              <AuthorCard />
+
               {/* 上一篇 / 下一篇 */}
               <PostNav next={post.next} prev={post.prev} />
-
-              {/* 署名卡 */}
-              <AuthorCard />
 
               {/* giscus 评论（GitHub Discussions，按路径映射）；锁定文解锁后再挂载 */}
               <GiscusComments />

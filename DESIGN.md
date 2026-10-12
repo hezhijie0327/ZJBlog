@@ -236,7 +236,7 @@ deck 文（frontmatter `deck: true` 或正文 marp fence）的视觉契约：构
 | 胶带（`TAPE` 片段 + `components/Tape.tsx`） | 半透明 `bg-accent-soft` 矩形，压在纸边之上 | **必须是被裁剪元素（clip-path）的兄弟节点** —— 放在其内部会被撕边裁掉角；两角对压优于单条居中 |
 | 马克笔高亮 `.marker-strip` | 文字下半截的撕边金条 | 只扫过关键字，微歪斜 |
 | 手绘分隔线 `.paper-chapter` | 章节顶部的 1px 细线，rotate -0.4° | 模拟纸页间手账分隔 |
-| 圆形邮戳 `.paper-postmark` | 双环圆戳（外圈虚线 + `::before` 内圈实线），环内承载真实元数据（日期/标签），尺寸与确定性旋转由消费方给（两侧 `global.css` / zjsearch `paper.css` 同配方，zjsearch 侧在 components 层） | **唯一的非 `aria-hidden` 纸感件**：环内是真实信息而非装饰；文档流内使用（不绝对定位遮字），rotate 12° 级盖戳（封缄信 LockScreen 的 SEALED 戳、zjsearch 报告的归档落款） |
+| 圆形邮戳 `.paper-postmark` | 双环圆戳（外圈虚线 + `::before` 内圈实线），环内承载真实元数据（日期/标签），尺寸与确定性旋转由消费方给（两侧 `global.css` / zjsearch `paper.css` 同配方，zjsearch 侧在 components 层） | **唯一的非 `aria-hidden` 纸感件**：环内是真实信息而非装饰；文档流内使用（不绝对定位遮字），rotate 12° 级盖戳（封缄信 LockScreen 的 SEALED 戳、文末署名卡的 CC 落款戳——戳文与正文内许可链接重复时退为 `aria-hidden` 装饰、zjsearch 报告的归档落款） |
 
 变化必须是**确定性**的（按序号轮换），禁止随机数 —— SSR 与客户端水合必须一致。
 
