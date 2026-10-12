@@ -102,6 +102,8 @@ export const EN = {
 
   // 打印预览（家族契约：ZJSearch print 管线同款）
   "print.close": "Close preview",
+  "print.hint":
+    "Dialog didn't open? This preview is the print view — output it via your browser menu's Print (⌘P / Ctrl+P), or open this site in a system browser to print.",
 
   // 旅行（地图 + 明信片墙）
   "travel.eyebrow": "Our Footsteps",

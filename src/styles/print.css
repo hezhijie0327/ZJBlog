@@ -91,16 +91,18 @@
   }
 
   /* deck 文：页头不印（首页幻灯片就是标题页），容器/正文纵向留白清零——
-     否则 720px 定高的幻灯片会被顶出页面，产生空页或碎页 */
-  main:has(.deck-root) {
+     否则 720px 定高的幻灯片会被顶出页面，产生空页或碎页。
+     判据是 .deck-page（整篇 deck 时 BlogPostPage 容器带上的标记类）：
+     .deck-root 嵌入 marp fence 挂载后同样存在，会把普通文章的页头误杀 */
+  main:has(.deck-page) {
     padding: 0 !important;
   }
 
-  main:has(.deck-root) .container {
+  main:has(.deck-page) .container {
     padding: 0 !important;
   }
 
-  main:has(.deck-root) header {
+  main:has(.deck-page) header {
     display: none !important;
   }
 

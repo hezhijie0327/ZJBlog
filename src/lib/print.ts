@@ -61,9 +61,12 @@ export function startPrintPreview({ titleBase, closeLabel, wordmark = false, hin
     document.querySelector("main .container")?.prepend(wordmarkEl);
   }
 
+  // 关闭芯片与提示只挂语义类：纸面排除由下方 @media print 的同名规则负责
+  //（print-hide 会被预览脸的 .print-preview .print-hide 一并藏掉——芯片在
+  // 屏幕上永远不可见，ZJSearch 侧无此问题）
   const chip = document.createElement("button");
   chip.type = "button";
-  chip.className = "print-close print-hide";
+  chip.className = "print-close";
   chip.setAttribute("aria-label", closeLabel);
   chip.textContent = "✕";
 
@@ -95,7 +98,7 @@ export function startPrintPreview({ titleBase, closeLabel, wordmark = false, hin
   document.body.append(chip);
   if (hint) {
     const hintEl = document.createElement("p");
-    hintEl.className = "print-hint print-hide";
+    hintEl.className = "print-hint";
     hintEl.textContent = hint;
     chip.after(hintEl);
   }

@@ -16,7 +16,14 @@ export function PrintButton({ titleBase }: { titleBase: string }) {
       aria-label={t("post.print")}
       className={cn(ICON_BTN, "print-hide")}
       onClick={() => {
-        startPrintPreview({ closeLabel: t("print.close"), titleBase, wordmark: true });
+        // hint + 关闭芯片 = ZJSearch 打印预览同款（webview 里 print 静默
+        // no-op，纸面即终态，提示用浏览器菜单输出）
+        startPrintPreview({
+          closeLabel: t("print.close"),
+          hint: t("print.hint"),
+          titleBase,
+          wordmark: true,
+        });
       }}
       title={t("post.print")}
       type="button"

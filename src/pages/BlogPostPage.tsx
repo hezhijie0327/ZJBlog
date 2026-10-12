@@ -35,7 +35,10 @@ export function BlogPostPage({ data }: { data: BlogPostData }) {
   const toc = unlocked?.toc ?? post.toc;
 
   return (
-    <div className={SECTION_DETAIL}>
+    // deck-page：整篇幻灯片的打印标记（print.css 据此收页头/容器留白）——
+    // 不能用 .deck-root 判定：嵌入 marp fence 挂载后同样出现 .deck-root，
+    // 会把普通文章的页头也误杀（打印丢标题）
+    <div className={cn(SECTION_DETAIL, post.deck && "deck-page")}>
       {/* 返回链接 */}
       <BackLink href="/blogs/" label={t("blog.back")} />
 

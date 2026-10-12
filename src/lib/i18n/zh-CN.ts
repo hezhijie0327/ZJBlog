@@ -102,6 +102,8 @@ export const ZH_CN: Record<StringKey, string> = {
 
   // 打印预览（家族契约：ZJSearch print 管线同款）
   "print.close": "关闭预览",
+  "print.hint":
+    "对话框未弹出？此预览即打印内容——用浏览器菜单的「打印」（⌘P / Ctrl+P）输出，或在系统浏览器中打开后再打印。",
 
   // 旅行（地图 + 明信片墙）
   "travel.eyebrow": "我们的步伐",
