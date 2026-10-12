@@ -6,7 +6,7 @@ import { Link } from "@/components/Shell.tsx";
 import { TagList } from "@/components/TagList.tsx";
 import { formatDateISO } from "@/lib/format.ts";
 import { useT } from "@/lib/i18n.ts";
-import { CHIP, DIVIDE_LIST } from "@/lib/styles.ts";
+import { CHIP, DIVIDE_LIST, GHOST_DATE } from "@/lib/styles.ts";
 import type { BlogListItem } from "@/lib/types.ts";
 
 export function PostList({ blogs }: { blogs: BlogListItem[] }) {
@@ -18,10 +18,7 @@ export function PostList({ blogs }: { blogs: BlogListItem[] }) {
         <article className="group relative overflow-x-clip py-8 first:pt-0" key={blog.slug}>
           {/* 幽灵日期水印（装饰）：空心描边压在标题后方，横向裁切防小屏溢出 */}
           {blog.date && (
-            <span
-              aria-hidden="true"
-              className="hollow-text pointer-events-none absolute -top-5 right-0 select-none whitespace-nowrap font-mono text-[4.5rem] font-bold leading-none sm:-top-6 sm:text-[5.5rem]"
-            >
+            <span aria-hidden="true" className={GHOST_DATE}>
               {formatDateISO(blog.date)}
             </span>
           )}

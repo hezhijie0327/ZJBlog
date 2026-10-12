@@ -4,9 +4,10 @@ import { Lock, Presentation } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState.tsx";
 import { SectionHeading } from "@/components/SectionHeading.tsx";
 import { Link } from "@/components/Shell.tsx";
+import { cn } from "@/lib/cn.ts";
 import { formatDateISO } from "@/lib/format.ts";
 import { useT } from "@/lib/i18n.ts";
-import { SECTION } from "@/lib/styles.ts";
+import { GHOST_DATE, SECTION } from "@/lib/styles.ts";
 import type { ArchivesData } from "@/lib/types.ts";
 
 export function ArchivesPage({ data }: { data: ArchivesData }) {
@@ -35,11 +36,8 @@ export function ArchivesPage({ data }: { data: ArchivesData }) {
           {years.length > 0 ? (
             years.map(([year, posts]) => (
               <section className="relative overflow-x-clip" key={year}>
-                {/* 空心年份水印（装饰）：压在年份行后方，与 PostList 幽灵日期同语言 */}
-                <span
-                  aria-hidden="true"
-                  className="hollow-text pointer-events-none absolute -top-7 right-0 select-none font-serif text-8xl font-black leading-none"
-                >
+                {/* 空心年份水印（装饰）：与 PostList 幽灵日期同一片段，仅定位微调 */}
+                <span aria-hidden="true" className={cn(GHOST_DATE, "-top-7")}>
                   {year}
                 </span>
                 <div className="relative mb-5 flex items-baseline gap-4">

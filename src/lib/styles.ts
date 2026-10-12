@@ -49,6 +49,12 @@ export const META = "font-mono text-xs text-ink-3";
  *  信息文本字号地板 = 12px（DESIGN.md §4）：eyebrow 虽是点缀但也承载章节名。 */
 export const EYEBROW = "font-mono text-xs uppercase tracking-[0.2em] text-ink-3";
 
+/** 幽灵日期水印（Archives 年份行与 PostList 文章行共用，§7 同语言）：
+ *  空心描边等宽大字（hollow-text），纯装饰必须 aria-hidden；定位微调由
+ *  消费方 cn 覆盖（父容器需 overflow-x-clip 防小屏溢出）。 */
+export const GHOST_DATE =
+  "hollow-text pointer-events-none absolute -top-5 right-0 select-none whitespace-nowrap font-mono text-[4.5rem] font-bold leading-none sm:-top-6 sm:text-[5.5rem]";
+
 /** 胶带（DESIGN.md §7 纸感装饰）：半透明金底矩形压在纸边之上；
  *  定位 / 旋转 / 透明度由调用方给（两角对压优于单条居中） */
 export const TAPE = "pointer-events-none absolute z-10 h-6 bg-accent-soft";
