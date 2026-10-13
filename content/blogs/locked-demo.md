@@ -26,9 +26,9 @@ secret: couple   # → 构建时读 BLOG_SECRET_COUPLE
 ```
 
 > [!important]
-> 标记了 `secret` 但没配对应口令时，构建会**直接失败**（fail-closed）——宁可不发布，也绝不把明文带出去。口令是唯一防线，请用 16 位以上的长口令。
+> 在 CI/线上，标记了 `secret` 但没配对应口令时，构建会**直接失败**（fail-closed）——宁可不发布，也绝不把明文带出去。口令是唯一防线，请用 16 位以上的长口令。
 
-本页用的 `secret: demo` 是**测试名豁免**：本地构建没配口令时自动随机生成临时口令并打印在构建输出里（每次构建都不同，仅供本地解锁自测）；CI 环境不豁免，正式部署需在 GitHub Secrets 固定 `BLOG_SECRET_DEMO`。
+本地构建没配口令时不阻塞：任何 secret 名都会自动随机生成临时口令并打印在构建输出里（每次构建都不同，同名共用一把，仅供本地解锁自测）；CI 环境不豁免，正式部署需在构建环境固定对应 `BLOG_SECRET_*`（CF Workers Builds 的 Build Variables，手动 dispatch 则配 GitHub Secrets）。
 
 ## 渲染自检
 
