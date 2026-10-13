@@ -8,12 +8,15 @@
 
 import type { Mermaid } from "mermaid";
 import { useEffect, useState } from "react";
+import { cn } from "@/lib/cn.ts";
 import { useT } from "@/lib/i18n.ts";
 import { watchThemeDark } from "@/lib/theme.ts";
 import { useInView } from "@/lib/useInView.ts";
 
 interface MermaidRendererProps {
   chart: string;
+  /** 整卡可点进全文灯箱（Prose 正文用）；deck 嵌入片自管翻页语义，不带 */
+  lightbox?: boolean;
 }
 
 let mermaidPromise: Promise<Mermaid> | null = null;
@@ -27,7 +30,7 @@ function loadMermaid(): Promise<Mermaid> {
   return mermaidPromise;
 }
 
-export function MermaidRenderer({ chart }: MermaidRendererProps) {
+export function MermaidRenderer({ chart, lightbox = false }: MermaidRendererProps) {
   const t = useT();
   // 进入视口（含 300px 缓冲）才触发加载；beforeprint 时强制渲染兜底
   const { ref: containerRef, inView: scrolled } = useInView<HTMLDivElement>({ once: true });
@@ -111,7 +114,16 @@ export function MermaidRenderer({ chart }: MermaidRendererProps) {
   }
 
   return (
-    <div className="my-6 overflow-x-auto rounded-xl border border-line bg-surface p-4 shadow-card" ref={containerRef}>
+    // data-mermaid-figure 是 Prose 灯箱委托的入口标记（deck 内不带），整卡
+    // 命中（含边框留白）比只命中 svg 好点
+    <div
+      className={cn(
+        "my-6 overflow-x-auto rounded-xl border border-line bg-surface p-4 shadow-card",
+        lightbox && "cursor-zoom-in",
+      )}
+      data-mermaid-figure={lightbox || undefined}
+      ref={containerRef}
+    >
       {svg ? (
         // mermaid.render 输出受 securityLevel: "strict" 约束的受信 SVG；
         // role="img" + aria-label 让读屏器把整图作为一张图语义呈现

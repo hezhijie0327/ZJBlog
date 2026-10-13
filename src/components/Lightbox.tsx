@@ -1,7 +1,10 @@
-// 正文图片灯箱：原生 <dialog> 顶层弹层 —— Esc 原生关闭、模态期焦点困在
-// 弹层内。固定尺寸舞台（不随图片与缩放变化），图片 object-contain 居中；
-// 0.5×–5× 缩放（滚轮 / +− 键 / 按钮，双击或 0 复位），放大后拖拽平移；
-// 点击背板关闭。零依赖实现。
+// 正文图元灯箱（位图 / 内联 SVG 图表）：原生 <dialog> 顶层弹层 —— Esc 原生
+// 关闭、模态期焦点困在弹层内。固定尺寸舞台（不随内容与缩放变化），内容
+// object-contain 居中；0.5×–5× 缩放（滚轮 / +− 键 / 按钮，双击或 0 复位），
+// 放大后拖拽平移；点击背板关闭。零依赖实现。
+// SVG 条目必须内联克隆而不能走 <img src>：mermaid 流程图默认 htmlLabels，
+// 节点文字住在 <foreignObject> 里，SVG-as-image 的 secure static mode 不渲染
+// foreignObject —— 会只剩框和箭头。内联 SVG 缩放是矢量，放大不糊。
 
 import { ChevronLeft, ChevronRight, Minus, Plus, X } from "lucide-react";
 import {
@@ -17,10 +20,11 @@ import { cn } from "@/lib/cn.ts";
 import { useT } from "@/lib/i18n.ts";
 import { CARD, ICON_BTN } from "@/lib/styles.ts";
 
-export interface LightboxImage {
-  alt: string;
-  src: string;
-}
+export type LightboxItem =
+  | { alt: string; kind: "img"; src: string }
+  // html 是点击瞬间序列化的受信 SVG（mermaid securityLevel: "strict" 的产物，
+  // 与正文注入同源）；内联 max-width（自然尺寸）保留 —— 小图不放大
+  | { alt: string; html: string; kind: "svg" };
 
 const ZOOM_MIN = 0.5;
 const ZOOM_MAX = 5;
@@ -29,11 +33,11 @@ const ZOOM_FACTOR = 1.15;
 const clampZoom = (value: number): number => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Math.round(value * 100) / 100));
 
 export function Lightbox({
-  images,
+  items,
   initialIndex,
   onClose,
 }: {
-  images: LightboxImage[];
+  items: LightboxItem[];
   initialIndex: number;
   onClose: () => void;
 }) {
@@ -45,7 +49,7 @@ export function Lightbox({
   const [dragging, setDragging] = useState(false);
   const dragStart = useRef<{ x: number; y: number; ox: number; oy: number } | null>(null);
   const t = useT();
-  const image = images[index];
+  const item = items[index];
 
   // 挂载即模态；所有关闭路径统一走原生 close()（Esc 天然如此），父级经
   // close 事件同步状态 —— 先关弹层（释放顶层、焦点可移出）再卸载组件，
@@ -73,7 +77,7 @@ export function Lightbox({
   }, []);
 
   const step = (delta: number) => {
-    setIndex((current) => (current + delta + images.length) % images.length);
+    setIndex((current) => (current + delta + items.length) % items.length);
     resetZoom();
   };
 
@@ -115,7 +119,7 @@ export function Lightbox({
   const onKeyDown = (event: KeyboardEvent<HTMLDialogElement>) => {
     if (event.key === "ArrowLeft" || event.key === "-") {
       event.preventDefault();
-      if (event.key === "ArrowLeft" && images.length > 1) {
+      if (event.key === "ArrowLeft" && items.length > 1) {
         step(-1);
       } else if (event.key === "-") {
         setZoom((current) => clampZoom(current / ZOOM_FACTOR));
@@ -124,7 +128,7 @@ export function Lightbox({
     }
     if (event.key === "ArrowRight" || event.key === "+" || event.key === "=") {
       event.preventDefault();
-      if (event.key === "ArrowRight" && images.length > 1) {
+      if (event.key === "ArrowRight" && items.length > 1) {
         step(1);
       } else {
         setZoom((current) => clampZoom(current * ZOOM_FACTOR));
@@ -136,13 +140,13 @@ export function Lightbox({
     }
   };
 
-  if (!image) {
+  if (!item) {
     return null;
   }
 
   return (
     <dialog
-      {...(image.alt ? { "aria-label": image.alt } : {})}
+      {...(item.alt ? { "aria-label": item.alt } : {})}
       className={cn(
         CARD,
         "lightbox fixed inset-0 m-auto flex h-[min(92dvh,44rem)] w-[min(94vw,56rem)] flex-col p-4 sm:p-5",
@@ -153,9 +157,9 @@ export function Lightbox({
     >
       {/* 工具条：计数 + 缩放档位 + 关闭 */}
       <div className="flex min-h-9 items-center justify-end gap-2 pb-2">
-        {images.length > 1 && (
+        {items.length > 1 && (
           <span className="mr-auto font-mono text-xs text-ink-3">
-            {index + 1} / {images.length}
+            {index + 1} / {items.length}
           </span>
         )}
         <button
@@ -189,11 +193,11 @@ export function Lightbox({
         </button>
       </div>
 
-      {/* 舞台：固定尺寸，图片 object-contain 居中；缩放/平移走 transform，
-          不改变布局 —— 框永远不因图片大小或缩放档位变化 */}
+      {/* 舞台：固定尺寸，内容 object-contain 居中；缩放/平移走 transform，
+          不改变布局 —— 框永远不因内容大小或缩放档位变化 */}
       <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden" ref={stageRef}>
         <div
-          className={cn("flex items-center justify-center", zoom > 1 && "touch-none")}
+          className={cn("flex items-center justify-center", item.kind === "svg" && "w-full", zoom > 1 && "touch-none")}
           onDoubleClick={resetZoom}
           onPointerDown={(event: PointerEvent<HTMLDivElement>) => {
             if (zoom <= 1) {
@@ -221,14 +225,25 @@ export function Lightbox({
             transition: dragging ? "none" : "transform 150ms ease-out",
           }}
         >
-          <img
-            alt={image.alt}
-            className="max-h-[64dvh] max-w-[min(86vw,52rem)] select-none object-contain"
-            draggable={false}
-            src={image.src}
-          />
+          {item.kind === "img" ? (
+            <img
+              alt={item.alt}
+              className="max-h-[64dvh] max-w-[min(86vw,52rem)] select-none object-contain"
+              draggable={false}
+              src={item.src}
+            />
+          ) : (
+            // 宽度链拉满（舞台定宽 → wrapper w-full）让 svg 的百分比宽有
+            // 确定基；mermaid 内联 max-width 保自然尺寸上限，超出部分靠
+            // preserveAspectRatio 居中 letterbox，高度超舞台由 max-height 截
+            <div
+              aria-hidden="true"
+              className="w-full max-w-[min(86vw,52rem)] select-none [&_svg]:mx-auto [&_svg]:block [&_svg]:h-auto [&_svg]:max-h-[64dvh] [&_svg]:w-full"
+              dangerouslySetInnerHTML={{ __html: item.html }}
+            />
+          )}
         </div>
-        {images.length > 1 && (
+        {items.length > 1 && (
           <>
             <button
               aria-label={t("lightbox.prev")}

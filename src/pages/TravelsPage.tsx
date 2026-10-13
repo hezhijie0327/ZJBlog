@@ -6,7 +6,7 @@
 import { Heart, Lock, Maximize, Play, User, ZoomIn, ZoomOut } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { EmptyState } from "@/components/EmptyState.tsx";
-import { Lightbox, type LightboxImage } from "@/components/Lightbox.tsx";
+import { Lightbox, type LightboxItem } from "@/components/Lightbox.tsx";
 import { SectionHeading } from "@/components/SectionHeading.tsx";
 import { Link } from "@/components/Shell.tsx";
 import { Tape } from "@/components/Tape.tsx";
@@ -302,9 +302,9 @@ export function TravelsPage({ data }: { data: TravelsData }) {
     mapRef.current?.querySelector("svg")?.setAttribute("aria-label", t("travel.mapLabel"));
   }, [t]);
   // 灯箱素材 = 有封面的明信片（按展示顺序）
-  const covers: LightboxImage[] = data.trips
+  const covers: LightboxItem[] = data.trips
     .filter((trip) => trip.cover !== undefined)
-    .map((trip) => ({ src: trip.cover as string, alt: trip.title }));
+    .map((trip) => ({ alt: trip.title, kind: "img", src: trip.cover as string }));
 
   // 重放我们的步伐：镜头跟拍编排 —— 复位到世界视野，随后逐站飞行
   // （ flyTo ），到站点亮针脚与轨迹；城市聚合站推进到市/区视角逐个点亮
@@ -423,7 +423,7 @@ export function TravelsPage({ data }: { data: TravelsData }) {
                   index={index}
                   key={trip.slug}
                   onPreview={() => {
-                    const i = covers.findIndex((image) => image.src === trip.cover);
+                    const i = covers.findIndex((cover) => cover.kind === "img" && cover.src === trip.cover);
                     if (i >= 0) {
                       setPreview(i);
                     }
@@ -436,7 +436,7 @@ export function TravelsPage({ data }: { data: TravelsData }) {
         )}
       </div>
 
-      {preview !== null && <Lightbox images={covers} initialIndex={preview} onClose={() => setPreview(null)} />}
+      {preview !== null && <Lightbox initialIndex={preview} items={covers} onClose={() => setPreview(null)} />}
     </div>
   );
 }

@@ -40,7 +40,11 @@ src/
 ├── features/
 │   ├── comments/        # GiscusComments.tsx（giscus，进视口才挂载 iframe）
 │   └── markdown/        # Prose（注入构建期 HTML + 复制/灯箱委托 + KaTeX 样式补注）
-│                        # + MermaidRenderer / StlViewer（进视口懒加载，离屏停帧）
+│                        # + MermaidRenderer / StlViewer（进视口懒加载，离屏停帧；
+│                        #   mermaid 整卡可点进全文灯箱——SVG 内联克隆进 Lightbox
+│                        #   的 svg 条目，不能走 <img src>（htmlLabels 的
+│                        #   foreignObject 在 SVG-as-image 上下文不渲染，只剩框）；
+│                        #   deck 嵌入片内由 DeckViewer 自管、不带灯箱入口）
 ├── components/          # Shell(Link/ProgressBar/骨架) Navigation Footer CommandPalette
 │                        # ThemeToggle SectionHeading icons
 ├── lib/

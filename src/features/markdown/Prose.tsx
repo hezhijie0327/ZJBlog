@@ -8,7 +8,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { Lightbox, type LightboxImage } from "@/components/Lightbox.tsx";
+import { Lightbox, type LightboxItem } from "@/components/Lightbox.tsx";
 import { DeckViewer } from "@/features/deck/DeckViewer.tsx";
 import { MermaidRenderer } from "@/features/markdown/MermaidRenderer.tsx";
 import { StlViewer } from "@/features/markdown/StlViewer.tsx";
@@ -17,9 +17,9 @@ import { ensureKatexStyles } from "@/lib/katex.ts";
 
 export function Prose({ html, needsKatex }: { html: string; needsKatex?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [preview, setPreview] = useState<{ images: LightboxImage[]; index: number } | null>(null);
-  // 关闭灯箱后焦点归还给触发图片（键盘/读屏用户回到原位）
-  const lastImageRef = useRef<HTMLImageElement | null>(null);
+  const [preview, setPreview] = useState<{ items: LightboxItem[]; index: number } | null>(null);
+  // 关闭灯箱后焦点归还给触发元素（键盘/读屏用户回到原位）
+  const lastTriggerRef = useRef<HTMLElement | null>(null);
   const t = useT();
 
   // html 是语义依赖：正文更新后 DOM 里的占位容器换了，需要重新挂载渲染器
@@ -35,7 +35,7 @@ export function Prose({ html, needsKatex }: { html: string; needsKatex?: boolean
     const roots: Root[] = [];
     for (const el of container.querySelectorAll<HTMLElement>(".mermaid-placeholder")) {
       const root = createRoot(el);
-      root.render(<MermaidRenderer chart={el.dataset.chart ?? ""} />);
+      root.render(<MermaidRenderer chart={el.dataset.chart ?? ""} lightbox />);
       roots.push(root);
     }
     // ```marp fence 的嵌入幻灯片（tools/deck.ts 占位结构）：从 DOM 提取构建期
@@ -105,8 +105,9 @@ export function Prose({ html, needsKatex }: { html: string; needsKatex?: boolean
     };
   }, [t, html]);
 
-  // 图片灯箱：委托点击正文图片（借鉴参考站的全文图片预览）。链接内的
-  // 图片也拦截 —— 先看大图，preventDefault 阻止跳转；图片列表点击时收集。
+  // 灯箱：委托点击正文图片与 mermaid 图卡（宽图在正文栏受挤，点开灯箱全屏
+  // 看 —— SVG 矢量缩放不失真；条目按点击瞬间序列化，与当前主题一致）。
+  // 链接内的图片也拦截 —— 先看大图，preventDefault 阻止跳转。
   useEffect(() => {
     const container = ref.current;
     if (!container) {
@@ -114,24 +115,52 @@ export function Prose({ html, needsKatex }: { html: string; needsKatex?: boolean
     }
     const onClick = (event: MouseEvent) => {
       const target = event.target;
-      if (!(target instanceof HTMLImageElement) || !container.contains(target)) {
+      if (!(target instanceof Element) || !container.contains(target)) {
         return;
       }
-      // 嵌入幻灯片内的图片由 DeckViewer 自管（翻页语义），不进全文灯箱
+      // 嵌入幻灯片由 DeckViewer 自管（翻页语义），图片与 mermaid 都不进全文灯箱
       if (target.closest(".deck-embed")) {
         return;
       }
-      const images = [...container.querySelectorAll("img")];
-      const index = images.indexOf(target);
+      const image = target.closest("img");
+      const mermaid = image ? null : target.closest<HTMLElement>("[data-mermaid-figure]");
+      if (!image && !mermaid) {
+        return;
+      }
+      // 画廊 = 全部图片 + 已出图的 mermaid（未进视口的还是占位，无 svg 跳过）；
+      // querySelectorAll 按文档序返回混排序列，prev/next 顺一遍全文图元
+      const items: LightboxItem[] = [];
+      let index = -1;
+      for (const node of container.querySelectorAll("img, [data-mermaid-figure]")) {
+        if (node.closest(".deck-embed")) {
+          continue;
+        }
+        if (node instanceof HTMLImageElement) {
+          if (node === image) {
+            index = items.length;
+          }
+          items.push({ alt: node.alt, kind: "img", src: node.currentSrc || node.src });
+        } else {
+          const svg = node.querySelector("svg");
+          if (!svg) {
+            continue;
+          }
+          if (node === mermaid) {
+            index = items.length;
+          }
+          items.push({
+            alt: node.querySelector('[role="img"]')?.getAttribute("aria-label") ?? "",
+            html: svg.outerHTML,
+            kind: "svg",
+          });
+        }
+      }
       if (index === -1) {
         return;
       }
       event.preventDefault();
-      lastImageRef.current = target;
-      setPreview({
-        images: images.map((img) => ({ src: img.currentSrc || img.src, alt: img.alt })),
-        index,
-      });
+      lastTriggerRef.current = image ?? mermaid;
+      setPreview({ items, index });
     };
     container.addEventListener("click", onClick);
     return () => {
@@ -139,13 +168,13 @@ export function Prose({ html, needsKatex }: { html: string; needsKatex?: boolean
     };
   }, []);
 
-  // dialog 的 close 事件触发（此时顶层已释放）：焦点先归还触发图片，
+  // dialog 的 close 事件触发（此时顶层已释放）：焦点先归还触发元素，
   // 再卸载灯箱 —— 顺序反了会被带焦点卸载抢回 body。
   const closePreview = () => {
-    const image = lastImageRef.current;
-    if (image) {
-      image.tabIndex = -1;
-      image.focus({ preventScroll: true });
+    const trigger = lastTriggerRef.current;
+    if (trigger) {
+      trigger.tabIndex = -1;
+      trigger.focus({ preventScroll: true });
     }
     setPreview(null);
   };
@@ -153,8 +182,8 @@ export function Prose({ html, needsKatex }: { html: string; needsKatex?: boolean
   return (
     <>
       <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: html }} ref={ref} />
-      {preview && preview.images.length > 0 && (
-        <Lightbox images={preview.images} initialIndex={preview.index} onClose={closePreview} />
+      {preview && preview.items.length > 0 && (
+        <Lightbox initialIndex={preview.index} items={preview.items} onClose={closePreview} />
       )}
     </>
   );
