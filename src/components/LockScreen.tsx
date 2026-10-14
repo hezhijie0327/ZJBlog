@@ -64,8 +64,8 @@ export function LockScreen({
   return (
     <div className="relative mx-auto mt-2 max-w-lg rotate-[0.45deg]">
       {/* 胶带两角对压，压在撕边纸沿上（§7：胶带是被裁元素的兄弟节点） */}
-      <Tape className="-top-3 left-8 w-24 -rotate-6 bg-accent-soft/80" />
-      <Tape className="-top-2 right-8 w-20 rotate-[5deg] bg-accent-soft/60" />
+      <Tape corner="start" seed={`${slug}-a`} className="w-24 bg-accent-soft/80" />
+      <Tape corner="end" seed={`${slug}-b`} className="w-20 bg-accent-soft/60" />
 
       {/* 圆形邮戳（DESIGN.md §7 .paper-postmark 共享原语，配方两侧同步）：
           右下角盖在信纸上，窄屏收起避让文字。锁屏戳是纯装饰，aria-hidden。 */}

@@ -447,12 +447,6 @@ export function TravelsPage({ data }: { data: TravelsData }) {
 function Postcard({ index, onPreview, trip }: { index: number; onPreview: () => void; trip: TravelListItem }) {
   const t = useT();
   const tilt = index % 2 === 0 ? "-rotate-[0.35deg]" : "rotate-[0.45deg]";
-  const tape =
-    index % 3 === 0
-      ? "left-1/2 -translate-x-1/2 -rotate-2"
-      : index % 3 === 1
-        ? "left-10 -rotate-6"
-        : "right-10 rotate-[5deg]";
 
   return (
     <article className="group relative scroll-mt-24" id={trip.slug}>
@@ -468,7 +462,7 @@ function Postcard({ index, onPreview, trip }: { index: number; onPreview: () => 
             <span className="h-8 w-px bg-line" />
           </div>
         ) : (
-          <Tape className={cn("-top-3 h-6 w-24 bg-accent-soft/80", tape)} />
+          <Tape className="h-6 w-24 bg-accent-soft/80" seed={trip.title} />
         )}
         <div className={cn(CARD_HOVER, "overflow-hidden")}>
           {trip.cover ? (

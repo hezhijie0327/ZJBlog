@@ -126,8 +126,8 @@ export function IndexPage({ data }: { data: HomeData }) {
             {/* 胶带放在 .paper-note 外层：撕边 clip-path 会裁掉子元素，
                 贴纸悬在纸外的角会被剪没；旋转由外层统一承载 */}
             <div className="relative mt-4 w-[280px] max-w-full rotate-2 sm:w-[340px]">
-              <Tape className="-top-3 left-9 w-24 -rotate-6 bg-accent-soft/80" />
-              <Tape className="-top-2 right-8 w-20 rotate-[5deg] bg-accent-soft/60" />
+              <Tape corner="start" seed="home-note-1-a" className="w-24 bg-accent-soft/80" />
+              <Tape corner="end" seed="home-note-1-b" className="w-20 bg-accent-soft/60" />
               <div className="paper-note p-6 sm:p-10">
                 <img
                   alt=""
@@ -227,8 +227,8 @@ export function IndexPage({ data }: { data: HomeData }) {
         />
         {/* 纸面微倾斜 + 两角胶带压住纸边（胶带在 .paper-note 外层，避免被撕边裁剪） */}
         <div className="relative -rotate-[0.35deg]">
-          <Tape className="-top-3 left-12 w-24 -rotate-6 bg-accent-soft/80" />
-          <Tape className="-top-2 right-14 w-20 rotate-[5deg] bg-accent-soft/60" />
+          <Tape corner="start" seed="home-note-2-a" className="w-24 bg-accent-soft/80" />
+          <Tape corner="end" seed="home-note-2-b" className="w-20 bg-accent-soft/60" />
           <div className={cn("paper-note", DIVIDE_LIST)}>
             {latestBlogs.length > 0 ? (
               latestBlogs.map((blog) => (
@@ -278,8 +278,8 @@ export function IndexPage({ data }: { data: HomeData }) {
             title={t("home.travels.title")}
           />
           <div className="relative rotate-[0.35deg]">
-            <Tape className="-top-3 left-16 w-24 rotate-[4deg] bg-accent-soft/80" />
-            <Tape className="-top-2 right-12 w-20 -rotate-6 bg-accent-soft/60" />
+            <Tape corner="start" seed="home-note-3-a" className="w-24 bg-accent-soft/80" />
+            <Tape corner="end" seed="home-note-3-b" className="w-20 bg-accent-soft/60" />
             <div className={cn("paper-note", DIVIDE_LIST)}>
               {latestTrips.map((trip) => (
                 <Link className={LIST_ROW} href={`/travels/${trip.slug}/`} key={trip.slug}>
@@ -320,8 +320,8 @@ export function IndexPage({ data }: { data: HomeData }) {
             title={t("home.archives.title")}
           />
           <div className="relative -rotate-[0.35deg]">
-            <Tape className="-top-3 right-20 w-24 -rotate-2 bg-accent-soft/80" />
-            <Tape className="-top-2 left-14 w-20 rotate-[5deg] bg-accent-soft/60" />
+            <Tape corner="end" seed="home-note-4-a" className="w-24 bg-accent-soft/80" />
+            <Tape corner="start" seed="home-note-4-b" className="w-20 bg-accent-soft/60" />
             <div className={cn("paper-note", DIVIDE_LIST)}>
               {years.map(([year, count]) => (
                 <Link className={LIST_ROW} href="/archives/" key={year}>
@@ -348,8 +348,8 @@ export function IndexPage({ data }: { data: HomeData }) {
         <SectionHeading en={t("home.contact.en")} index="05" title={t("home.contact.title")} />
         {/* 纸面便签承载联系入口（标题靠左，便签在剩余空间垂直居中）：轻微反向外倾 + 两角胶带 */}
         <div className="relative mx-auto max-w-2xl rotate-[0.4deg]">
-          <Tape className="-top-3 left-10 w-24 -rotate-3 bg-accent-soft/80" />
-          <Tape className="-top-3 right-10 w-20 rotate-[4deg] bg-accent-soft/60" />
+          <Tape corner="start" seed="home-note-5-a" className="w-24 bg-accent-soft/80" />
+          <Tape corner="end" seed="home-note-5-b" className="w-20 bg-accent-soft/60" />
           <div className="paper-note px-6 py-8 sm:px-10 sm:py-10">
             <p className="mx-auto max-w-xl text-sm leading-relaxed text-ink-2 sm:text-base">{t("home.contact.desc")}</p>
             <div className="mt-6 flex flex-wrap items-center justify-center gap-3">

@@ -81,7 +81,7 @@ export function BlogPostPage({ data }: { data: BlogPostData }) {
                   撕边纸 + 顶部单胶带 + 确定性微倾，纯阅读面不抢交互位 */}
               {post.summary && (
                 <div className="relative mb-8 rotate-[0.35deg]">
-                  <Tape className="-top-3 left-8 w-20 -rotate-3 bg-accent-soft/80" />
+                  <Tape className="w-20 bg-accent-soft/80" seed={post.slug} />
                   <div className="paper-note px-5 py-4">
                     <p className="font-mono text-xs uppercase tracking-[0.18em] text-ink-2">✨ {t("post.summary")}</p>
                     <p className="mt-1.5 text-sm leading-relaxed text-ink">{post.summary}</p>
