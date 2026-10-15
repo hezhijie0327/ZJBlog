@@ -1,16 +1,43 @@
 // 顶部导航：sticky 毛玻璃、桌面链接 + 移动端抽屉、搜索/主题/语言/RSS/GitHub/支持操作区。
 // 窄屏（<sm）时 RSS/支持 收进抽屉（抽屉内本就有第二入口），头部图标行才放得下 320px。
 
-import { Languages, Menu, Search, X } from "lucide-react";
+import { Languages, Menu, MonitorDown, Search, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "@/components/Shell.tsx";
 import { ThemeToggle } from "@/components/ThemeToggle.tsx";
 import { cn } from "@/lib/cn.ts";
 import { useLocaleSwitch, useT } from "@/lib/i18n.ts";
+import { promptInstall, watchInstallAvailability } from "@/lib/installPrompt.ts";
 import { useRouter } from "@/lib/router.tsx";
 import { ICON_BTN } from "@/lib/styles.ts";
 
 const MOBILE_MENU_ID = "mobile-menu";
+
+/** 「安装 App」图标钮（beforeinstallprompt 驱动，DESIGN.md §18）——位次与
+    ZJSearch HeaderActions 同语言：右侧图标组首位、搜索左侧。按钮只在事件
+    捕获后出现（SSR 与水合初帧都不渲染，无水合分歧）；iOS Safari 不派发该
+    事件，按钮永不出现，安装走系统「分享 → 添加到主屏幕」。 */
+function InstallAppButton() {
+  const t = useT();
+  const [available, setAvailable] = useState(false);
+  useEffect(() => watchInstallAvailability(setAvailable), []);
+  if (!available) {
+    return null;
+  }
+  return (
+    <button
+      aria-label={t("nav.installApp")}
+      className={ICON_BTN}
+      onClick={() => {
+        void promptInstall();
+      }}
+      title={t("nav.installApp")}
+      type="button"
+    >
+      <MonitorDown aria-hidden="true" className="size-4" />
+    </button>
+  );
+}
 
 export function Navigation() {
   const t = useT();
@@ -115,8 +142,9 @@ export function Navigation() {
             })}
           </nav>
 
-          {/* 右侧操作区（搜索/主题/语言 + 小屏菜单） */}
+          {/* 右侧操作区（安装/搜索/主题/语言 + 小屏菜单） */}
           <div className="flex items-center gap-0.5">
+            <InstallAppButton />
             <button
               aria-label={t("nav.search")}
               className={ICON_BTN}

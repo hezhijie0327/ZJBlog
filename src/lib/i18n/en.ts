@@ -35,9 +35,8 @@ export const EN = {
   "nav.openMenu": "Open menu",
   "nav.closeMenu": "Close menu",
   "nav.mobileNav": "Mobile navigation",
-
-  // 页脚（PWA 安装入口，beforeinstallprompt 驱动，仅可安装时渲染）
-  "footer.installApp": "Install app",
+  // 「安装 App」入口在导航右上角（搜索左侧，ZJSearch HeaderActions 同位）
+  "nav.installApp": "Install app",
 
   // 页头（SectionHeading）
   "page.blogs.title": "All Posts",

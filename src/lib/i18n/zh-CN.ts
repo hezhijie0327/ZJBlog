@@ -35,9 +35,8 @@ export const ZH_CN: Record<StringKey, string> = {
   "nav.openMenu": "打开菜单",
   "nav.closeMenu": "关闭菜单",
   "nav.mobileNav": "移动端导航",
-
-  // 页脚（PWA 安装入口，beforeinstallprompt 驱动，仅可安装时渲染）
-  "footer.installApp": "安装 App",
+  // 「安装 App」入口在导航右上角（搜索左侧，ZJSearch HeaderActions 同位）
+  "nav.installApp": "安装 App",
 
   // 页头（SectionHeading）
   "page.blogs.title": "全部文章",
