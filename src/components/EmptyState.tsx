@@ -54,8 +54,8 @@ export function EmptyState({ icon, heading = "h2", title, desc, action, bare = f
   return (
     <div className={cn("relative", className)}>
       {/* 告示纸两角对压（§7：胶带必须是被裁剪元素的兄弟节点） */}
-      <Tape corner="start" seed="notice-a" className="w-20 bg-accent-soft/80" />
-      <Tape corner="end" seed="notice-b" className="w-16 bg-accent-soft/60" />
+      <Tape className="w-20 bg-accent-soft/80" corner="start" seed="notice-a" />
+      <Tape className="w-16 bg-accent-soft/60" corner="end" seed="notice-b" />
       <div className="paper-note px-6 py-16 text-center">{body}</div>
     </div>
   );

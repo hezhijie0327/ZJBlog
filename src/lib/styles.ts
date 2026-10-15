@@ -56,7 +56,8 @@ export const GHOST_DATE =
   "hollow-text pointer-events-none absolute -top-5 right-0 select-none whitespace-nowrap font-mono text-[4.5rem] font-bold leading-none sm:-top-6 sm:text-[5.5rem]";
 
 /** 胶带（DESIGN.md §7 纸感装饰）：半透明金底矩形压在纸边之上；
- *  定位 / 旋转 / 透明度由调用方给（两角对压优于单条居中） */
+ *  定位 / 旋转 / 透明度由调用方给（构图按纸宽分档：宽纸单条顶中、
+ *  中等纸面双角对压、窄便签单条角压——被叠压的角不上胶带） */
 export const TAPE = "pointer-events-none absolute z-10 h-6 bg-accent-soft";
 
 /** 页面级 section 外壳（容器 + 统一纵向节奏） */

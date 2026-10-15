@@ -233,7 +233,7 @@ deck 文（frontmatter `deck: true` 或正文 marp fence）的视觉契约：构
 |---|---|---|
 | 撕边纸面 `.paper-note` | clip-path 撕边 + 横线纸纹 + 随轮廓 drop-shadow；变体 `--blank` 素面去横线 | 平贴会假 —— 微倾斜 ±0.5° 级，方向按位置轮换；**横线只配静态列表** —— 中段可滚动的交互纸面（zjsearch 澄清门）用 `--blank`，文字滚动才不漂过固定横线 |
 | 撕边纸条 `.paper-strip` | 按钮形态的撕边纸，纸色经 `--strip` 注入 | 主纸条金底（`--accent-strong`），次纸条纸面色；交错 ±1° 歪斜 |
-| 胶带（`TAPE` 片段 + `components/Tape.tsx`） | 半透明 `bg-accent-soft` 矩形，压在纸边之上；传 `seed`（内容字符串）时位置按下方 **seed 物理规范** 确定性变化 | **必须是被裁剪元素（clip-path）的兄弟节点** —— 放在其内部会被撕边裁掉角；两角对压优于单条居中 |
+| 胶带（`TAPE` 片段 + `components/Tape.tsx`） | 半透明 `bg-accent-soft` 矩形，压在纸边之上；传 `seed`（内容字符串）时位置按下方 **seed 物理规范** 确定性变化 | **必须是被裁剪元素（clip-path）的兄弟节点** —— 放在其内部会被撕边裁掉角；构图按纸宽分档：通栏宽纸单条顶中（`center`）、中等纸面双角对压、窄便签单条角压——已被其他纸片叠压的角不再上胶带（真实贴法里便签多为一胶带，满页两角对压即机器感） |
 | 马克笔高亮 `.marker-strip` | 文字下半截的撕边金条 | 只扫过关键字，微歪斜 |
 | 手绘分隔线 `.paper-chapter` | 章节顶部的 1px 细线，rotate -0.4° | 模拟纸页间手账分隔 |
 | 圆形邮戳 `.paper-postmark` | 双环圆戳（外圈虚线 + `::before` 内圈实线），环内承载真实元数据（日期/标签），尺寸与确定性旋转由消费方给（两侧 `global.css` / zjsearch `paper.css` 同配方，zjsearch 侧在 components 层） | **唯一的非 `aria-hidden` 纸感件**：环内是真实信息而非装饰；文档流内使用（不绝对定位遮字），rotate 12° 级盖戳（封缄信 LockScreen 的 SEALED 戳、文末署名卡的 CC 落款戳——戳文与正文内许可链接重复时退为 `aria-hidden` 装饰、zjsearch 报告的归档落款） |
@@ -246,14 +246,17 @@ deck 文（frontmatter `deck: true` 或正文 marp fence）的视觉契约：构
 h = 5381                      // djb2 初值
 for c in seed: h = ((h << 5) + h + ord(c)) >>> 0
 top    = -(6 + (h % 4))                 // -6..-9 px 顶部漂移
-inset  = 24 + ((h >> 2) % 5) * 4        // 24..40 px 角内缩
-rotate = (h % 2 == 0 ? 1 : -1) * (4 + ((h >> 4) % 4))   // ±4..7°
+inset  = 24 + ((h >>> 2) % 5) * 4       // 24..40 px 角内缩
+rotate = (h % 2 == 0 ? 1 : -1) * (4 + ((h >>> 4) % 4))   // ±4..7°
+drift  = ((h >>> 6) % 5) * 6 - 12       // -12..12 px 顶中漂移（center 构图）
 h 偶数 → insetInlineStart；奇数 → insetInlineEnd        // 角侧
 ```
 
-seed 取该卡片的**内容身份**（标题 / slug / 查询词；单屏构图取稳定常量）。适用对象是**一切胶带**：重复钉卡角侧随 seed，双角对压构图由 `corner` 参数指定角侧（同一纸条的两条胶带 seed 各异，漂移互不相同）——家族内不再有规范外的胶带定位。
+位移一律**逻辑右移 `>>>`**：djb2 结果约半数 ≥ 2³¹，算术右移 `>>` 按 int32 符号扩展会算出负偏移，把 inset / rotate 拖出上列值域（2026-10 视觉调试实测：半数内容 seed 越界，胶带近乎水平或悬出纸外——勿回退）。`corner` 三构型：`start`/`end` 角压（双角对压构图由构图指定左右，同一纸条的两条胶带 seed 各异，漂移互不相同）；`center` 顶中——`left = calc(50% + drift)`，`transform = translateX(-50%) rotate(rotate)`，供通栏宽纸单条固定用。
 
-博客侧同语言消费（2026-10 起）：hero 便签与联系纸条、旅行明信片墙（**有封面 = 拍立得 + 图钉挂绳**——金钉头 + 棉线升向地图卡方向，参考实体旅行照片墙；无封面 = 胶带便签 + 背面粉条角票，胶带入 **seed 物理** seed 行程标题）、文头手写摘要便签（撕边纸 + 顶部单胶带 + 0.35° 微倾，胶带 seed 文章 slug）、项目卡（胶带 seed 项目标题——按序号轮换已退役）、文末署名卡（素面撕边 + CC 落款邮戳，信件落款叙事）、404 与全部列表空态告示纸（EmptyState 非 bare 变体，两角对压——ZJSearch `PaperEmpty` 同语言）、`PAPER_STRIP` 作空态/纸条动作。
+seed 取该卡片的**内容身份**（标题 / slug / 查询词；单屏构图取稳定常量）。适用对象是**一切胶带**——家族内不再有规范外的胶带定位。
+
+博客侧同语言消费（2026-10 起）：hero 便签（单条角压——右上由姓名小纸片占位，被叠压的角不上胶带）与联系纸条（双角对压）、首页三张通栏列表纸（最新思考/旅行足迹/归档：单条顶中 `center` w-32——宽纸双角窄胶带比例失衡且满页同构图即机器感）、旅行明信片墙（**有封面 = 拍立得 + 图钉挂绳**——金钉头 + 棉线升向地图卡方向，参考实体旅行照片墙；无封面 = 胶带便签 + 背面粉条角票，胶带入 **seed 物理** seed 行程标题）、文头手写摘要便签（撕边纸 + 顶部单胶带 + 0.35° 微倾，胶带 seed 文章 slug）、项目卡（胶带 seed 项目标题——按序号轮换已退役）、文末署名卡（素面撕边 + CC 落款邮戳，信件落款叙事）、404 与全部列表空态告示纸（EmptyState 非 bare 变体，两角对压——ZJSearch `PaperEmpty` 同语言）、`PAPER_STRIP` 作空态/纸条动作。
 
 ZJSearch 侧同语言消费（2026-10 起）：`.paper-note` + 两角胶带作空状态/404/搜索失败框的告示纸、AI 线程「已确认方向」卡的钉住便签与报告 TOC 纸条，`PAPER_STRIP` 作空状态的唯一动作，`.marker-strip` 扫首页问候语的称呼词，`.paper-chapter` 作混合搜索分类块的手绘分隔线，衬线标题 + 等宽日期作知识库目录行（PostList 的行语言；目录行的幽灵 hollow-text 日期水印已退场——行的右上角是操作钮领地，「装饰只落留白」在那里不成立，blog 的 PostList 无角钮才立得住），`PaperEmpty` 组件承载全部告示纸空态；hero 手绘箭头同款移植（`client/zjsearch/src/styles/paper.css` + `components/PaperEmpty.tsx`，片段在 `lib/styles.ts` 同名同语义）。钉卡物理同款上身的还有首页 ask-card（确定性微倾 + 顶边胶带 + 聚焦转正 `focus-within:rotate-0`，箭头/胶带挂在不倾斜的外层上）、常规搜索的两个内容卡（AI Overview 卡与 infobox：单胶带压角 + 交替 ±0.35° 微倾，胶带 `zjs-print-hide`——打印留盒去胶带；两卡胶带入 **seed 物理**——AI Overview seed 查询词、infobox seed 条目标题）；`.paper-postmark` 作报告文档的归档落款（DocumentView 文末 + 知识库 inspector 同款）；线程未找到页入列 `PaperEmpty` 告示纸 + 金 `PAPER_STRIP` 动作；澄清门问询卡入列钉住的问询纸条（`paper-note--blank` 素面撕边 + 两角胶带，对话语义留在纸面上，确认动作是金 `PAPER_STRIP`——LockScreen 解锁按钮同款）。撕边多边形 / 物理规则改动**两侧同步**（§17）。
 

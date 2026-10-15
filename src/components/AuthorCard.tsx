@@ -12,7 +12,7 @@ export function AuthorCard() {
   return (
     <div className="print-hide relative mt-12 rotate-[0.35deg]">
       {/* 单胶带压角（§7：胶带必须是被裁剪元素的兄弟节点，进纸内会被撕边裁掉） */}
-      <Tape corner="end" seed={author} className="w-20 bg-accent-soft/60" />
+      <Tape className="w-20 bg-accent-soft/60" corner="end" seed={author} />
       <div className="paper-note paper-note--blank flex items-center gap-4 p-5">
         <img
           alt={author}
