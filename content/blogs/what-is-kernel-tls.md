@@ -1,7 +1,7 @@
 ---
 title: "什么是 Kernel TLS"
 description: "Kernel TLS（kTLS）原理入门：TLS 记录层下沉内核后的收发包路径、硬件卸载，以及 nginx 等应用的开启方式。"
-date: "2026-10-13"
+date: "2026-10-18"
 category: "技术"
 tags:
   - Linux
