@@ -15,7 +15,7 @@ description: Use when writing or editing any article in this blog (content/blogs
 | Callouts | `> [!tip]` `[!warning]` `[!important]` `[!info]` `[!note]` 等 + 自定义标题 | 构建期渲染；支持折叠（`[!tip]-`）与嵌套 |
 | 表格 | GFM 表格，支持对齐、行内格式 | 自动滚动容器；单元格内放短句 |
 | 任务清单 | `- [ ]` / `- [x]` | 出发前清单、检查项 |
-| Mermaid | ```mermaid（flowchart / sequence / gantt） | 进视口惰性渲染；中文标签可用 |
+| Mermaid | ```mermaid | v12 全部图型（flowchart / sequence / gantt / pie / mindmap / sankey / xychart …全量演示见 markdown-demo），进视口惰性渲染；中文标签多数可用，词法坑：xychart 数组与 sankey/packet/radar/quadrant/treemap 的裸标识符不含 CJK、treemap 节点必须双引号（引号内可 CJK）、sankey 是 CSV 三段式 `a,b,80`、radar curve 用花括号映射、architecture 边为两横线且右端点方向前置 `B:id`、requirement 关系用 `->`、zenuml 未内置 |
 | 地图 | ```geojson / ```topojson | 构建期静态 SVG，坐标为真实经纬时叠加 world-atlas 底图；Point 的 `properties.name` 渲染为点位标注，`label-dx` / `label-dy`（数字，默认 7 / -7）可调偏移避让，贴右缘自动换侧 |
 | 3D | ```stl | 进视口惰性加载 three.js |
 | 数学 | `$…$`、`$$…$$`、```math | KaTeX 按需注入该页 |

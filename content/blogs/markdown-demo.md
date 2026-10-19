@@ -29,7 +29,7 @@ tags:
 | Callout | `> [!tip]` | 十类配色，可折叠 / 嵌套 / 自定义标题 |
 | 折叠 | `<details>` | summary 与内容之间留空行 |
 | 数学 | `$…$` `$$…$$` | KaTeX 样式按需注入本页 |
-| Mermaid | ` ```mermaid ` | v12 全部图型（文内演示六种），进视口渲染 |
+| Mermaid | ` ```mermaid ` | v12 全部图型逐一演示，进视口渲染 |
 | sequence / flow | ` ```sequence ` / ` ```flow ` | 构建期翻译为 Mermaid |
 | 地图 | ` ```geojson ` / ` ```topojson ` | 构建期投影为内联 SVG，真实世界底图 |
 | 3D 模型 | ` ```stl ` | three.js 进视口惰性加载 |
@@ -232,7 +232,9 @@ e^{i\pi} + 1 = 0
 
 ## 图表
 
-Mermaid 进视口才渲染，写法保持线性简单。流程与决策分支用 `flowchart`——本站的构建管线画出来就是：
+Mermaid 进视口才渲染，写法保持线性简单。本站是 v12 全量接入、渲染器不挑图型——下面把官方注册的全部图型逐一演示，既是写法清单，也是渲染验证。
+
+**流程与决策**用 `flowchart`——本站的构建管线画出来就是：
 
 ```mermaid
 flowchart LR
@@ -242,7 +244,7 @@ flowchart LR
   D --> E["Cloudflare Workers"]
 ```
 
-时间安排用 `gantt`（`dateFormat HH:mm` 按时刻写起止）：
+**时间安排**用 `gantt`（`dateFormat HH:mm` 按时刻写起止）：
 
 ```mermaid
 gantt
@@ -256,7 +258,31 @@ gantt
   校对与发布 :crit, a4, 15:30, 16:30
 ```
 
-数据对比用 `xychart-beta` 画柱状图 / 折线，`bar` 与 `line` 写在一起就是叠加图：
+**里程碑回顾**用 `timeline`：
+
+```mermaid
+timeline
+    title 本站大事记
+    2026-08 : 立项与设计系统定稿
+    2026-09 : Markdown 渲染管线接入
+    2026-10 : PWA 安装适配
+             : 内容库支持子文件夹收纳
+```
+
+**版本与分支**用 `gitGraph`：
+
+```mermaid
+gitGraph
+    commit id: "初稿"
+    branch draft
+    commit id: "配图与排版"
+    checkout main
+    merge draft id: "发布"
+    commit id: "勘误"
+    commit tag: "v1.1"
+```
+
+**数据对比**用 `xychart-beta` 画柱状图 / 折线，`bar` 与 `line` 写在一起就是叠加图：
 
 ```mermaid
 xychart-beta
@@ -267,7 +293,41 @@ xychart-beta
   line [180, 160, 190, 300, 260, 380, 350]
 ```
 
-mermaid 是 v12 全量接入，渲染器不挑图型——状态机、饼图、类图、ER 图、旅程图、时间线、思维导图、gitGraph 等全部图型都按同一惰性管线渲染，随选两个小的：
+**占比构成**用 `pie`：
+
+```mermaid
+pie title 文章分类占比
+    "技术" : 4
+    "游戏" : 1
+    "商业" : 1
+```
+
+**结构建模**用 `classDiagram`（条目与标签的多对多关联）：
+
+```mermaid
+classDiagram
+    class BlogEntry {
+        +slug
+        +title
+        +tags
+        +contentHtml
+    }
+    class Tag
+    BlogEntry "1" --> "*" Tag
+```
+
+**实体关系**用 `erDiagram`（属性块与关系线）：
+
+```mermaid
+erDiagram
+    BLOG ||--o{ TAG : tagged
+    BLOG {
+        string slug
+        string title
+    }
+```
+
+**状态机**用 `stateDiagram-v2`（文章生命周期）：
 
 ```mermaid
 stateDiagram-v2
@@ -278,14 +338,31 @@ stateDiagram-v2
     已发布 --> [*]
 ```
 
+**思维导图**用 `mindmap`（站点内容地图，缩进即层级）：
+
 ```mermaid
-pie title 文章分类占比
-    "技术" : 4
-    "游戏" : 1
-    "商业" : 1
+mindmap
+  root((ZJBlog))
+    内容
+      博客
+      项目
+      旅行
+    工程
+      构建期编译
+      边缘部署
 ```
 
-老式的 `sequence` 围栏也认——构建期直接翻译成 Mermaid 时序图，主题与惰性渲染和原生 Mermaid 完全一致（下面画的正是本站 SPA 路由的一次换页）：
+**原生时序**用 `sequenceDiagram`（一次 RSS 拉取）：
+
+```mermaid
+sequenceDiagram
+    participant 浏览器
+    participant 边缘
+    浏览器->>边缘: GET /rss.xml
+    边缘-->>浏览器: 200 XML
+```
+
+老式的 ` ```sequence ` 围栏也认——构建期直接翻译成 Mermaid（下面画的正是本站 SPA 路由的一次换页）：
 
 ```sequence
 浏览器->路由: 点击站内链接
@@ -294,7 +371,7 @@ CDN-->路由: 返回整页与 page-data
 路由-->浏览器: 提取 payload、pushState、换视图
 ```
 
-`flow` 围栏同理（构建期翻译为 flowchart，`(yes)/(no)` 变分支标签）：
+` ```flow ` 围栏同理（构建期翻译为 flowchart，`(yes)/(no)` 变分支标签）：
 
 ```flow
 s=>start: 想写一篇博客
@@ -306,6 +383,132 @@ s->w->c
 c(yes)->p->e
 c(no)->w
 ```
+
+**旅程图**用 `journey`（读者满意度曲线）：
+
+```mermaid
+journey
+    title 读者的一天
+    section 发现
+      搜索到文章: 5: 读者
+      点进站点: 4: 读者
+    section 阅读
+      速览矩阵定位: 5: 读者
+      复制 Markdown: 4: 读者
+```
+
+**四象限**用 `quadrantChart`（文章定位；轴与点名词法不含 CJK，用英文）：
+
+```mermaid
+quadrantChart
+    title Post Matrix
+    x-axis Quick read --> Deep dive
+    y-axis One-off --> Evergreen
+    quadrant-1 Reference
+    quadrant-2 Cheatsheet
+    quadrant-3 Casual
+    quadrant-4 Evergreen system
+    Render Test: [0.85, 0.8]
+    Kernel TLS: [0.7, 0.6]
+    WoW Report: [0.9, 0.35]
+```
+
+**需求图**用 `requirementDiagram`（门禁与满足关系）：
+
+```mermaid
+requirementDiagram
+    requirement test_req {
+        id: 1
+        text: Lighthouse 全类别 100 分
+        risk: high
+        verifymethod: test
+    }
+    element render_pipeline {
+        type: simulation
+    }
+    render_pipeline - satisfies -> test_req
+```
+
+**系统上下文**用 `C4Context`（不支持 `title` 行）：
+
+```mermaid
+C4Context
+    Person(reader, "读者", "浏览器访问")
+    System(zjblog, "ZJBlog", "预渲染静态站")
+    System(cf, "Cloudflare", "边缘托管")
+    Rel(reader, zjblog, "浏览文章", "HTTPS")
+    Rel(zjblog, cf, "部署产物", "CI")
+```
+
+**实验与 Beta 图型**同样可用——`sankey-beta` 流量走向（CSV 三段式 `源,目标,数值`；节点名词法不含 CJK，用英文）：
+
+```mermaid
+sankey-beta
+search,post,80
+search,archive,15
+search,tag,5
+```
+
+`block-beta` 区块栅格（声明列数，`space` 占位）：
+
+```mermaid
+block-beta
+    columns 3
+    md["Markdown"] pipe["构建期编译"] cdn["边缘 CDN"]
+    space:3
+    db["page-data"] assets["静态资产"]
+```
+
+`packet-beta` 报文字段位（字段名词法不含 CJK，标签用英文）：
+
+```mermaid
+packet-beta
+    0-7: "status"
+    8-15: "lang"
+    16-31: "post-id"
+```
+
+`kanban` 看板（列声明 + 卡片归属）：
+
+```mermaid
+kanban
+    todo[待写]
+    done[已发布]
+    demo[渲染测试]@{column: done}
+```
+
+`radar-beta` 雷达（多指标对照；轴与曲线名词法不含 CJK，用英文）：
+
+```mermaid
+radar-beta
+    axis perf, a11y, seo, bp
+    curve site{perf: 100, a11y: 100, seo: 100, bp: 100}
+    max 100
+```
+
+`architecture-beta` 部署架构（端口 `T/B/L/R`，右端点方向前置写作 `B:assets`）：
+
+```mermaid
+architecture-beta
+    group edge["Cloudflare"]
+    service worker["Workers"] in edge
+    service assets["Static assets"] in edge
+    worker:T -- B:assets
+```
+
+`treemap` 篇幅占比（缩进即父子，叶子带数值；节点名必须双引号，引号内可含 CJK）：
+
+```mermaid
+treemap
+    "root"
+        "技术"
+            "渲染测试": 40
+            "Kernel TLS": 25
+        "游戏"
+            "魔兽数据报告": 35
+```
+
+渲染失败的图型会显示错误占位并保留图源，不会吞内容——这一页本身就在持续验证渲染器。另有一处边界：ZenUML 未随 v12 内置注册，本页不作演示。
 
 ## 地图与 3D
 
