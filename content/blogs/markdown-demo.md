@@ -315,10 +315,10 @@ c(no)->w
 {
   "type": "FeatureCollection",
   "features": [
-    { "type": "Feature", "properties": { "name": "家" }, "geometry": { "type": "Point", "coordinates": [120.12, 30.28] } },
-    { "type": "Feature", "properties": { "name": "咖啡馆", "label-dx": -7 }, "geometry": { "type": "Point", "coordinates": [120.15, 30.265] } },
-    { "type": "Feature", "properties": { "name": "办公室" }, "geometry": { "type": "Point", "coordinates": [120.19, 30.26] } },
-    { "type": "Feature", "properties": { "name": "通勤路线（示意）" }, "geometry": { "type": "LineString", "coordinates": [[120.12, 30.28], [120.15, 30.265], [120.19, 30.26]] } }
+    { "type": "Feature", "properties": { "name": "鼓浪屿" }, "geometry": { "type": "Point", "coordinates": [118.0622, 24.4443] } },
+    { "type": "Feature", "properties": { "name": "厦门大学", "label-dx": -7 }, "geometry": { "type": "Point", "coordinates": [118.0965, 24.4353] } },
+    { "type": "Feature", "properties": { "name": "曾厝垵" }, "geometry": { "type": "Point", "coordinates": [118.1122, 24.4361] } },
+    { "type": "Feature", "properties": { "name": "环岛南线（示意）" }, "geometry": { "type": "LineString", "coordinates": [[118.0622, 24.4443], [118.0965, 24.4353], [118.1122, 24.4361]] } }
   ]
 }
 ```
@@ -328,17 +328,17 @@ c(no)->w
 ```topojson
 {
   "type": "Topology",
-  "transform": { "scale": [0.001, 0.001], "translate": [120.0, 30.0] },
+  "transform": { "scale": [0.001, 0.001], "translate": [118.0, 24.4] },
   "objects": {
-    "commute": {
+    "island": {
       "type": "GeometryCollection",
       "geometries": [
-        { "type": "LineString", "properties": { "name": "路线" }, "arcs": [0] },
-        { "type": "Point", "properties": { "name": "办公室" }, "coordinates": [190, 260] }
+        { "type": "LineString", "properties": { "name": "环岛南线" }, "arcs": [0] },
+        { "type": "Point", "properties": { "name": "曾厝垵" }, "coordinates": [112, 36] }
       ]
     }
   },
-  "arcs": [[[120, 280], [30, -15], [40, -5]]]
+  "arcs": [[[62, 44], [35, -9], [15, 1]]]
 }
 ```
 
