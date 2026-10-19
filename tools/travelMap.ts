@@ -15,11 +15,9 @@
 // tiny-ring culling, detail layer cropped by bbox; the artifact is stored
 // once in the DOM (never in page-data).
 
-import { readFileSync } from "node:fs";
-import { createRequire } from "node:module";
 import { BASELINE_TRAVEL_MAP_LABEL, baselineClusterPinTitle } from "../src/lib/i18n/baseline.ts";
 import { TRAVEL_MAP_SIZE, type TravelListItem } from "../src/lib/types.ts";
-import { topoToGeo } from "./diagrams.ts";
+import { clippedDetailPaths, countryPathData } from "./geoBase.ts";
 
 /** Map canvas and lat/lon extent (poles trimmed to avoid distortion,
  *  Antarctica dropped). H = 136° × (W/360°): equal pixel density for lon and
@@ -54,106 +52,6 @@ function makeProjector(extent: { lonMin: number; lonMax: number; latMin: number;
 }
 
 const worldProject = makeProjector(WORLD_EXTENT);
-
-/** All polygons of a geometry (Polygon/MultiPolygon; others ignored):
- *  returns [polygon][ring][point]. */
-function ringsOf(geometry: unknown): [number, number][][][] {
-  if (!geometry || typeof geometry !== "object") {
-    return [];
-  }
-  const geo = geometry as { type?: string; coordinates?: unknown };
-  if (geo.type === "Polygon" && Array.isArray(geo.coordinates)) {
-    return [geo.coordinates as [number, number][][]];
-  }
-  if (geo.type === "MultiPolygon" && Array.isArray(geo.coordinates)) {
-    return geo.coordinates as [number, number][][][];
-  }
-  return [];
-}
-
-/** Basemap is read only at build time (createRequire hits node_modules
- *  directly, never enters the bundle). 110m draws the world, 10m draws city
- *  detail (coastlines); conversion results are cached per resolution. */
-const geoCache = new Map<110 | 10, Array<{ properties?: { name?: string }; geometry?: unknown }>>();
-
-function countriesGeo(detail: 110 | 10): Array<{ properties?: { name?: string }; geometry?: unknown }> {
-  let features = geoCache.get(detail);
-  if (!features) {
-    const require = createRequire(import.meta.url);
-    const file = require.resolve(`world-atlas/countries-${detail}m.json`);
-    const geo = topoToGeo(JSON.parse(readFileSync(file, "utf8")) as Record<string, unknown>) as {
-      features?: typeof features;
-    };
-    features = geo.features ?? [];
-    geoCache.set(detail, features);
-  }
-  return features;
-}
-
-/** Lat/lon bbox of a ring (city-detail features are cropped against it) */
-function ringExtentDeg(ring: [number, number][]): { lonMin: number; lonMax: number; latMin: number; latMax: number } {
-  let lonMin = 180;
-  let lonMax = -180;
-  let latMin = 90;
-  let latMax = -90;
-  for (const [lon, lat] of ring) {
-    if (lon < lonMin) lonMin = lon;
-    if (lon > lonMax) lonMax = lon;
-    if (lat < latMin) latMin = lat;
-    if (lat > latMax) latMax = lat;
-  }
-  return { lonMin, lonMax, latMin, latMax };
-}
-
-function intersects(
-  a: { lonMin: number; lonMax: number; latMin: number; latMax: number },
-  b: { lonMin: number; lonMax: number; latMin: number; latMax: number },
-): boolean {
-  return a.lonMin <= b.lonMax && a.lonMax >= b.lonMin && a.latMin <= b.latMax && a.latMax >= b.latMin;
-}
-
-/** Basemap country paths: the projector decides viewport and projection;
- *  minAreaPx culls rings too small to see; when extent is given only rings
- *  intersecting it are kept (the city-detail crop). */
-function countryPathData(
-  detail: 110 | 10,
-  project: Projector,
-  minAreaPx: number,
-  extent?: { lonMin: number; lonMax: number; latMin: number; latMax: number },
-): string[] {
-  const paths: string[] = [];
-  for (const feature of countriesGeo(detail)) {
-    // Antarctica sits below the main map's latitude band; drop it outright
-    if (feature.properties?.name === "Antarctica") {
-      continue;
-    }
-    let d = "";
-    for (const polygon of ringsOf(feature.geometry)) {
-      for (const ring of polygon) {
-        if (extent && !intersects(ringExtentDeg(ring), extent)) {
-          continue;
-        }
-        const projected = ring.map(([lon, lat]) => project(lon, lat));
-        // Tiny-ring culling: islands/holes with projected area < minAreaPx
-        // are invisible at the current scale
-        let area2 = 0;
-        for (let i = 0; i < projected.length - 1; i += 1) {
-          const [x1, y1] = projected[i] as [number, number];
-          const [x2, y2] = projected[i + 1] as [number, number];
-          area2 += x1 * y2 - x2 * y1;
-        }
-        if (Math.abs(area2) / 2 < minAreaPx) {
-          continue;
-        }
-        d += `M${projected.map(([x, y]) => `${x},${y}`).join("L")}Z`;
-      }
-    }
-    if (d !== "") {
-      paths.push(d);
-    }
-  }
-  return paths;
-}
 
 /** Graticule (every 30°, poster feel for the main map) */
 function graticule(project: Projector): string {
@@ -222,58 +120,6 @@ function anchorMarkup(item: {
  *  inside the viewport (padded 5%) — taking whole 10m rings (an entire
  *  continental coastline) would bloat the page to MBs; point-level cropping
  *  keeps it to a few KB. */
-function clippedDetailPaths(
-  project: Projector,
-  extent: { lonMin: number; lonMax: number; latMin: number; latMax: number },
-): string[] {
-  const marginLon = (extent.lonMax - extent.lonMin) * 0.05;
-  const marginLat = (extent.latMax - extent.latMin) * 0.05;
-  const box = {
-    lonMin: extent.lonMin - marginLon,
-    lonMax: extent.lonMax + marginLon,
-    latMin: extent.latMin - marginLat,
-    latMax: extent.latMax + marginLat,
-  };
-  const paths: string[] = [];
-  for (const feature of countriesGeo(10)) {
-    if (feature.properties?.name === "Antarctica") {
-      continue;
-    }
-    let d = "";
-    for (const polygon of ringsOf(feature.geometry)) {
-      for (const ring of polygon) {
-        if (!intersects(ringExtentDeg(ring), extent)) {
-          continue;
-        }
-        const kept: [number, number][] = [];
-        for (const [lon, lat] of ring) {
-          if (lon >= box.lonMin && lon <= box.lonMax && lat >= box.latMin && lat <= box.latMax) {
-            kept.push([lon, lat]);
-          }
-        }
-        if (kept.length < 3) {
-          continue;
-        }
-        const projected = kept.map(([lon, lat]) => project(lon, lat));
-        const deduped: string[] = [];
-        for (const [x, y] of projected) {
-          const token = `${x},${y}`;
-          if (deduped[deduped.length - 1] !== token) {
-            deduped.push(token);
-          }
-        }
-        if (deduped.length >= 3) {
-          d += `M${deduped.join("L")}Z`;
-        }
-      }
-    }
-    if (d !== "") {
-      paths.push(d);
-    }
-  }
-  return paths;
-}
-
 /** City cluster artifact: city view (camera fly target), reveal threshold,
  *  detail layer and member pins. */
 interface CityCluster {

@@ -30,13 +30,8 @@ import type { DeckMeta, LockedContent, TocItem } from "../src/lib/types.ts";
 import { remarkCallouts } from "./callouts";
 import { deriveSecretKeys, encryptBundle, type SecretRef } from "./crypto";
 import { compileDeck, renderDeckEmbed } from "./deck";
-import {
-  plantumlFigure,
-  renderGeoSvg,
-  topoToGeo,
-  translateFlowToMermaid,
-  translateSequenceToMermaid,
-} from "./diagrams";
+import { plantumlFigure, renderGeoSvg, translateFlowToMermaid, translateSequenceToMermaid } from "./diagrams";
+import { topoToGeo } from "./geoBase.ts";
 import { decodeEntities, escapeAttr, escapeHtml } from "./html.ts";
 import { noteImageRefs, sealImagesForPost } from "./lockedImages";
 import { highlightCode } from "./shiki.ts";

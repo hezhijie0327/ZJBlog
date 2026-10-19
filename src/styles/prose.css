@@ -136,9 +136,28 @@
   height: auto;
 }
 
-/* GeoJSON projected SVG: geometry colored via tokens, cross-fades with the page light/dark */
+/* GeoJSON projected SVG: canvas steps down to surface-2 so the world-atlas
+   land (plain surface, same relationship as the travel map) reads against it;
+   both cross-fade with the page light/dark */
 .prose .geo-map-bg {
-  fill: color-mix(in oklab, var(--accent-soft) 30%, var(--surface));
+  fill: var(--surface-2);
+}
+
+/* world-atlas basemap (drawn only for real lng/lat data): land takes a faint
+   brand-gold tint over the neutral sea; 10m coastline polylines (city-scale
+   windows only) read as hairlines — both stay far quieter than the accent
+   data layer */
+.prose .geo-land {
+  fill: color-mix(in oklab, var(--accent) 10%, var(--surface-2));
+  stroke: var(--line);
+  stroke-width: 0.6;
+}
+
+.prose .geo-detail {
+  fill: none;
+  stroke: var(--ink-3);
+  stroke-width: 1;
+  stroke-linejoin: round;
 }
 
 .prose .geo-polygon {

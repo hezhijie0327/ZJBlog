@@ -6,8 +6,8 @@
 // goes through the public rendering service as a lazy <img>.
 
 import encoder from "plantuml-encoder";
-import { feature as topoFeature } from "topojson-client";
 import { BASELINE_GEO_MAP_LABEL } from "../src/lib/i18n/baseline.ts";
+import { clippedDetailPaths, countryPathData } from "./geoBase.ts";
 
 type Json = Record<string, unknown>;
 type Coord = [number, number];
@@ -116,6 +116,9 @@ export function translateFlowToMermaid(code: string): string {
 const GEO_W = 640;
 const GEO_H = 360;
 const GEO_PAD = 28;
+
+/** Deterministic clipPath id sequence (build order is stable) */
+let geoClipSeq = 0;
 
 /** Nesting depth of the coordinate array per Geometry type (a coordinate =
  *  an array whose elements are numbers directly) */
@@ -273,30 +276,65 @@ export function renderGeoSvg(geo: Json): string {
   const labelEls = labels
     .map(({ coords, name, dx, dy }) => {
       const [px, py] = project(coords);
-      const x = Math.round((px + dx) * 10) / 10;
+      // The rightmost point sits at the padded bbox edge by construction, so
+      // a default right-side label would overflow the viewBox: flip to
+      // text-anchor="end" whenever the estimated width crosses the edge
+      // (width estimate: CJK ≈ font-size per char, latin ≈ 0.62em)
+      let anchor = "";
+      let x = px + dx;
+      const width = [...name].reduce((w, ch) => w + ((ch.codePointAt(0) ?? 0) > 0x2e80 ? 13 : 8), 0);
+      if (x + width > GEO_W - 2) {
+        anchor = ' text-anchor="end"';
+        x = px - dx;
+      }
       const y = Math.round((py + dy) * 10) / 10;
       const text = name.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
-      return `<text class="geo-label" x="${x}" y="${y}">${text}</text>`;
+      return `<text class="geo-label"${anchor} x="${Math.round(x * 10) / 10}" y="${y}">${text}</text>`;
     })
     .join("");
-  return `<svg class="geo-map" viewBox="0 0 ${GEO_W} ${GEO_H}" role="img" aria-label="${BASELINE_GEO_MAP_LABEL}"><rect class="geo-map-bg" width="${GEO_W}" height="${GEO_H}"/>${parts.join("")}${labelEls}</svg>`;
+  // Real basemap (world-atlas) only when every coordinate is actual
+  // lng/lat — abstract numeric data must not get a world under it. Extent is
+  // the data bbox grown to at least 0.5° per axis (at that scale 110m
+  // coastlines resolve into visible polylines while the data keeps ~15% of
+  // the canvas width) and clamped to the world.
+  const geographic = coords.every((c) => c[0] >= -180 && c[0] <= 180 && c[1] >= -85 && c[1] <= 85);
+  let basemap = "";
+  if (geographic) {
+    const grow = (min: number, max: number, lo: number, hi: number): [number, number] => {
+      const half = Math.max(max - min, 0.5) / 2;
+      const center = (min + max) / 2;
+      return [Math.max(lo, center - half), Math.min(hi, center + half)];
+    };
+    const [lonMin, lonMax] = grow(minX, maxX, -180, 180);
+    const [latMin, latMax] = grow(minY, maxY, -85, 85);
+    // Basemap rings extend far beyond the viewBox (country polygons are much
+    // larger than the data bbox), so clip to the canvas instead of relying on
+    // the outer svg's overflow alone; ids must be unique across the page
+    geoClipSeq += 1;
+    const clipId = `geo-clip-${geoClipSeq}`;
+    // Basemap always gets the 110m land fill (country polygons carry the
+    // "you are on land" tint); city-scale windows additionally draw the 10m
+    // coastline detail as a stroke polyline — 10m rings clipped point-by-point
+    // to the window stay KB-sized, and conversion is cached per resolution,
+    // shared with the travel map's build. Regional windows (>2°) skip the
+    // 10m layer: its coastline is denser than the view needs.
+    const projector = (lon: number, lat: number): [number, number] => project([lon, lat]);
+    const extent = { lonMin, lonMax, latMin, latMax };
+    const cityScale = lonMax - lonMin <= 2 && latMax - latMin <= 2;
+    const land = countryPathData(110, projector, 2, extent)
+      .map((d) => `<path class="geo-land" d="${d}"/>`)
+      .join("");
+    const detail = cityScale
+      ? clippedDetailPaths(projector, extent)
+          .map((d) => `<path class="geo-detail" d="${d}"/>`)
+          .join("")
+      : "";
+    basemap = `<clipPath id="${clipId}"><rect width="${GEO_W}" height="${GEO_H}"/></clipPath><g class="geo-basemap" aria-hidden="true" clip-path="url(#${clipId})">${land}${detail}</g>`;
+  }
+  return `<svg class="geo-map" viewBox="0 0 ${GEO_W} ${GEO_H}" role="img" aria-label="${BASELINE_GEO_MAP_LABEL}"><rect class="geo-map-bg" width="${GEO_W}" height="${GEO_H}"/>${basemap}${parts.join("")}${labelEls}</svg>`;
 }
 
-/** TopoJSON → GeoJSON (multiple objects merged into a single
- *  FeatureCollection) */
-export function topoToGeo(topo: Json): Json {
-  const objects = (topo.objects ?? {}) as Record<string, unknown>;
-  const features: Json[] = [];
-  for (const key of Object.keys(objects)) {
-    const converted = topoFeature(topo, objects[key]) as Json;
-    if (converted.type === "FeatureCollection") {
-      features.push(...((converted.features as Json[]) ?? []));
-    } else {
-      features.push(converted);
-    }
-  }
-  return { type: "FeatureCollection", features };
-}
+/** TopoJSON → GeoJSON conversion lives in geoBase.ts (shared with travelMap). */
 
 /** PlantUML → lazy <img> via the public rendering service (deflate+base64
  *  encoding, not encrypted) */

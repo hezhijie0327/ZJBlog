@@ -31,7 +31,7 @@ tags:
 | 数学 | `$…$` `$$…$$` | KaTeX 样式按需注入本页 |
 | Mermaid | ` ```mermaid ` | v12 全部图型（文内演示六种），进视口渲染 |
 | sequence / flow | ` ```sequence ` / ` ```flow ` | 构建期翻译为 Mermaid |
-| 地图 | ` ```geojson ` / ` ```topojson ` | 构建期投影为内联 SVG |
+| 地图 | ` ```geojson ` / ` ```topojson ` | 构建期投影为内联 SVG，真实世界底图 |
 | 3D 模型 | ` ```stl ` | three.js 进视口惰性加载 |
 | PlantUML | ` ```plantuml ` | 公共渲染服务惰性出图 |
 | HTML 子集 | `<kbd>` `<mark>` `<u>` `<sub>` `<sup>` | 裸色值与外站 iframe 禁止 |
@@ -309,14 +309,14 @@ c(no)->w
 
 ## 地图与 3D
 
-`geojson` / `topojson` 围栏在构建期投影成内联 SVG（坐标自动适配包围盒，示意精度即可）。点位标注取 Point 的 `properties.name`：
+`geojson` / `topojson` 围栏在构建期投影成内联 SVG：坐标落在真实经纬范围内时自动叠加 world-atlas 世界底图（与旅行地图同源数据），示意精度即可；点位标注取 Point 的 `properties.name`，`label-dx` / `label-dy` 可调偏移，贴近视口右缘时自动换到点左侧：
 
 ```geojson
 {
   "type": "FeatureCollection",
   "features": [
     { "type": "Feature", "properties": { "name": "家" }, "geometry": { "type": "Point", "coordinates": [120.12, 30.28] } },
-    { "type": "Feature", "properties": { "name": "咖啡馆" }, "geometry": { "type": "Point", "coordinates": [120.15, 30.265] } },
+    { "type": "Feature", "properties": { "name": "咖啡馆", "label-dx": -7 }, "geometry": { "type": "Point", "coordinates": [120.15, 30.265] } },
     { "type": "Feature", "properties": { "name": "办公室" }, "geometry": { "type": "Point", "coordinates": [120.19, 30.26] } },
     { "type": "Feature", "properties": { "name": "通勤路线（示意）" }, "geometry": { "type": "LineString", "coordinates": [[120.12, 30.28], [120.15, 30.265], [120.19, 30.26]] } }
   ]
