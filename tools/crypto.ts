@@ -1,23 +1,32 @@
-// 构建期加密（Node 侧专用，客户端 bundle 永不引入本文件；对应的浏览器端
-// 解密实现见 src/lib/locked.ts，两者经 src/lib/types.ts 的 LockedContent
-// 信封契约互通）。
+// Build-time encryption (Node-side only; the client bundle never imports this
+// file. The matching browser-side decryption lives in src/lib/locked.ts; the
+// two interoperate through the LockedContent envelope contract in
+// src/lib/types.ts).
 //
-// 安全模型：纯静态托管没有服务端，采用构建期真加密 —— 标记了
-// `secret: <name>` 的博文，其正文 HTML + TOC 的明文只存在于构建内存，
-// 落盘前完成 AES-256-GCM 加密，产物中不存在任何明文。
+// Security model: purely static hosting has no server, so real encryption
+// happens at build time — for a post marked `secret: <name>`, the plaintext
+// of its body HTML + TOC exists only in build memory; AES-256-GCM encryption
+// completes before anything is written to disk, and the artifact contains no
+// plaintext at all.
 //
-// 口令供给：frontmatter `secret: <name>` → 环境变量 BLOG_SECRET_<NAME>
-// （name 大写化）。查找顺序 process.env → 仓库根 .env.local → .env
-// （.env* 均已 gitignore）。**CI/线上缺失即构建失败（fail-closed）**，
-// 绝不静默降级为明文。本地构建缺配置时按 secret 名随机生成临时口令并
-// 打印在构建输出里（每次构建都不同，仅方便本地自测，同名多篇共用一把）；
-// CI（process.env.CI）下不生成，缺配置照旧失败 —— 正式口令固定在
-// CF Workers Builds 构建变量 / GitHub Secrets。
+// Password supply: frontmatter `secret: <name>` → env var BLOG_SECRET_<NAME>
+// (name uppercased). Lookup order: process.env → repo-root .env.local → .env
+// (.env* are all gitignored). **Missing in CI/production = build failure
+// (fail-closed)**; never silently degrade to plaintext. When a local build
+// lacks configuration, a temporary password is randomly generated per secret
+// name and printed in the build output (different on every build, purely for
+// local self-testing; multiple posts with the same name share one). Under CI
+// (process.env.CI) nothing is generated and a missing config still fails —
+// real passwords are pinned in CF Workers Builds build variables / GitHub
+// Secrets.
 //
-// KDF：Argon2id（OWASP 密码存储当前首选，内存困难，实质性抬高 GPU/ASIC
-// 离线爆破成本）。参数取 OWASP 建议档的加强版（64 MiB / t=3 / p=1 /
-// 32B 输出）并随信封存档，客户端按信封参数解密 —— 参数可以演进而不破坏
-// 旧文。盐每篇每构建独立（16B 随机），同口令多篇互不相关。
+// KDF: Argon2id (OWASP's current first choice for password storage;
+// memory-hard, substantially raising the cost of GPU/ASIC offline cracking).
+// Parameters are the hardened tier of the OWASP recommendation (64 MiB /
+// t=3 / p=1 / 32B output) and are archived with the envelope; the client
+// decrypts using the envelope's parameters — parameters can evolve without
+// breaking old posts. The salt is unique per post per build (16B random);
+// multiple posts sharing a password stay mutually uncorrelated.
 
 import { createCipheriv, randomBytes } from "node:crypto";
 import { readFileSync } from "node:fs";
@@ -25,28 +34,32 @@ import path from "node:path";
 import { argon2id } from "hash-wasm";
 import type { LockedContent } from "../src/lib/types.ts";
 
-/** Argon2id 参数（OWASP 2023+ 建议档 19MiB/t=2/p=1 的加强版）。
- *  客户端单次派生约 100-300ms，是「输错密码重试」的天然节流阀。 */
+/** Argon2id parameters (hardened version of the OWASP 2023+ recommended tier
+ *  19MiB/t=2/p=1). A single client-side derivation takes ~100-300ms — a
+ *  natural throttle on wrong-password retries. */
 const ARGON2ID_PARAMS = { m: 65536, t: 3, p: 1, len: 32 } as const;
 
-/** secret 名 → 环境变量名（仅允许安全字符，防注入意外变量名）。 */
+/** secret name → env var name (only safe characters allowed, guarding against injecting an unintended variable name). */
 const SECRET_NAME_PATTERN = /^[a-z0-9][a-z0-9_-]*$/;
 
 function envNameForSecret(name: string): string {
   return `BLOG_SECRET_${name.toUpperCase()}`;
 }
 
-/** 本次构建内已生成的临时口令（同名共用一把，保证同 secret 的多篇文与
- *  独占图密钥一致；新构建重新生成，密文随之更新）。 */
+/** Ephemeral passwords generated within this build (one per name, keeping the
+ *  key consistent across same-secret posts and their exclusive images; a new
+ *  build regenerates them and the ciphertext is updated accordingly). */
 const ephemeralPasswords = new Map<string, string>();
 
-/** 24 字符 URL 安全随机口令（base64url，144 bit 熵）。 */
+/** 24-char URL-safe random password (base64url, 144 bits of entropy). */
 function randomPassword(): string {
   return randomBytes(18).toString("base64url");
 }
 
-/** .env 文件解析（十几行覆盖自身用例：KEY=VALUE / # 注释 / 成对引号），
- *  不引入 dotenv 依赖。返回的值不会写回 process.env，仅作查漏兜底。 */
+/** .env file parsing (a dozen lines covering this project's own cases:
+ *  KEY=VALUE / # comments / matched quotes), without adding a dotenv
+ *  dependency. Returned values are never written back to process.env; they
+ *  are only a fallback lookup. */
 function parseEnvFile(file: string): Record<string, string> {
   let text: string;
   try {
@@ -76,10 +89,10 @@ function parseEnvFile(file: string): Record<string, string> {
   return values;
 }
 
-/** name → 口令。fail-closed：任何一步不满足都直接抛错终止构建。 */
+/** name → password. fail-closed: any unmet step throws and terminates the build. */
 export function loadSecret(name: string, context: string): string {
   if (!SECRET_NAME_PATTERN.test(name)) {
-    throw new Error(`[crypto] ${context}: secret 名 "${name}" 不合法（需匹配 ${SECRET_NAME_PATTERN.source}）`);
+    throw new Error(`[crypto] ${context}: invalid secret name "${name}" (must match ${SECRET_NAME_PATTERN.source})`);
   }
   const envName = envNameForSecret(name);
   const fromProcess = process.env[envName];
@@ -95,49 +108,60 @@ export function loadSecret(name: string, context: string): string {
   }
   if (password === undefined || password === "") {
     if (!process.env.CI) {
-      // 本地豁免：随机口令仅存在于本次构建进程，打印出来供解锁自测；
-      // 密文随每次构建重加密，绝不能把本地随机口令的产物当正式部署物。
+      // Local exemption: the random password exists only in this build
+      // process and is printed for unlock self-testing; the ciphertext is
+      // re-encrypted on every build — never treat a local random-password
+      // artifact as an official deployment.
       const generated = ephemeralPasswords.get(name) ?? randomPassword();
       ephemeralPasswords.set(name, generated);
-      console.log(`[crypto] ${context}: secret: ${name} 未配置口令 —— 本地构建已随机生成临时口令（每次构建都不同）：`);
-      console.log(`[crypto] ┃ 解锁口令 >>> ${generated} <<<`);
-      console.log(`[crypto] ┃ 固定口令请写入 .env / .env.local 的 ${envName}；CI/线上必须配置固定口令，否则构建失败`);
+      console.log(
+        `[crypto] ${context}: secret "${name}" has no password configured — a random ephemeral password was generated for this local build (it changes on every build):`,
+      );
+      console.log(`[crypto] ┃ unlock password >>> ${generated} <<<`);
+      console.log(
+        `[crypto] ┃ set a fixed password via ${envName} in .env / .env.local; CI/production MUST configure it or the build fails`,
+      );
       return generated;
     }
     throw new Error(
-      `[crypto] ${context}: 标记了 secret: ${name}，但找不到口令 —— 请设置环境变量 ${envName}` +
-        `（或写入仓库根 .env / .env.local，均已 gitignore）。构建拒绝在无口令时产出明文。`,
+      `[crypto] ${context}: secret "${name}" is marked but no password was found — set the env var ${envName}` +
+        ` (or put it in the repo-root .env / .env.local, both gitignored). The build refuses to emit plaintext without a password.`,
     );
   }
   if (password.length < 8) {
-    throw new Error(`[crypto] ${context}: ${envName} 少于 8 个字符，拒绝构建（密文的唯一防线就是口令强度）`);
+    throw new Error(
+      `[crypto] ${context}: ${envName} is shorter than 8 chars — refusing to build (password strength is the only line of defense for the ciphertext)`,
+    );
   }
   if (password.length < 16) {
-    console.warn(`[crypto] ${context}: ${envName} 建议至少 16 个字符（长口令是对离线爆破的唯一防线）`);
+    console.warn(
+      `[crypto] ${context}: ${envName} should be at least 16 chars (a long password is the only defense against offline brute force)`,
+    );
   }
   return password;
 }
 
-/** 每篇文章的派生材料：盐在预派生阶段生成并冻结，加密阶段同步取用。 */
+/** Per-post key material: the salt is generated and frozen at pre-derivation time, then consumed synchronously during encryption. */
 interface KeyMaterial {
   key: Buffer;
   salt: Buffer;
 }
 
-/** slug → 派生材料。由 deriveSecretKeys 在模块加载期填充。 */
+/** slug → key material. Filled by deriveSecretKeys at module load time. */
 const keyMaterials = new Map<string, KeyMaterial>();
 
 export interface SecretRef {
-  /** 密钥命名空间：blogs 与 travels 的 slug 可能同名，一律 `<kind>:<slug>` */
+  /** Key namespace: blogs and travels slugs can share a name, so always `<kind>:<slug>` */
   key: string;
-  /** 错误信息里的可读位置（如 blogs/xxx.md） */
+  /** Readable location for error messages (e.g. blogs/xxx.md) */
   context: string;
   secretName: string;
 }
 
-/** 预派生密钥（Argon2id 是异步 API，而内容管线全同步 —— 与 shiki 同一
- *  模式：模块加载期 await 完成重活，请求/构建路径保持同步）。每篇独立盐，
- *  同名 secret 的多篇内容密钥互不相同。 */
+/** Pre-derive keys (Argon2id is an async API while the content pipeline is
+ *  fully synchronous — same pattern as shiki: await the heavy lifting at
+ *  module load time, keeping request/build paths synchronous). Each post gets
+ *  its own salt; posts sharing a secret name still get distinct keys. */
 export async function deriveSecretKeys(refs: SecretRef[]): Promise<void> {
   for (const ref of refs) {
     const password = loadSecret(ref.secretName, ref.context);
@@ -157,21 +181,22 @@ export async function deriveSecretKeys(refs: SecretRef[]): Promise<void> {
   }
 }
 
-/** 取已预派生的内容密钥（图片等同文衍生资产复用同一把口令密钥）。 */
+/** Fetch the pre-derived content key (derived assets of the same post, such as images, reuse the same password key). */
 export function keyFor(key: string): Buffer {
   const material = keyMaterials.get(key);
   if (!material) {
-    throw new Error(`[crypto] ${key}: 密钥未预派生（deriveSecretKeys 未覆盖，属管线缺陷）`);
+    throw new Error(`[crypto] ${key}: key not pre-derived (deriveSecretKeys does not cover it — pipeline bug)`);
   }
   return material.key;
 }
 
-/** 加密内容包（同步；明文 = JSON { html, toc, images? }，由调用方序列化）。
- *  认证 tag 后置拼接，与 WebCrypto AES-GCM 的密文布局一致。 */
+/** Encrypt a content bundle (synchronous; plaintext = JSON { html, toc,
+ *  images? }, serialized by the caller). The auth tag is appended after the
+ *  ciphertext, matching WebCrypto AES-GCM's ciphertext layout. */
 export function encryptBundle(key: string, plaintext: string): LockedContent {
   const material = keyMaterials.get(key);
   if (!material) {
-    throw new Error(`[crypto] ${key}: 密钥未预派生（deriveSecretKeys 未覆盖，属管线缺陷）`);
+    throw new Error(`[crypto] ${key}: key not pre-derived (deriveSecretKeys does not cover it — pipeline bug)`);
   }
   const iv = randomBytes(12);
   const cipher = createCipheriv("aes-256-gcm", material.key, iv);

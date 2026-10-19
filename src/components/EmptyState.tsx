@@ -1,22 +1,25 @@
-// 空状态：DESIGN.md §9 的共享构成（图标圆盘 + 标题 + 灰字说明 + 可选胶囊动作）。
-// 列表页内的空态是告示纸（paper-note + 两角胶带，ZJSearch PaperEmpty 同语言，
-// §7）；404 等整页场景用 bare 变体（纸面壳由调用方给）+ h1 页题字号，
-// 复用同一构成而不是各写一套（DESIGN.md §9「404 与空状态同构」）。
+// Empty state: the shared composition from DESIGN.md §9 (icon disc + title +
+// gray description + optional pill action). Inside list pages the empty state
+// is a notice paper (paper-note + tape on two corners, same language as
+// ZJSearch PaperEmpty, §7); full-page scenes like 404 use the bare variant
+// (the paper shell is supplied by the caller) plus the h1 page-title size,
+// reusing the same composition instead of writing separate ones
+// (DESIGN.md §9 "404 and empty states share one structure").
 
 import type { ReactNode } from "react";
 import { Tape } from "@/components/Tape.tsx";
 import { cn } from "@/lib/cn.ts";
 
 interface EmptyStateProps {
-  /** 顶部图标（渲染进 accent-soft 圆盘，纯装饰） */
+  /** Top icon (rendered inside the accent-soft disc, purely decorative) */
   icon?: ReactNode;
-  /** 标题层级：404 等整页场景为 h1（字号同 §4 页面 H1），默认 h2 */
+  /** Heading level: h1 for full-page scenes like 404 (same size as the §4 page H1), h2 by default */
   heading?: "h1" | "h2";
   title?: string;
   desc: string;
-  /** 底部动作（如返回首页的胶囊链接） */
+  /** Bottom action (e.g. a pill link back to the home page) */
   action?: ReactNode;
-  /** 去掉纸面壳（整页居中的 404，纸壳由调用方给） */
+  /** Drop the paper shell (full-page centered 404; the shell is supplied by the caller) */
   bare?: boolean;
   className?: string;
 }
@@ -53,7 +56,8 @@ export function EmptyState({ icon, heading = "h2", title, desc, action, bare = f
   }
   return (
     <div className={cn("relative", className)}>
-      {/* 告示纸两角对压（§7：胶带必须是被裁剪元素的兄弟节点） */}
+      {/* Tape pressed on two corners of the notice paper (§7: the tape must
+          be a sibling of the clipped element) */}
       <Tape className="w-20 bg-accent-soft/80" corner="start" seed="notice-a" />
       <Tape className="w-16 bg-accent-soft/60" corner="end" seed="notice-b" />
       <div className="paper-note px-6 py-16 text-center">{body}</div>

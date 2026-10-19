@@ -1,8 +1,8 @@
-/** 日期格式化。列表 / 归档统一等宽紧凑格式（按日历字段拆分，不走 Date
- *  时区解析 —— frontmatter 日期无时区语义，UTC 解析会在 UTC 以西时区把
- *  日期显示成前一天）。 */
+/** Date formatting. Lists / archives share one mono compact format (split by calendar
+ *  fields, no Date timezone parsing — frontmatter dates carry no timezone semantics;
+ *  UTC parsing would show the previous day for timezones west of UTC). */
 
-// 等宽紧凑日期：2024/12/21
+// Mono compact date: 2024/12/21
 export function formatDateISO(date: string): string {
   const parts = date.slice(0, 10).split("-");
   const y = Number.parseInt(parts[0] ?? "", 10);

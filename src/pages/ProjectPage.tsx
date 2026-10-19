@@ -1,5 +1,5 @@
-// 项目详情页：外链 CTA + 正文 + giscus 评论区。
-// 封面仅在 frontmatter.image 提供时渲染，无图直接以标题开页。
+// Project detail page: external-link CTA + body + giscus comments. The cover renders only when
+// frontmatter.image is provided; without an image the page opens directly with the title.
 
 import { ArrowUpRight } from "lucide-react";
 import { BackLink } from "@/components/BackLink.tsx";
@@ -19,10 +19,11 @@ export function ProjectPage({ data }: { data: ProjectData }) {
 
   return (
     <div className={SECTION_DETAIL}>
-      {/* 返回链接 */}
+      {/* Back link */}
       <BackLink href="/projects/" label={t("project.back")} />
 
-      {/* 项目头部：页头直接置于容器下，全站标题同一左缘（DESIGN.md §6） */}
+      {/* Project header: the header sits directly under the container, site-wide titles share
+          one left edge (DESIGN.md §6) */}
       <header className="mb-10 mt-8 border-b border-line pb-8">
         {project.image && (
           <img
@@ -65,10 +66,10 @@ export function ProjectPage({ data }: { data: ProjectData }) {
       </header>
 
       <article className="mx-auto max-w-3xl">
-        {/* 正文 */}
+        {/* Body */}
         <Prose html={project.contentHtml ?? ""} needsKatex={project.needsKatex} />
 
-        {/* giscus 评论（GitHub Discussions，按路径映射） */}
+        {/* giscus comments (GitHub Discussions, mapped by path) */}
         <GiscusComments />
       </article>
     </div>

@@ -1,4 +1,4 @@
-// 「查看全部」右对齐入口：首页两个章节共用。
+// Right-aligned "view all" entry: shared by the two home page sections.
 
 import { ArrowRight } from "lucide-react";
 import { Link } from "@/components/Shell.tsx";

@@ -1,6 +1,8 @@
-// 明暗切换按钮：跟随系统 → 亮色 → 暗色 循环。图标显隐走 html[data-theme-mode]
-// （SSR/接管前即正确，无闪烁），偏好写入 lib/theme.ts 管理的 localStorage；
-// React 状态仅用于 aria-label / title 文案（挂载后从 localStorage 校正一次）。
+// Light/dark toggle: cycles system -> light -> dark. Icon show/hide rides on
+// html[data-theme-mode] (correct from SSR/pre-hydration, no flash); the
+// preference is written to the localStorage managed by lib/theme.ts; React
+// state only feeds the aria-label / title copy (corrected once from
+// localStorage after mount).
 
 import { Moon, Sun, SunMoon } from "lucide-react";
 import { useEffect, useState } from "react";

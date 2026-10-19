@@ -1,5 +1,6 @@
-// 首页：Hero + 精选项目 + 最新文章 + 旅行足迹 + 归档 + 打个招呼（GitHub / RSS / 支持）。
-// 章节顺序与顶部导航一致：项目 / 博客 / 旅行 / 归档 / 支持。
+// Home page: Hero + featured projects + latest posts + travel footprint + archives + say hello
+// (GitHub / RSS / support). Section order matches the top navigation:
+// projects / blogs / travels / archives / support.
 
 import { ArrowDown, ArrowRight, ArrowUpRight, Coffee, Lock, Presentation, Rss } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState.tsx";
@@ -21,13 +22,15 @@ import { useInView } from "@/lib/useInView.ts";
 
 export function IndexPage({ data }: { data: HomeData }) {
   const t = useT();
-  // 精选：作者标记 starred 的项目优先（按日期已倒序），不足再由最新个人项目补齐
+  // Featured: projects the author marked starred come first (already date-descending); the
+  // newest personal projects fill the remainder
   const ordered = [...data.projects].sort((a, b) => Number(b.type === "starred") - Number(a.type === "starred"));
   const featured = ordered.slice(0, featuredProjectCount);
   const moreProjects = ordered.slice(featuredProjectCount, featuredProjectCount + moreProjectsCount);
   const latestBlogs = data.blogs.slice(0, 3);
   const latestTrips = data.trips.slice(0, 3);
-  // 归档预告：按年聚合全部文章（首页 blogs 已是全量列表），取最近 4 年
+  // Archives teaser: aggregate all posts by year (the home payload already carries the full
+  // list) and take the latest 4 years
   const yearCounts = new Map<string, number>();
   for (const blog of data.blogs) {
     if (!blog.date) {
@@ -37,14 +40,17 @@ export function IndexPage({ data }: { data: HomeData }) {
     yearCounts.set(year, (yearCounts.get(year) ?? 0) + 1);
   }
   const years = [...yearCounts.entries()].sort(([a], [b]) => Number(b) - Number(a)).slice(0, 4);
-  // 下滚提示的循环动画只在 Hero 可见时运行（离屏停帧，与 STL 自转同一纪律）
+  // The scroll-hint loop animation only runs while the Hero is visible (stops offscreen,
+  // same discipline as the STL spin)
   const { ref: heroRef, inView: heroInView } = useInView<HTMLElement>({ rootMargin: "0px" });
 
   return (
     <div className="min-h-full">
-      {/* Hero：首屏占满整个视口（对标 justin3go），内容垂直居中；扣除 sticky 导航高度（h-14），
-          否则区块底缘会超出折叠线。移动端走收紧构图让 Scroll down 回到折叠线（§9 处方）：
-          装饰箭头/姓名便签退场，纸片拼贴缩幅，纵向节奏减档 —— sm: 起恢复桌面值 */}
+      {/* Hero: fills the whole viewport above the fold (modeled on justin3go), content vertically
+          centered; subtract the sticky nav height (h-14) or the section's bottom edge overflows
+          the fold. Mobile uses a tightened composition to bring Scroll down back onto the fold
+          (§9 prescription): decorative arrow/name note exit, paper collage shrinks, vertical
+          rhythm steps down — desktop values restore from sm: */}
       <section
         className="container relative mx-auto flex min-h-[calc(100svh-3.5rem)] items-center px-4 pb-14 pt-12 sm:pb-20 sm:pt-24"
         ref={heroRef}
@@ -58,7 +64,8 @@ export function IndexPage({ data }: { data: HomeData }) {
             <h1 className="animate-fade-up font-serif text-4xl font-black leading-tight tracking-tight text-ink [animation-delay:60ms] sm:text-6xl">
               {t("hero.headline")}
               <span className="relative inline-block whitespace-nowrap px-1 align-baseline">
-                {/* 马克笔高亮：撕边纸条微歪斜，只扫过后半句下半截（纯装饰） */}
+                {/* Marker highlight: a slightly tilted torn-edge strip sweeping only the lower
+                    half of the second phrase (purely decorative) */}
                 <span
                   aria-hidden="true"
                   className="marker-strip pointer-events-none absolute -inset-x-1.5 bottom-[0.1em] top-[0.45em] bg-accent-soft"
@@ -70,8 +77,10 @@ export function IndexPage({ data }: { data: HomeData }) {
               {t("hero.motto")}
             </p>
             <div className="animate-fade-up mt-8 flex flex-wrap items-center gap-3 [animation-delay:180ms] sm:mt-10">
-              {/* 撕边纸条入口：金黄纸条 + 纸面次条，交错歪斜；锚点滚到本页对应 section */}
-              {/* biome-ignore lint/a11y/useValidAnchor: 页内 section 导航，保留 hash 深链，滚动由 jumpToSection 接管 */}
+              {/* Torn-edge strip entry: gold primary strip + paper secondary strip, alternating
+                  tilts; anchors scroll to this page's sections */}
+              {/* biome-ignore lint/a11y/useValidAnchor: in-page section navigation, keep the hash
+                  deep link, scrolling handled by jumpToSection */}
               <a
                 className={cn(
                   PAPER_STRIP,
@@ -85,7 +94,7 @@ export function IndexPage({ data }: { data: HomeData }) {
                 {t("home.cta.projects")}
                 <ArrowRight aria-hidden="true" className="size-4" />
               </a>
-              {/* biome-ignore lint/a11y/useValidAnchor: 同上，页内 section 导航 */}
+              {/* biome-ignore lint/a11y/useValidAnchor: same as above, in-page section navigation */}
               <a
                 className={cn(PAPER_STRIP, "rotate-1 [--strip:var(--surface)] hover:text-accent")}
                 href="#blogs"
@@ -96,7 +105,8 @@ export function IndexPage({ data }: { data: HomeData }) {
                 {t("home.cta.blogs")}
               </a>
             </div>
-            {/* 手绘箭头（纯装饰）：移动端退场 —— 首屏预算让给拼贴与滚动提示 */}
+            {/* Hand-drawn arrow (purely decorative): exits on mobile — above-the-fold budget
+                goes to the collage and the scroll hint */}
             <svg
               aria-hidden="true"
               className="animate-fade-up mt-6 ml-24 hidden w-28 -rotate-3 text-accent-strong [animation-delay:240ms] sm:block"
@@ -114,18 +124,20 @@ export function IndexPage({ data }: { data: HomeData }) {
             </svg>
           </div>
 
-          {/* 纸片拼贴（纯装饰）：撕边便签 + 胶带 + 头像 + 姓名便签。
-              全端可见；max-w-full 防窄屏横向溢出。移动端缩幅（w-280 / 头像 128 /
-              p-6），姓名便签退场 */}
+          {/* Paper collage (purely decorative): torn-edge note + tape + avatar + name note.
+              Visible on all form factors; max-w-full guards against horizontal overflow on
+              narrow screens. Mobile shrinks it (w-280 / avatar 128 / p-6); the name note exits */}
           <div aria-hidden="true" className="relative shrink-0 select-none">
             <div className="absolute -top-9 right-3 hidden rotate-[7deg] rounded-sm border border-line bg-bg px-4 py-2.5 font-mono text-[10px] uppercase leading-relaxed tracking-[0.18em] text-ink-3 shadow-card sm:block">
               {t("site.author")} · {t("hero.noteBirthday")}
               <br />
               {t("hero.noteTagline")}
             </div>
-            {/* 胶带放在 .paper-note 外层：撕边 clip-path 会裁掉子元素，
-                贴纸悬在纸外的角会被剪没；旋转由外层统一承载。
-                左上单条角压——右上由姓名小纸片占位，被叠压的角不上胶带（§7 构图分档） */}
+            {/* Tape sits outside .paper-note: the torn-edge clip-path clips its children, so
+                corners of tape hovering off the paper would be cut away; rotation is carried
+                uniformly by the outer layer. Single top-left corner press — the top-right is
+                occupied by the small name note, and overlapped corners get no tape (§7
+                composition tiers) */}
             <div className="relative mt-4 w-[280px] max-w-full rotate-2 sm:w-[340px]">
               <Tape className="w-24 bg-accent-soft/80" corner="start" seed="home-note-1-a" />
               <div className="paper-note p-6 sm:p-10">
@@ -145,14 +157,16 @@ export function IndexPage({ data }: { data: HomeData }) {
             </div>
           </div>
         </div>
-        {/* 底部滚动提示（对标 justin3go「向下滚动」）：纯装饰，锚点跳转交给分镜条 */}
+        {/* Bottom scroll hint (modeled on justin3go's "scroll down"): purely decorative, anchor
+            jumps are delegated to the story bar */}
         <p className="absolute inset-x-0 bottom-5 flex items-center justify-center gap-2 font-mono text-xs tracking-[0.2em] text-ink-3">
           {t("hero.scrollHint")}
           <ArrowDown aria-hidden="true" className={cn("size-3.5", heroInView && "animate-hint-bob")} />
         </p>
       </section>
 
-      {/* 故事分镜条：文档流内 sticky，滚过 Hero 后吸附在顶栏下方 */}
+      {/* Story bar: sticky within the document flow, docks below the app bar once the Hero
+          scrolls past */}
       <StoryBar
         sections={[
           { id: "projects", no: "01", label: t("home.featured.title") },
@@ -163,7 +177,7 @@ export function IndexPage({ data }: { data: HomeData }) {
         ]}
       />
 
-      {/* 01 精选项目 */}
+      {/* 01 Featured projects */}
       <section className={cn(SECTION, "paper-chapter scroll-mt-28")} id="projects">
         <SectionHeading
           en={t("home.featured.en")}
@@ -182,7 +196,8 @@ export function IndexPage({ data }: { data: HomeData }) {
             {moreProjects.length > 0 && (
               <div className="mt-8">
                 <p className={cn(EYEBROW, "mb-3")}>{t("home.moreProjects")}</p>
-                {/* 开放列表（对标参考站更多项目）：短横标记 + 下划线品名 + 金色 ↗ + 行内描述 */}
+                {/* Open list (modeled on the reference site's more-projects): dash marker +
+                    underlined name + gold ↗ + inline description */}
                 <ul>
                   {moreProjects.map((project) => (
                     <li key={project.slug}>
@@ -217,7 +232,7 @@ export function IndexPage({ data }: { data: HomeData }) {
         )}
       </section>
 
-      {/* 02 最新博客 */}
+      {/* 02 Latest posts */}
       <section className={cn(SECTION, "paper-chapter scroll-mt-28")} id="blogs">
         <SectionHeading
           en={t("home.recent.en")}
@@ -225,8 +240,9 @@ export function IndexPage({ data }: { data: HomeData }) {
           index="02"
           title={t("home.recent.title")}
         />
-        {/* 纸面微倾斜 + 通栏宽纸单条顶中胶带（§7 构图分档：双角窄胶带比例失衡；
-            胶带在 .paper-note 外层，避免被撕边裁剪） */}
+        {/* Slight paper tilt + a single top-center tape on the full-width sheet (§7 composition
+            tiers: narrow tapes on both corners throw off the proportions; tape stays outside
+            .paper-note to avoid the torn-edge clipping) */}
         <div className="relative -rotate-[0.35deg]">
           <Tape className="w-32 bg-accent-soft/80" corner="center" seed="home-note-2" />
           <div className={cn("paper-note", DIVIDE_LIST)}>
@@ -243,13 +259,13 @@ export function IndexPage({ data }: { data: HomeData }) {
                   </span>
                   {blog.locked && (
                     <>
-                      <span className="sr-only">（{t("post.locked")}）</span>
+                      <span className="sr-only">({t("post.locked")})</span>
                       <Lock aria-hidden="true" className="size-3.5 shrink-0 text-accent-strong" />
                     </>
                   )}
                   {blog.deck && (
                     <>
-                      <span className="sr-only">（{t("blog.deck")}）</span>
+                      <span className="sr-only">({t("blog.deck")})</span>
                       <Presentation aria-hidden="true" className="size-3.5 shrink-0 text-accent-strong" />
                     </>
                   )}
@@ -268,7 +284,8 @@ export function IndexPage({ data }: { data: HomeData }) {
         {data.blogs.length > 0 && <ViewAllLink href="/blogs/" label={t("home.viewAllPosts")} />}
       </section>
 
-      {/* 03 旅行足迹：最新 3 次旅行的纸面列表（封面墙留给 /travels/，首页保持轻） */}
+      {/* 03 Travel footprint: paper list of the latest 3 trips (the cover wall is left to
+          /travels/, home stays light) */}
       {latestTrips.length > 0 && (
         <section className={cn(SECTION, "paper-chapter scroll-mt-28")} id="travels">
           <SectionHeading
@@ -293,7 +310,7 @@ export function IndexPage({ data }: { data: HomeData }) {
                   </span>
                   {trip.locked && (
                     <>
-                      <span className="sr-only">（{t("post.locked")}）</span>
+                      <span className="sr-only">({t("post.locked")})</span>
                       <Lock aria-hidden="true" className="size-3.5 shrink-0 text-accent-strong" />
                     </>
                   )}
@@ -309,7 +326,8 @@ export function IndexPage({ data }: { data: HomeData }) {
         </section>
       )}
 
-      {/* 04 归档：最近 4 年的文章年份索引（全量时间线留给 /archives/） */}
+      {/* 04 Archives: year index of posts for the latest 4 years (the full timeline is left
+          to /archives/) */}
       {years.length > 0 && (
         <section className={cn(SECTION, "paper-chapter scroll-mt-28")} id="archives">
           <SectionHeading
@@ -341,17 +359,20 @@ export function IndexPage({ data }: { data: HomeData }) {
         </section>
       )}
 
-      {/* 05 打个招呼：GitHub / RSS / 支持（参考 justin3go SAY HELLO 的胶囊链接形态） */}
+      {/* 05 Say hello: GitHub / RSS / support (after the capsule-link style of justin3go's
+          SAY HELLO) */}
       <section className={cn(SECTION, "paper-chapter scroll-mt-28")} id="contact">
         <SectionHeading en={t("home.contact.en")} index="05" title={t("home.contact.title")} />
-        {/* 纸面便签承载联系入口（标题靠左，便签在剩余空间垂直居中）：轻微反向外倾 + 两角胶带 */}
+        {/* Paper note carries the contact entries (heading left, note vertically centered in
+            the remaining space): slight counter-tilt + tape on two corners */}
         <div className="relative mx-auto max-w-2xl rotate-[0.4deg]">
           <Tape className="w-24 bg-accent-soft/80" corner="start" seed="home-note-5-a" />
           <Tape className="w-20 bg-accent-soft/60" corner="end" seed="home-note-5-b" />
           <div className="paper-note px-6 py-8 sm:px-10 sm:py-10">
             <p className="mx-auto max-w-xl text-sm leading-relaxed text-ink-2 sm:text-base">{t("home.contact.desc")}</p>
             <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-              {/* 纸条入口：金色主纸条（GitHub）+ 纸面次条（RSS / 支持），与 Hero 按钮同语言 */}
+              {/* Strip entries: gold primary strip (GitHub) + paper secondary strips (RSS /
+                  support), same language as the Hero buttons */}
               <a
                 className={cn(
                   PAPER_STRIP,

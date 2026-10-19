@@ -1,4 +1,4 @@
-// 上一篇 / 下一篇导航（构建期算好的相邻链接，边界隐藏）。
+// Previous / next post navigation (adjacent links computed at build time; hidden at boundaries).
 
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Link } from "@/components/Shell.tsx";

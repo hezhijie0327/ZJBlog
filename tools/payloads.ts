@@ -1,6 +1,7 @@
-// 页面 payload 构建：每条路由 → 判别联合 payload（含文档头所需的
-// title / description / OG）。SSR、预渲染与静态生成器共用；客户端契约
-// （类型）见 src/lib/types.ts。
+// Page payload building: each route → discriminated-union payload (including
+// the title / description / OG needed by the document head). Shared by SSR,
+// prerender and the static generators; the client contract (types) lives in
+// src/lib/types.ts.
 
 import { siteConfig } from "../src/config/site.ts";
 import { translateFor } from "../src/lib/i18n.ts";
@@ -52,7 +53,8 @@ function toBlogListItem(entry: {
   if (entry.deck) {
     item.deck = true;
   }
-  // 加密文：description / summary 即内容摘要，任何列表一律不带；仅标记锁
+  // Locked post: description / summary are content excerpts, never shipped on
+  // any list; only the lock flag is set
   if (entry.locked) {
     item.locked = true;
   } else {
@@ -83,8 +85,8 @@ function toProjectListItem(entry: {
   };
 }
 
-/** 旅行列表项：锁定旅行的 cover/summary 属内容性字段不出站（针脚与
- *  地名/日期是公开纪念层）。 */
+/** Travel list item: a locked travel's cover/summary are content fields and
+ *  never ship (pins and place/date form the public memorial layer). */
 function toTravelListItem(entry: {
   slug: string;
   title: string;
@@ -117,9 +119,10 @@ function toTravelListItem(entry: {
   return item;
 }
 
-/** 全部已发布路由（URL 形态，带尾斜杠；首页为 "/"）。预渲染与 RSS/sitemap
- *  的路线来源共用；注意：generateSitemap 只列内容页，标签筛选页属重复内容
- *  视图，刻意不进 sitemap。 */
+/** All published routes (URL form, with trailing slash; home is "/"). Shared
+ *  route source for prerender and RSS/sitemap; note: generateSitemap only
+ *  lists content pages — tag filter pages are duplicate-content views and are
+ *  deliberately excluded from the sitemap. */
 export function allRoutes(): string[] {
   const { blogs, projects, travels } = loadContent();
   const tags = [...new Set(blogs.flatMap((blog) => blog.tags))];
@@ -138,8 +141,8 @@ export function allRoutes(): string[] {
   ];
 }
 
-/** 路由 → payload。未知路径返回 not-found payload（预渲染 404 页与
- *  客户端兜底共用）。 */
+/** Route → payload. Unknown paths return the not-found payload (shared by
+ *  the prerendered 404 page and the client fallback). */
 export function buildPayload(pathname: string): AnyPageData {
   const { blogs, projects, travels } = loadContent();
   const blogLists = blogs.map(toBlogListItem);
@@ -161,8 +164,9 @@ export function buildPayload(pathname: string): AnyPageData {
     return {
       globals: globals("travels", t("page.travels.title"), siteConfig.description),
       trips: travelLists,
-      // 地图 SVG（含市内细节层）单份存 DOM：slimForClient 会从 page-data 剥掉
-      // 它；无旅行时不烘底图（空状态页面不承担体积）
+      // The map SVG (with city detail layers) is stored once in the DOM:
+      // slimForClient strips it from page-data; with no trips the basemap is
+      // not baked (the empty-state page carries no weight)
       ...(travelLists.length > 0 ? { mapSvg: renderWorldMap(travelLists).mapSvg } : {}),
     };
   }
@@ -196,14 +200,17 @@ export function buildPayload(pathname: string): AnyPageData {
     const post = blogs[index];
     if (post) {
       const item = toBlogListItem(post);
-      // 列表项上的 locked 是布尔标记；文章 payload 上的 locked 是密文信封，
-      // 同名不同义，先剥掉标记再按分支组装
+      // On the list item, locked is a boolean flag; on the post payload,
+      // locked is the ciphertext envelope — same name, different meaning.
+      // Strip the flag first, then assemble per branch
       const { locked: _lockFlag, deck: _deckFlag, ...meta } = item;
-      // blogs 已按日期倒序：i-1 更新（下一篇），i+1 更旧（上一篇）
+      // blogs is sorted by date descending: i-1 is newer (next post), i+1 is
+      // older (previous post)
       const newer = index > 0 ? blogs[index - 1] : undefined;
       const older = index >= 0 && index < blogs.length - 1 ? blogs[index + 1] : undefined;
-      // 加密文：目录结构也属内容（随正文一起加密），meta 描述用兜底文案，
-      // 只公开标题/日期/分类/标签等与列表页同级的元信息
+      // Locked post: the TOC structure is content too (encrypted with the
+      // body); the meta description uses fallback copy, exposing only
+      // title/date/category/tags-level metadata on par with list pages
       if (post.locked) {
         return {
           globals: {
@@ -231,7 +238,8 @@ export function buildPayload(pathname: string): AnyPageData {
           contentHtml: post.contentHtml,
           needsKatex: post.needsKatex,
           summary: post.summary,
-          // 整篇幻灯片：css 随 payload（head 不随 SPA 换页），HTML 走 DOM 契约
+          // Full deck: css travels with the payload (head does not swap on SPA
+          // navigation), HTML goes through the DOM contract
           ...(post.deck ? { deck: post.deck } : {}),
           ...(older ? { prev: { slug: older.slug, title: older.title } } : {}),
           ...(newer ? { next: { slug: newer.slug, title: newer.title } } : {}),
@@ -245,10 +253,12 @@ export function buildPayload(pathname: string): AnyPageData {
     const travel = travels.find((entry) => entry.slug === travelMatch[1]);
     if (travel) {
       const item = toTravelListItem(travel);
-      // 列表项上的 locked 是布尔标记；详情 payload 上的 locked 是密文信封
+      // On the list item, locked is a boolean flag; on the detail payload,
+      // locked is the ciphertext envelope
       const { locked: _lockFlag, ...meta } = item;
-      // 锁定旅行：故事与照片都在信封里，meta 描述用兜底文案（针脚/地名/日期
-      // 是公开纪念层，已在列表项中保留）
+      // Locked travel: story and photos are inside the envelope; the meta
+      // description uses fallback copy (pins/place/date form the public
+      // memorial layer, already preserved on the list item)
       if (travel.locked) {
         return {
           globals: {

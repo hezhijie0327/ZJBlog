@@ -1,11 +1,17 @@
-// 故事分镜条（首页专属，md+ 显示）：置于 Hero 之后的文档流内，sticky 吸附
-// 在顶栏下方（top = 导航高度）。首屏时位于第一屏底部，滚过后吸附跟随；
-// 由于是 in-flow sticky，滚动到页尾会随父容器自然松开 —— 不会遮挡 footer。
-// 高亮用 rAF 节流的 scrollspy：当前区块 = 与视口 30%–45% 判定带相交者。
-// 不用 IntersectionObserver：最后一项（联系）紧挨页尾，contact + footer
-// 撑不满视口剩余空间，滚到底也进不了判定带 —— IO 只在跨越时触发，
-// 永远等不到那次回调；滚动重算才能加「到底部点亮最后一项」的兜底。
-// 锚点跳转经 lib/scroll.ts 的 jumpToSection（平滑滚动 + 焦点跟随）。
+// Story bar (home page only, md+): sits in the document flow after the Hero
+// and sticks below the top bar (top = navigation height). It rests at the
+// bottom of the first screen and sticks once you scroll past; because it is
+// in-flow sticky, it naturally releases at the page end with its parent
+// container -- it never covers the footer.
+// Highlighting uses a rAF-throttled scrollspy: the current section is the one
+// intersecting the viewport's 30%-45% decision band.
+// IntersectionObserver is not used: the last item (contact) sits right above
+// the page end, contact + footer cannot fill the remaining viewport, so even
+// scrolled to the bottom it never enters the decision band -- IO only fires
+// on crossings and that callback would never come; scroll-driven recalc is
+// what allows the "light up the last item at page bottom" fallback.
+// Anchor jumps go through lib/scroll.ts's jumpToSection (smooth scroll +
+// focus follow).
 
 import { Clapperboard } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -24,7 +30,8 @@ export function StoryBar({ sections }: { sections: StorySection[] }) {
   const t = useT();
   const [activeId, setActiveId] = useState<string | null>(null);
 
-  // 章节跳转走 lib/scroll.ts 的 jumpToSection（与 Hero CTA 同一语义）。
+  // Section jumps go through lib/scroll.ts's jumpToSection (same semantics as
+  // the Hero CTA).
 
   useEffect(() => {
     const visible = sections
@@ -38,14 +45,18 @@ export function StoryBar({ sections }: { sections: StorySection[] }) {
     const update = () => {
       raf = 0;
       const vh = window.innerHeight;
-      // 页尾兜底：文档滚到底时判定带里往往还是上一区块，直接点亮最后一项
+      // Page-end fallback: when the document is scrolled to the bottom the
+      // band often still holds the previous section, so light up the last
+      // item directly
       if (window.scrollY + vh >= document.documentElement.scrollHeight - 1) {
         setActiveId(last.id);
         return;
       }
       const bandTop = vh * 0.3;
       const bandBottom = vh * 0.45;
-      // 判定带同时碰到多个区块时取文档顺序靠后者（延续原 IO 回调的覆盖次序）
+      // When the band overlaps multiple sections at once, take the later one
+      // in document order (preserving the original IO callback's override
+      // order)
       let current: string | null = null;
       for (const { id, el } of visible) {
         const rect = el.getBoundingClientRect();

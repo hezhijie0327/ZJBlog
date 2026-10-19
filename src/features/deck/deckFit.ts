@@ -1,21 +1,28 @@
 // SPDX-License-Identifier: Apache-2.0 WITH Commons-Clause-1.0
 
-// 幻灯片溢出自动适配（DESIGN.md §5.2 家族契约，zjsearch
-// features/results/aiSearch/deck/deckFit.ts 孪生）：固定 1280×720 画布上
-// 超高的正文原本被 overflow 裁掉——这里检测溢出并对 compile 期包好的
-// .deck-body 施加等比缩放 + 宽度补偿，整页内容按原版面完整缩小落进画布。
+// Automatic overflow fitting for slides (DESIGN.md §5.2 family contract; twin
+// of zjsearch features/results/aiSearch/deck/deckFit.ts): on the fixed
+// 1280×720 canvas, overly tall body content would originally be cut off by
+// overflow — this detects the overflow and applies uniform scaling + width
+// compensation to the .deck-body wrapped at compile time, shrinking the whole
+// page with its original layout intact into the canvas.
 //
-// 原理：section 的布局宽恒为 1280px CSS px（视口缩放在画布层 transform），
-// 因此测量一次即稳定、不随窗口改变；scale 不参与布局，scrollHeight 始终
-// 反映原始内容高度，撤销重测幂等。缩放下限之下宁可保留裁切——无限缩小
-// 等于不可读。display:none 的页量不出尺寸：逐页模式只量可见页，翻到时
-// 再量；迟到内容（mermaid svg、图片）由查看器挂的 MutationObserver 触发
-// 重测（fit 只改 style/attribute，不在 childList 观察范围，无回环）。
+// How it works: a section's layout width is always 1280px CSS px (viewport
+// scaling happens at the canvas-level transform), so one measurement is
+// stable and independent of the window; scale does not participate in layout,
+// so scrollHeight always reflects the original content height, making removal
+// and re-measuring idempotent. Below the scale floor, prefer keeping the
+// clipping — shrinking without bound equals unreadable. display:none pages
+// cannot be measured: paged mode measures only visible pages and re-measures
+// on slide arrival; late content (mermaid svgs, images) triggers re-measuring
+// via the MutationObserver the viewer mounts (fit only touches style/
+// attribute, outside childList observation — no feedback loop).
 
 const MIN_SCALE = 0.5;
-/** 缩放下限：再往下文字已不可读。 */
+/** Scale floor: below this the text is unreadable. */
 
-/** 适配单页：溢出时对 .deck-body 施加 scale + 宽度补偿，返回是否适配了。 */
+/** Fit one page: on overflow applies scale + width compensation to
+ *  .deck-body; returns whether fitting was applied. */
 export function fitSlide(section: HTMLElement): boolean {
   const body = section.querySelector<HTMLElement>(":scope > .deck-body");
   if (!body) {
@@ -28,9 +35,10 @@ export function fitSlide(section: HTMLElement): boolean {
   const padTop = Number.parseFloat(cs.paddingTop) || 0;
   const padBottom = Number.parseFloat(cs.paddingBottom) || 0;
   const contentBox = section.clientHeight - padTop - padBottom;
-  // 内容实际高度 = wrapper 自己的 scrollHeight（不受 transform 影响）。
-  // 不能用 section.scrollHeight：它被钳到 clientHeight、且把 padding-bottom
-  // 算进去——没溢出的页会误报成恰好超出一个 padding 的量。
+  // Actual content height = the wrapper's own scrollHeight (unaffected by
+  // transform). Do not use section.scrollHeight: it is clamped to
+  // clientHeight and counts padding-bottom in — a page without overflow
+  // would be misreported as exceeding the limit by exactly one padding.
   const bodyExtent = body.scrollHeight;
   if (contentBox <= 0 || bodyExtent <= contentBox + 1) {
     return false;
@@ -38,14 +46,18 @@ export function fitSlide(section: HTMLElement): boolean {
   const scale = Math.max(MIN_SCALE, contentBox / bodyExtent);
   body.style.transformOrigin = "top left";
   body.style.transform = `scale(${scale})`;
-  // 宽度补偿：先按 1/s 放宽排版再缩回，正文有效行宽不变、整页等比缩小
+  // Width compensation: widen the layout by 1/s first, then scale back down;
+  // the body's effective line width stays unchanged while the whole page
+  // shrinks proportionally
   body.style.width = `${100 / scale}%`;
   section.dataset.deckFit = scale.toFixed(2);
   return true;
 }
 
-/** 量所有当前可见的页：逐页模式只有当前页可见（display:none 量不出尺寸，
- *  翻到时由换页 effect 再量），连续/打印揭示后自然全覆盖。 */
+/** Measure all currently visible pages: in paged mode only the current page
+ *  is visible (display:none cannot be measured; the slide-change effect
+ *  re-measures on arrival), while stacked/print reveal naturally covers
+ *  everything. */
 export function fitVisibleSlides(root: HTMLElement): void {
   for (const section of root.querySelectorAll<HTMLElement>("section[data-slide]")) {
     if (section.offsetParent !== null) {
@@ -54,8 +66,10 @@ export function fitVisibleSlides(root: HTMLElement): void {
   }
 }
 
-/** 迟到内容的重测观察：mermaid 占位符被渲染器替换成 svg、图片加载完成等
- *  DOM 变化后，防抖重量可见页。查看器在画布挂载时接一次，卸载时清理。 */
+/** Late-content re-fit observer: after DOM changes such as a mermaid
+ *  placeholder being replaced by the renderer's svg or an image finishing
+ *  loading, debounced re-fit of the visible pages. The viewer attaches it
+ *  once when the canvas mounts and cleans up on unmount. */
 export function observeLateContent(root: HTMLElement): () => void {
   let timer = 0;
   const observer = new MutationObserver(() => {

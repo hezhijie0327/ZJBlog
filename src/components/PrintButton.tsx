@@ -1,6 +1,7 @@
-// 「打印 / 存为 PDF」按钮：走 lib/print.ts 的预览管线（纸面先可见，
-// webview 里 print no-op 也有反应），文件名 = zjblog_<title>。
-// 打印/预览纸面上隐藏（styles/print.css）。
+// "Print / Save as PDF" button: goes through the lib/print.ts preview pipeline
+// (the paper becomes visible first, so even a no-op print in a webview gives
+// feedback), filename = zjblog_<title>.
+// Hidden on the print/preview paper (styles/print.css).
 
 import { Printer } from "lucide-react";
 import { cn } from "@/lib/cn.ts";
@@ -13,7 +14,9 @@ export function PrintButton({
   wordmark = true,
 }: {
   titleBase: string;
-  /** deck 页不注入（幻灯片自带品牌且定高页面不容插入——print.ts 同款约定） */
+  /** Not injected on deck pages (slides carry their own branding and a
+      fixed-height page cannot fit an insertion -- same convention as
+      print.ts) */
   wordmark?: boolean;
 }) {
   const t = useT();
@@ -23,8 +26,9 @@ export function PrintButton({
       aria-label={t("post.print")}
       className={cn(ICON_BTN, "print-hide")}
       onClick={() => {
-        // hint + 关闭芯片 = ZJSearch 打印预览同款（webview 里 print 静默
-        // no-op，纸面即终态，提示用浏览器菜单输出）
+        // hint + close chip = same as the ZJSearch print preview (in a webview
+        // print is a silent no-op, the paper is the final state, and the hint
+        // tells users to output via the browser menu)
         startPrintPreview({
           closeLabel: t("print.close"),
           hint: t("print.hint"),

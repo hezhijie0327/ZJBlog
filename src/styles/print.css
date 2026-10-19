@@ -1,16 +1,19 @@
-/* 打印 / 存为 PDF 的纸面 —— 家族契约：与 ZJSearch
-   (client/zjsearch/src/styles/print.css + lib/print.ts) 同机制同语义，
-   契约登记见 DESIGN.md §5.3。
-   纸面永远是浅色主题：色 token 均为 @property 注册色、注册初值即浅色值，
-   深色覆写用 `initial` 归位即可从 tokens.css 单一来源取回浅色，无 hex
-   复制可漂移。特例 --bg：纯白纸面上，应用浅色主题的暖白底贴着 @page
-   白边会像一块黄渍。
-   预览脸（body.print-preview）：嵌入式浏览器里 print 对话框是静默
-   no-op（lib/print.ts 注释），纸面直接可见——浅色强制与 chrome 隐藏
-   两份列表分别与下方 @media print 保持同步（ZJSearch 同款取舍）。 */
+/* Print / save-as-PDF paper — family contract: same mechanism and semantics
+   as ZJSearch (client/zjsearch/src/styles/print.css + lib/print.ts);
+   contract registered in DESIGN.md §5.3.
+   Paper is always the light theme: color tokens are all @property-registered
+   colors whose registered initial values are the light values; dark-mode
+   overrides just reset to `initial`, recovering the light colors from the
+   tokens.css single source — no hex copies to drift. Special case --bg: on a
+   pure white sheet, the light theme's warm white background next to the @page
+   white margin reads as a yellow stain.
+   Preview face (body.print-preview): in embedded browsers the print dialog is
+   a silent no-op (see the lib/print.ts comment), so the paper is rendered
+   directly — the light-theme enforcement and chrome-hiding lists each stay in
+   sync with the @media print blocks below (same tradeoff as ZJSearch). */
 
 @media print {
-  /* ── 纸面永远浅色 ────────────────────────────────────────────── */
+  /* ── paper is always light ────────────────────────────────────────────── */
   .dark {
     --bg: #ffffff;
     --surface: initial;
@@ -36,15 +39,19 @@
     color-scheme: light;
   }
 
-  /* 代码高亮切回浅色主题：prose.css 的 .dark 切换在打印下会输出暗色文字
-     （shiki 双主题变量），浅色纸面上不可读——打印一律取 --shiki-light。
-     置于文件末尾：本块特异性 (0,3,1) 必须晚于下方分页避免的裸 `pre` (0,0,1)，
-     特异性升序才不挂 noDescendingSpecificity（两块属性不相干，顺序无行为影响）。 */
+  /* Code highlighting switches back to the light theme: prose.css's .dark
+     switch would emit dark text under print (shiki dual-theme variables),
+     unreadable on light paper — printing always takes --shiki-light.
+     Placed at the end of the file: this block's specificity (0,3,1) must come
+     after the bare `pre` (0,0,1) targeted by the page-break avoidance below,
+     so specificity ascends and noDescendingSpecificity passes (the two blocks
+     share no properties; the order has no behavioral impact). */
   * {
     print-color-adjust: exact;
   }
 
-  /* 调色板交叉淡化不得渗进打印快照：浅色强制在纸上原子生效 */
+  /* Palette cross-fade must not leak into the print snapshot: light-theme
+     enforcement applies atomically on paper */
   html {
     transition: none !important;
   }
@@ -56,7 +63,7 @@
     overflow: visible !important;
   }
 
-  /* ── chrome：纸面上消失（.print-hide 钩子 + 结构选择器） ──────── */
+  /* ── chrome: vanishes from the paper (.print-hide hook + structural selectors) ──────── */
   .print-hide {
     display: none !important;
   }
@@ -67,21 +74,23 @@
     display: none !important;
   }
 
-  /* position-fixed/sticky 家具（返回顶部等）要么消失要么破坏文档流 */
+  /* position-fixed/sticky furniture (back-to-top etc.) must vanish or it breaks document flow */
   .fixed,
   .sticky {
     position: static !important;
   }
 
-  /* ── 内容：完整揭示 ──────────────────────────────────────────── */
-  /* 入场动画不得以 opacity:0 印成白页（含 deck 换页动画，见 DeckViewer） */
+  /* ── content: fully revealed ──────────────────────────────────────────── */
+  /* Entrance animations must not print as blank pages at opacity:0
+     (including deck slide transitions, see DeckViewer) */
   [class*="animate-"] {
     animation: none !important;
     opacity: 1 !important;
   }
 
-  /* 长文版心放宽到纸面（@page 边距提供留白；deck 页 @page 无边距 +
-     容器去 padding，1280px 画布才能满页不裁） */
+  /* Long-form content column widens to the paper (@page margins provide the
+     whitespace; deck pages get a marginless @page + container padding removed
+     so the 1280px canvas fills the page without clipping) */
   main article {
     max-width: none !important;
   }
@@ -90,10 +99,13 @@
     padding-inline: 0 !important;
   }
 
-  /* deck 文：页头不印（首页幻灯片就是标题页），容器/正文纵向留白清零——
-     否则 720px 定高的幻灯片会被顶出页面，产生空页或碎页。
-     判据是 .deck-page（整篇 deck 时 BlogPostPage 容器带上的标记类）：
-     .deck-root 嵌入 marp fence 挂载后同样存在，会把普通文章的页头误杀 */
+  /* Deck posts: page header not printed (the first slide is the title slide),
+     container/body vertical padding zeroed — otherwise the fixed-height
+     720px slides get pushed off the page, producing blank or shredded pages.
+     The discriminator is .deck-page (the marker class BlogPostPage puts on
+     the container for a full-deck post): .deck-root also exists once an
+     embedded marp fence mounts, which would wrongly kill headers of regular
+     posts */
   main:has(.deck-page) {
     padding: 0 !important;
   }
@@ -110,7 +122,7 @@
     padding-bottom: 0 !important;
   }
 
-  /* 外链在纸上露出目标（站内锚点不必） */
+  /* External links reveal their target on paper (in-page anchors need not) */
   .prose a[href^="http"]::after {
     content: " (" attr(href) ")";
     font-size: 0.75em;
@@ -118,12 +130,12 @@
     word-break: break-all;
   }
 
-  /* 复制按钮是交互件不进纸面（语言标签保留） */
+  /* Copy button is interactive, stays off the paper (language label is kept) */
   .prose .copy-code {
     display: none;
   }
 
-  /* 卡片与代码块不跨页断裂；标题不孤行在页尾 */
+  /* Cards and code blocks never split across pages; headings never strand at a page bottom */
   .code-card,
   pre,
   .table-scroll,
@@ -138,9 +150,12 @@
     break-after: avoid;
   }
 
-  /* 代码高亮切回浅色主题（shiki 双主题变量在打印下必须取浅色一档）——
-     本块特异性 (0,3,1) 晚于上方分页避免的裸 `pre` (0,0,1)，特异性升序；
-     与预览脸的 .print-preview.dark 同名块保持内容同步（见文件头注） */
+  /* Code highlighting switches back to the light theme (shiki dual-theme
+     variables must take the light tier under print) — this block's
+     specificity (0,3,1) comes after the bare `pre` (0,0,1) targeted by the
+     page-break avoidance above, keeping specificity ascending; content kept
+     in sync with the identically named .print-preview.dark block (see file
+     header) */
   .dark .prose .code-card pre,
   .dark .prose .code-card span,
   .dark .prose .code-card pre span {
@@ -153,17 +168,20 @@
   margin: 16mm 14mm;
 }
 
-/* deck 页由 payload 内 marpit 自带的 @page 1280×720 后置覆盖（body 内
-   style 晚于本文件的 head 引用，级联天然分工） */
+/* Deck pages are later-overridden by marpit's own @page 1280×720 from the
+   payload (the in-body style comes after this file's head reference, so the
+   cascade splits the work naturally) */
 
-/* ── 预览脸：html.print-preview 时纸面直接上屏（webview 里 print 是
-   no-op，见 lib/print.ts）——下面两份列表与 @media print 保持同步。
-   预览类挂在 <html>（与 .dark 同元素，复合选择器命中）。 ── */
+/* ── Preview face: with html.print-preview the paper renders directly
+   (print is a no-op in webviews, see lib/print.ts) — the two lists below
+   stay in sync with @media print. The preview class hangs on <html>
+   (same element as .dark, hit via compound selectors). ── */
 .print-preview body {
   background: #ffffff;
 }
 
-/* 预览是纸面：一切屏幕过渡停掉，浅色强制原子生效 */
+/* The preview is the paper: every screen transition stops, light-theme
+   enforcement applies atomically */
 .print-preview,
 .print-preview * {
   transition: none !important;
@@ -192,11 +210,11 @@
   --code-bg: initial;
   --code-fg: initial;
   color-scheme: light;
-  /* 调色板交叉淡化不得拖泥带水地过渡进纸面 */
+  /* The palette cross-fade must not drag a lingering transition onto the paper */
   transition: none;
 }
 
-/* 代码高亮切回浅色主题（同 @media print 块） */
+/* Code highlighting switches back to the light theme (same as the @media print block) */
 .print-preview.dark .prose .code-card pre,
 .print-preview.dark .prose .code-card span,
 .print-preview.dark .prose .code-card pre span {
@@ -219,8 +237,9 @@
   max-width: none !important;
 }
 
-/* deck 三规则的预览脸 twin（与上方 @media print 的 .deck-page 列表同步）：
-   页头不印、容器留白清零——deck 打印物 = 幻灯片本身，预览即所印 */
+/* Preview-face twin of the three deck rules (synced with the @media print
+   .deck-page list above): header not printed, container padding zeroed —
+   the deck printout = the slides themselves; the preview is what prints */
 .print-preview main:has(.deck-page) {
   padding: 0 !important;
 }
@@ -233,7 +252,8 @@
   display: none !important;
 }
 
-/* 外链在纸上露出目标（与 @media print 同名块同步：预览脸必须所见即所印） */
+/* External links reveal their target on paper (synced with the identical
+   @media print block: the preview face must be exactly what prints) */
 .print-preview .prose a[href^="http"]::after {
   content: " (" attr(href) ")";
   font-size: 0.75em;
@@ -241,13 +261,14 @@
   word-break: break-all;
 }
 
-/* 复制按钮不进纸面（与 @media print 同名块同步） */
+/* Copy button stays off the paper (synced with the identical @media print block) */
 .print-preview .prose .copy-code {
   display: none;
 }
 
-/* 品牌字标（家族契约，同 ZJSearch print 文档左上角 wordmark）：
-   衬线品牌名 + 金点 + 分隔线，预览脸与打印纸面都可见 */
+/* Brand wordmark (family contract, same as ZJSearch's top-left print
+   wordmark): serif brand name + gold dot + divider, visible in both the
+   preview face and the printed paper */
 .print-wordmark {
   font-family: var(--font-serif);
   font-size: 20px;
@@ -262,7 +283,7 @@
   color: var(--accent-strong);
 }
 
-/* 关闭芯片（print.ts 注入）：屏幕上的预览退出钮，打印时隐藏 */
+/* Close chip (injected by print.ts): on-screen preview exit button, hidden while printing */
 .print-close {
   position: fixed;
   top: 14px;
@@ -286,8 +307,9 @@
   color: var(--ink);
 }
 
-/* webview 提示：print 在嵌入式浏览器里是静默 no-op，纸面即终态——
-   告诉用户用浏览器菜单的「打印」输出这份内容 */
+/* Webview hint: print is a silent no-op in embedded browsers, so the paper
+   is the final state — tells the user to output this content via the browser
+   menu's "Print" */
 .print-hint {
   position: fixed;
   top: 20px;

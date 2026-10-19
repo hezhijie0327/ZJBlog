@@ -1,6 +1,8 @@
-// 构建期内容管线：content/<type>/*.md → 类型化条目（frontmatter + 阅读时长
-// + 编译后的 HTML + 目录树）。仅在 Node 侧使用（SSR / 预渲染 / 静态生成器），
-// 客户端 bundle 永不引入本文件 —— Markdown 在构建期编译，运行时零编译成本。
+// Build-time content pipeline: content/<type>/*.md → typed entries
+// (frontmatter + reading time + compiled HTML + TOC tree). Node-side only
+// (SSR / prerender / static generators); the client bundle never imports this
+// file — Markdown is compiled at build time, so runtime has zero compilation
+// cost.
 
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path, { join } from "node:path";
@@ -23,6 +25,7 @@ import remarkRehype from "remark-rehype";
 import { type Processor, unified } from "unified";
 import type { Node } from "unist";
 import { visit } from "unist-util-visit";
+import { BASELINE_COPY_CODE } from "../src/lib/i18n/baseline.ts";
 import type { DeckMeta, LockedContent, TocItem } from "../src/lib/types.ts";
 import { remarkCallouts } from "./callouts";
 import { deriveSecretKeys, encryptBundle, type SecretRef } from "./crypto";
@@ -40,13 +43,17 @@ import { highlightCode } from "./shiki.ts";
 
 const contentDirectory = path.join(process.cwd(), "content");
 
-// ==高亮==（Pandoc/Typora 风格）：micromark 微扩展经标准注入点挂进 remark-parse。
-// 注意 data(key, value) 是整体替换而非追加 —— 必须读出现有列表再 push，
-// 否则会把 remark-gfm / remark-math 已注册的扩展整个顶掉（pandocMark 是
-// 工厂函数，须调用取扩展对象）。mark mdast 节点没有官方 hast handler，在
-// 解析后的树上统一补 data.hName="mark"（与 gfm delete 的 data.hName 同机制，
-// remarkRehype 的未知节点兜底会按它输出 <mark>）—— 不能包装 enter.mark 从
-// 返回值挂：上游 handler 经 this.enter() 建节点、返回 undefined。
+// ==highlight== (Pandoc/Typora style): a micromark micro-extension wired into
+// remark-parse through the standard injection point. Note that data(key,
+// value) replaces wholesale rather than appending — read out the existing
+// list before pushing, or you would wipe out the extensions already
+// registered by remark-gfm / remark-math (pandocMark is a factory function;
+// call it to obtain the extension object). The mark mdast node has no
+// official hast handler, so after parsing we uniformly set data.hName="mark"
+// on the tree (same mechanism as gfm delete's data.hName; remarkRehype's
+// unknown-node fallback emits <mark> from it) — you cannot wrap enter.mark
+// and attach from its return value: the upstream handler builds the node via
+// this.enter() and returns undefined.
 function remarkMark(this: Processor) {
   const data = this.data() as {
     micromarkExtensions?: unknown[];
@@ -68,11 +75,12 @@ function remarkMark(this: Processor) {
   };
 }
 
-/** 站内图片注入固有尺寸（src 以 / 开头 → public/ 下的文件）：正文里的
- *  Markdown 图片与 raw <img> 缺 width/height 会引入 CLS 并挂 a11y 审计
- *  （unsized-images）；外站图无法取尺寸，保持原样。缺 alt 一并兜底为空
- *  （装饰语义）。 */
-/** hast 元素节点的本地结构类型（项目不直接依赖 @types/hast） */
+/** Inject intrinsic dimensions for site-local images (src starting with "/" →
+ *  files under public/): Markdown images and raw <img> in the body that lack
+ *  width/height introduce CLS and trip the a11y audit (unsized-images);
+ *  off-site images can't be measured, so they are left as-is. A missing alt
+ *  is likewise backfilled as empty (decorative semantics). */
+/** Local structural type for hast element nodes (the project does not depend on @types/hast directly) */
 interface HastElement extends Node {
   type: "element";
   tagName: string;
@@ -97,7 +105,7 @@ function rehypeLocalImageSize() {
         properties.width ??= dim.width;
         properties.height ??= dim.height;
       } catch {
-        // public/ 下找不到对应文件（含百分比 width 的演示标签），不注入
+        // No matching file under public/ (includes demo tags with percentage widths); skip injection
       }
       properties.alt ??= "";
     });
@@ -107,20 +115,26 @@ function rehypeLocalImageSize() {
 const processor = unified()
   .use(remarkParse)
   .use(remarkGfm)
-  // 数学公式：标准库 remark-math。已知与 GitHub 渲染的差异（upstream 未实现
-  // cmark-gfm 的 delimiter 规则，属上游边界而非回归，勿往这里加 hack）：
-  //   1. `$` 后紧跟数字仍会开启公式（$100 这类美元金额会被误配对）
-  //   2. 缺「关闭 $ 后紧跟数字不闭合」判定
-  //   3. 公式内 `\$` 转义在 markdown 层即被解掉，KaTeX 收到裸 $ 报错
-  // 若需完全对齐 GitHub，可从提交 0686022 找回打补丁的 tools/math-gfm.js。
+  // Math: the standard remark-math library. Known divergences from GitHub's
+  // rendering (upstream has not implemented cmark-gfm's delimiter rules; this
+  // is an upstream boundary, not a regression — don't add hacks here):
+  //   1. A digit right after `$` still opens math (dollar amounts like $100
+  //      get mis-paired as a formula)
+  //   2. Lacks the "digit right after a closing $ does not close" check
+  //   3. `\$` escapes inside math are unwrapped at the markdown layer, so
+  //      KaTeX receives a bare $ and errors
+  // To align fully with GitHub, the patched tools/math-gfm.js can be recovered
+  // from commit 0686022.
   .use(remarkMath)
   .use(remarkMark)
   .use(remarkEmoji)
   .use(remarkCallouts)
   .use(remarkDeflist)
-  // raw HTML：内容构建期编译且仅来自本人撰写，视为可信 —— 放行后由
-  // rehype-raw 重解析回元素树（此前 allowDangerousHtml:false 会把 HTML
-  // 节点整体丢弃，造成「HTML 支持情况」一类章节内容静默消失）。
+  // Raw HTML: content is compiled at build time and written solely by the
+  // site author, so it is trusted — allowed through and re-parsed back into
+  // the element tree by rehype-raw (previously allowDangerousHtml:false
+  // dropped HTML nodes wholesale, silently deleting sections like the "HTML
+  // support" matrix).
   .use(remarkRehype, { allowDangerousHtml: true })
   .use(rehypeRaw)
   .use(rehypeLocalImageSize)
@@ -129,19 +143,20 @@ const processor = unified()
   .use(rehypeExternalLinks, { rel: ["noopener", "noreferrer"], target: "_blank" })
   .use(rehypeStringify);
 
-/** 单个代码块 → code-card HTML（语言标签 + 复制按钮 + shiki 高亮）。
- *  未识别语言回退纯 <pre><code>，不吞内容。 */
+/** Single code block → code-card HTML (language label + copy button + shiki
+ *  highlighting). Unrecognized languages fall back to plain <pre><code>;
+ *  content is never swallowed. */
 function renderCodeBlock(lang: string, code: string): string {
   const label = lang || "text";
-  return `<div class="code-card" data-lang="${escapeAttr(label)}"><div class="code-card-head"><span class="code-lang">${escapeHtml(label)}</span><button class="copy-code" type="button">复制</button></div>${highlightCode(lang, code)}</div>`;
+  return `<div class="code-card" data-lang="${escapeAttr(label)}"><div class="code-card-head"><span class="code-lang">${escapeHtml(label)}</span><button class="copy-code" type="button">${BASELINE_COPY_CODE}</button></div>${highlightCode(lang, code)}</div>`;
 }
 
-/** 图示卡外壳：与 code-card 同语言的头部标签（无复制按钮）。 */
+/** Diagram card shell: a header label in the code-card language style (no copy button). */
 function diagramFigure(lang: string, body: string): string {
   return `<figure class="diagram-card"><figcaption class="code-card-head"><span class="code-lang">${escapeHtml(lang)}</span></figcaption>${body}</figure>`;
 }
 
-/** Typora 专属 fence 的构建期兼容层：非法数据一律回退普通代码块，不吞内容。 */
+/** Build-time compatibility layer for Typora-specific fences: invalid data always falls back to a plain code block; content is never swallowed. */
 function renderDiagram(lang: string, code: string): string | undefined {
   try {
     switch (lang) {
@@ -168,17 +183,24 @@ function renderDiagram(lang: string, code: string): string | undefined {
   }
 }
 
-/** Markdown → HTML + 目录。后处理：
- *  1. mermaid / sequence / flow 代码块 → mermaid 占位容器（前者原文直存，
- *     后两者构建期翻译为 mermaid 源码），客户端进视口后才动态加载 mermaid
- *     渲染（库 ~2.7MB，预加载曾致 perf 掉到 82）；
- *  2. geojson / topojson → 构建期直接投影成静态 SVG 图卡；plantuml → 公共
- *     渲染服务的 lazy img；stl → 占位容器（客户端 three.js 惰性渲染）；
- *  3. 其余代码块 → code-card（语言标签 + 复制按钮 + shiki 高亮）；
- *  4. 表格包一层横向滚动容器（窄屏不挤压列）；
- *  5. GFM 任务清单复选框补 aria-hidden（纯装饰）；
- *  6. 剥掉行首 h1（页面头部已渲染标题，避免双 h1 + 标题重复）；
- *  7. h2/h3 收进目录（id 由 rehype-slug 生成，正文锚点与 TOC 同源）。 */
+/** Markdown → HTML + TOC. Post-processing:
+ *  1. mermaid / sequence / flow code blocks → mermaid placeholder containers
+ *     (the first stores the source verbatim; the latter two are translated to
+ *     mermaid source at build time); the client loads mermaid dynamically
+ *     only once they enter the viewport (the library is ~2.7MB; preloading it
+ *     once dropped the perf score to 82);
+ *  2. geojson / topojson → projected at build time into static SVG figure
+ *     cards; plantuml → lazy img from the public rendering service; stl →
+ *     placeholder container (three.js rendered lazily on the client);
+ *  3. remaining code blocks → code-card (language label + copy button + shiki
+ *     highlighting);
+ *  4. tables get wrapped in a horizontal scroll container (columns are not
+ *     squeezed on narrow screens);
+ *  5. GFM task list checkboxes get aria-hidden (purely decorative);
+ *  6. the leading h1 is stripped (the page header already renders the title,
+ *     avoiding a double h1 + duplicate headings);
+ *  7. h2/h3 are collected into the TOC (ids come from rehype-slug, so body
+ *     anchors and the TOC share one source). */
 function compileMarkdown(markdown: string): { html: string; toc: TocItem[] } {
   const html = processor
     .processSync(markdown)
@@ -192,8 +214,9 @@ function compileMarkdown(markdown: string): { html: string; toc: TocItem[] } {
         if (lang === "mermaid") {
           return `<div class="mermaid-placeholder" data-chart="${escapeAttr(decoded)}"></div>`;
         }
-        // Marpit 幻灯片（marp / deck fence）：构建期编译为嵌入占位结构，
-        // 数据非法回退普通代码块，不吞内容
+        // Marpit slides (marp / deck fences): compiled at build time into the
+        // embed placeholder structure; invalid data falls back to a plain
+        // code block — content is never swallowed
         if (lang === "marp" || lang === "deck") {
           try {
             return renderDeckEmbed(compileDeck(decoded));
@@ -208,14 +231,15 @@ function compileMarkdown(markdown: string): { html: string; toc: TocItem[] } {
           }
           return renderCodeBlock(lang, decoded);
         }
-        // 无语言标注：保留转义后的原文，仅补 code-card 外壳与复制按钮
-        return `<div class="code-card"><div class="code-card-head"><button class="copy-code" type="button">复制</button></div>${match}</div>`;
+        // No language annotation: keep the escaped source verbatim, adding only the code-card shell and copy button
+        return `<div class="code-card"><div class="code-card-head"><button class="copy-code" type="button">${BASELINE_COPY_CODE}</button></div>${match}</div>`;
       },
     )
     .replace(/<table>/g, '<div class="table-scroll"><table>')
     .replace(/<\/table>/g, "</table></div>")
-    // GFM 对齐列：mdast-util-to-hast 输出的是废弃的 align 属性，现代浏览器
-    // 已不应用 —— 转成内联 text-align 才生效
+    // GFM aligned columns: mdast-util-to-hast emits the deprecated align
+    // attribute, which modern browsers no longer apply — converting to inline
+    // text-align is what actually takes effect
     .replace(/<(th|td) align="(left|center|right)"/g, '<$1 style="text-align:$2"')
     .replace(/<input((?:(?!aria-hidden)[^>]*)?type="checkbox"[^>]*)>/g, '<input aria-hidden="true"$1>');
 
@@ -237,23 +261,25 @@ export interface BlogEntry {
   description?: string;
   category?: string;
   tags: string[];
-  /** 阅读时长（分钟，向上取整；展示文案由 i18n 负责） */
+  /** Reading time (minutes, rounded up; display copy is handled by i18n) */
   readingMinutes: number;
-  /** 手写摘要（frontmatter.summary，文章页摘要卡用；不填则无卡） */
+  /** Hand-written summary (frontmatter.summary; used by the post page's summary card; absent means no card) */
   summary?: string;
   contentHtml: string;
-  /** 正文含 KaTeX 公式（页面需按需加载 katex.min.css） */
+  /** Body contains KaTeX formulas (the page must load katex.min.css on demand) */
   needsKatex: boolean;
-  /** h2/h3 目录（rehype-slug 的 id，客户端 TOC 与锚点共用） */
+  /** h2/h3 table of contents (rehype-slug ids; shared by the client TOC and anchors) */
   toc: TocItem[];
-  /** 原始 Markdown 正文（llms-full.txt 用，不进页面 payload） */
+  /** Raw Markdown body (used by llms-full.txt; not included in page payloads) */
   content: string;
-  /** 幻灯片 deck 元信息（frontmatter deck: true 的博文）：css 随 payload 出站
-   *  （head 不随 SPA 换页，样式须可换页注入），幻灯片 HTML 走 contentHtml 的
-   *  DOM 单份契约 */
+  /** Slide deck metadata (posts with frontmatter deck: true): the css ships
+   *  with the payload (the head does not change on SPA page swaps, so styles
+   *  must be injectable per swap); slide HTML travels through contentHtml's
+   *  single-source DOM channel */
   deck?: DeckMeta;
-  /** 加密信封（frontmatter.secret 命中时有值）：contentHtml/toc/content 均
-   *  不出站（构建内存私有），仅信封随 payload 落盘，客户端解锁后还原 */
+  /** Encrypted envelope (set when frontmatter.secret matches): contentHtml/
+   *  toc/content never ship (private to build memory); only the envelope is
+   *  written out with the payload, and the client restores it after unlock */
   locked?: LockedContent;
 }
 
@@ -265,12 +291,12 @@ export interface ProjectEntry {
   type: "personal" | "starred";
   tags: string[];
   link?: string;
-  /** 封面图（frontmatter.image，站点根路径如 /images/xxx.png） */
+  /** Cover image (frontmatter.image; a site-root path like /images/xxx.png) */
   image?: string;
   contentHtml: string;
-  /** 正文含 KaTeX 公式（页面需按需加载 katex.min.css） */
+  /** Body contains KaTeX formulas (the page must load katex.min.css on demand) */
   needsKatex: boolean;
-  /** 原始 Markdown 正文（llms-full.txt 用，不进页面 payload） */
+  /** Raw Markdown body (used by llms-full.txt; not included in page payloads) */
   content: string;
 }
 
@@ -291,11 +317,11 @@ type RawEntry = {
   toc?: TocItem[];
   content?: string;
   locked?: LockedContent;
-  /** frontmatter secret 名（blogs/travels；密封阶段据此生成信封） */
+  /** frontmatter secret name (blogs/travels; the sealing stage derives the envelope from it) */
   secretName?: string;
-  /** 整篇幻灯片（frontmatter deck: true，仅 blogs） */
+  /** Whole-post slide deck (frontmatter deck: true; blogs only) */
   deck?: DeckMeta;
-  /** 旅行专属（travels） */
+  /** Travel-specific (travels) */
   place?: string;
   coords?: [number, number];
   endDate?: string;
@@ -303,11 +329,11 @@ type RawEntry = {
   cover?: string;
 };
 
-/** 旅行条目：/travels/ 明信片墙与地图针脚的数据源。 */
+/** Travel entry: data source for the /travels/ postcard wall and map pins. */
 export interface TravelEntry {
   slug: string;
   title: string;
-  /** 地图针脚短标签 */
+  /** Short label for the map pin */
   place: string;
   /** [lng, lat] */
   coords: [number, number];
@@ -317,14 +343,14 @@ export interface TravelEntry {
   cover?: string;
   description?: string;
   summary?: string;
-  /** 相关游记（/blogs/...） */
+  /** Related travelogue (/blogs/...) */
   link?: string;
   contentHtml: string;
-  /** 正文含 KaTeX 公式（页面需按需加载 katex.min.css） */
+  /** Body contains KaTeX formulas (the page must load katex.min.css on demand) */
   needsKatex: boolean;
-  /** 原始 Markdown 正文（构建内存私有，不进 payload） */
+  /** Raw Markdown body (private to build memory; not in the payload) */
   content: string;
-  /** 加密信封（frontmatter.secret 命中）：contentHtml 不出站 */
+  /** Encrypted envelope (frontmatter.secret match): contentHtml does not ship */
   locked?: LockedContent;
 }
 
@@ -334,7 +360,7 @@ export interface ContentIndex {
   travels: TravelEntry[];
 }
 
-/** frontmatter 白名单；白名单外的键一律告警（typo 防线）。 */
+/** frontmatter whitelist; keys outside it always warn (typo defense). */
 const FRONTMATTER_KEYS = new Set([
   "title",
   "description",
@@ -350,7 +376,7 @@ const FRONTMATTER_KEYS = new Set([
   "deck",
 ]);
 
-/** travels 专属白名单（body 为故事正文；photo 走正文 Markdown 图片）。 */
+/** travels-specific whitelist (body is the story text; photos go through body Markdown images). */
 const TRAVEL_FRONTMATTER_KEYS = new Set([
   "title",
   "description",
@@ -370,24 +396,29 @@ function validateFrontmatter(type: string, slug: string, data: Record<string, un
   const whitelist = type === "travels" ? TRAVEL_FRONTMATTER_KEYS : FRONTMATTER_KEYS;
   for (const key of Object.keys(data)) {
     if (!whitelist.has(key)) {
-      console.warn(`[content] ${type}/${slug}.md: 未知的 frontmatter 字段 "${key}"（检查拼写或补充白名单）`);
+      console.warn(
+        `[content] ${type}/${slug}.md: unknown frontmatter field "${key}" (fix the typo or extend the whitelist)`,
+      );
     }
   }
   if (!data.title) {
-    console.warn(`[content] ${type}/${slug}.md: 缺少 title，列表与文档头将退化显示 slug`);
+    console.warn(`[content] ${type}/${slug}.md: missing title — lists and the document head fall back to the slug`);
   }
   if (type !== "travels" && !data.description) {
-    console.warn(`[content] ${type}/${slug}.md: 缺少 description，SEO/OG 描述将使用兜底文案`);
+    console.warn(`[content] ${type}/${slug}.md: missing description — SEO/OG copy falls back to the default text`);
   }
   if (!data.date) {
-    console.warn(`[content] ${type}/${slug}.md: 缺少 date，排序将退到最后且 sitemap 无 lastmod`);
+    console.warn(
+      `[content] ${type}/${slug}.md: missing date — sorting falls to the end and the sitemap has no lastmod`,
+    );
   }
 }
 
 function parseDate(type: string, slug: string, value: unknown): string | undefined {
-  // 无引号的 YAML 日期（date: 2023-06-01）会被 gray-matter 解析成 Date 实例，
-  // 必须一并接受并取回日历字段，否则整条日期被静默丢弃（列表无日期、
-  // 归档进「未知」、sitemap 无 lastmod）。
+  // Unquoted YAML dates (date: 2023-06-01) are parsed by gray-matter into
+  // Date instances; they must be accepted too and the calendar field
+  // extracted, or the whole date is silently dropped (no dates in lists,
+  // archives land in "unknown", sitemap has no lastmod).
   if (value instanceof Date) {
     return value.toISOString().slice(0, 10);
   }
@@ -396,7 +427,7 @@ function parseDate(type: string, slug: string, value: unknown): string | undefin
   }
   const time = Date.parse(value);
   if (Number.isNaN(time)) {
-    console.warn(`[content] ${type}/${slug}.md: 无法解析的日期 "${value}"（需要 ISO 形如 2024-12-20）`);
+    console.warn(`[content] ${type}/${slug}.md: unparseable date "${value}" (ISO form required, e.g. 2024-12-20)`);
     return undefined;
   }
   return value;
@@ -415,30 +446,36 @@ function readEntries(type: "blogs" | "projects" | "travels"): RawEntry[] {
     const slug = file.replace(/\.md$/, "");
     const { data, content } = matter(readFileSync(path.join(dirPath, file), "utf8"));
     validateFrontmatter(type, slug, data);
-    // draft: true 的条目构建期整体剔除，不进路由 / 列表 / RSS
+    // draft: true entries are removed wholesale at build time; they never reach routes / lists / RSS
     if (data.draft === true) {
       continue;
     }
-    // secret: <name> → 加密内容（blogs/travels；projects 无锁屏 UI）。信封在
-    // loadContent 的密封阶段生成 —— 独占图判定需要全站引用图先完成。
-    // 口令缺失时 deriveSecretKeys 阶段的 loadSecret 直接抛错，fail-closed。
+    // secret: <name> → encrypted content (blogs/travels; projects have no
+    // lock screen UI). The envelope is generated in loadContent's sealing
+    // stage — exclusive-image detection needs the site-wide image reference
+    // analysis to finish first. With a missing password, loadSecret throws
+    // right at the deriveSecretKeys stage — fail-closed.
     const secretName =
       type !== "projects" && typeof data.secret === "string" && data.secret !== "" ? data.secret : undefined;
     if (data.secret !== undefined && secretName === undefined) {
       console.warn(
         type === "projects"
-          ? `[content] ${type}/${slug}.md: secret 仅支持 blogs/travels（projects 无锁屏），已忽略`
-          : `[content] ${type}/${slug}.md: secret 需为非空字符串，已忽略`,
+          ? `[content] ${type}/${slug}.md: secret only supports blogs/travels (projects have no lock screen) — ignored`
+          : `[content] ${type}/${slug}.md: secret must be a non-empty string — ignored`,
       );
     }
-    // deck: true → 整篇幻灯片（Marpit 方言，tools/deck.ts）。与 secret 组合
-    // 直接构建失败：v1 不做幻灯片加密，静默按明文处理违背 fail-closed。
+    // deck: true → whole-post slides (Marpit dialect, tools/deck.ts).
+    // Combining it with secret fails the build outright: v1 has no slide
+    // encryption, and silently treating it as plaintext would violate
+    // fail-closed.
     const isDeck = data.deck === true;
     if (data.deck !== undefined && !isDeck) {
-      console.warn(`[content] ${type}/${slug}.md: deck 需为 true，已按普通文章处理`);
+      console.warn(`[content] ${type}/${slug}.md: deck must be true — treated as a regular post`);
     }
     if (isDeck && secretName !== undefined) {
-      throw new Error(`[content] ${type}/${slug}.md: deck 与 secret 暂不支持组合（幻灯片不做加密），请去掉其一`);
+      throw new Error(
+        `[content] ${type}/${slug}.md: deck + secret is not supported yet (no slide encryption) — drop one of them`,
+      );
     }
     const deckPost = isDeck ? compileDeck(content) : undefined;
     const compiled = deckPost
@@ -449,14 +486,16 @@ function readEntries(type: "blogs" | "projects" | "travels"): RawEntry[] {
           count: deckPost.count,
         }
       : compileMarkdown(content);
-    // 旅行专属字段：coords 必须是 [lng, lat] 数值对，companion 缺省按情侣同行
+    // Travel-specific fields: coords must be a [lng, lat] numeric pair; companion defaults to couple
     let coords: [number, number] | undefined;
     if (type === "travels") {
       const raw = data.coords;
       if (Array.isArray(raw) && raw.length === 2 && raw.every((n) => typeof n === "number" && Number.isFinite(n))) {
         coords = [raw[0] as number, raw[1] as number];
       } else {
-        console.warn(`[content] ${type}/${slug}.md: coords 需为 [lng, lat] 数值对，针脚将缺失`);
+        console.warn(
+          `[content] ${type}/${slug}.md: coords must be a [lng, lat] numeric pair — the pin will be missing`,
+        );
       }
     }
     const companion = data.companion === "solo" ? "solo" : "couple";
@@ -466,7 +505,7 @@ function readEntries(type: "blogs" | "projects" | "travels"): RawEntry[] {
       data.companion !== "solo" &&
       data.companion !== "couple"
     ) {
-      console.warn(`[content] ${type}/${slug}.md: companion 需为 couple | solo，已按 couple 处理`);
+      console.warn(`[content] ${type}/${slug}.md: companion must be couple | solo — treated as couple`);
     }
     entries.push({
       slug,
@@ -493,7 +532,7 @@ function readEntries(type: "blogs" | "projects" | "travels"): RawEntry[] {
       cover: type === "travels" && typeof data.cover === "string" ? data.cover : undefined,
     });
   }
-  // 日期倒序，无日期排后（与迁移前排序一致）
+  // Sort by date descending, undated entries last (same ordering as before the migration)
   return entries.sort((a, b) => {
     if (a.date && b.date) {
       return Date.parse(b.date) - Date.parse(a.date);
@@ -502,8 +541,9 @@ function readEntries(type: "blogs" | "projects" | "travels"): RawEntry[] {
   });
 }
 
-/** 扫描 blogs/travels frontmatter，收集需要预派生密钥的加密内容（含命名
- *  空间密钥 + secret 名）。draft 的条目已整体剔除，不参与。 */
+/** Scan blogs/travels frontmatter and collect the encrypted content that
+ *  needs pre-derived keys (namespace keys + secret names). draft entries have
+ *  already been removed wholesale and take no part. */
 function collectSecretRefs(): SecretRef[] {
   const refs: SecretRef[] = [];
   for (const kind of ["blogs", "travels"] as const) {
@@ -531,8 +571,10 @@ function collectSecretRefs(): SecretRef[] {
   return refs;
 }
 
-// Argon2id 是异步 API 而内容管线全同步：与 shiki 高亮器同一模式，模块加载期
-// await 完成重活（每篇约百毫秒级），此后 loadContent 的调用路径保持同步。
+// Argon2id is an async API while the content pipeline is fully synchronous:
+// same pattern as the shiki highlighter — await the heavy lifting at module
+// load time (roughly hundreds of ms per post), after which loadContent's call
+// paths stay synchronous.
 await deriveSecretKeys(collectSecretRefs());
 
 let cache: ContentIndex | null = null;
@@ -543,9 +585,11 @@ export function loadContent(): ContentIndex {
     const rawProjects = readEntries("projects");
     const rawTravels = readEntries("travels");
 
-    // 引用图分析必须先于密封全量完成：独占性是全站判定（任何公开内容也
-    // 引用的图片无法加密）。键用 `<kind>:<slug>` 命名空间（与 crypto 密钥
-    // 一致），防 blogs/travels 同名 slug 互相覆盖引用表
+    // The image reference analysis must complete site-wide before sealing:
+    // exclusivity is a site-wide determination (an image also referenced by
+    // any public content cannot be encrypted). Keys use the `<kind>:<slug>`
+    // namespace (matching the crypto keys) so blogs/travels slugs with the
+    // same name don't overwrite each other's reference tables
     for (const entry of rawBlogs) {
       noteImageRefs(`blogs:${entry.slug}`, entry.contentHtml ?? "", entry.secretName !== undefined);
     }
@@ -553,8 +597,9 @@ export function loadContent(): ContentIndex {
       noteImageRefs(`projects:${entry.slug}`, entry.contentHtml ?? "", false);
     }
     for (const entry of rawTravels) {
-      // 锁定旅行的 frontmatter cover 同样是私密照片 —— 拼进引用分析，
-      // 让密封管线把它一并加密（明文不留在 dist）
+      // A locked travel's frontmatter cover is also a private photo — splice
+      // it into the reference analysis so the sealing pipeline encrypts it
+      // too (no plaintext left behind in dist)
       const html =
         entry.cover !== undefined && entry.cover !== ""
           ? `${entry.contentHtml ?? ""}<img src="${entry.cover}">`
@@ -562,8 +607,9 @@ export function loadContent(): ContentIndex {
       noteImageRefs(`travels:${entry.slug}`, html, entry.secretName !== undefined);
     }
 
-    // 密封锁定内容：正文 HTML + TOC + 独占图 IV 表一起进信封密文。明文不出
-    // 构建内存（payloads/generators 对锁定内容一律不再消费它们）。
+    // Seal the locked content: body HTML + TOC + the exclusive-image IV table
+    // go into the envelope ciphertext together. Plaintext never leaves build
+    // memory (payloads/generators no longer consume it for locked content).
     for (const entry of rawBlogs) {
       if (!entry.secretName) {
         continue;

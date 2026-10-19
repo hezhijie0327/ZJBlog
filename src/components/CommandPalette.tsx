@@ -1,6 +1,9 @@
-// 命令面板：Ctrl/⌘+K 全站搜索，首次打开才拉取 /search-index.json。
-// 焦点语义：input 以 aria-activedescendant 指向 listbox 当前项（options
-// 不进 Tab 序），关闭时焦点归还触发者；modal 期间锁定背景滚动。
+// Command palette: Ctrl/⌘+K site-wide search; /search-index.json is only
+// fetched the first time it opens.
+// Focus semantics: the input points at the listbox's current entry via
+// aria-activedescendant (options stay out of the Tab order), focus returns to
+// the trigger on close, and background scroll is locked while the modal is
+// open.
 
 import { ArrowUpRight, FileText, FolderGit2, Search } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -13,7 +16,7 @@ import type { SearchItem } from "@/lib/types.ts";
 const LIST_ID = "command-palette-list";
 const OPTION_PREFIX = "command-palette-option";
 
-/** 命中位置 → 相关度（title > tags > description）；null = 不匹配。 */
+/** Match location -> relevance rank (title > tags > description); null = no match. */
 function matchRank(item: SearchItem, q: string): number | null {
   const needle = q.toLowerCase();
   if (item.title.toLowerCase().includes(needle)) {
@@ -28,7 +31,7 @@ function matchRank(item: SearchItem, q: string): number | null {
   return null;
 }
 
-/** 把 text 按 q（大小写不敏感）切分成命中/未命中片段，供 <mark> 高亮。 */
+/** Splits text by q (case-insensitive) into hit/miss segments for <mark> highlighting. */
 function highlightParts(text: string, q: string): { text: string; hit: boolean }[] {
   const lower = text.toLowerCase();
   const needle = q.toLowerCase();
@@ -51,7 +54,7 @@ function highlightParts(text: string, q: string): { text: string; hit: boolean }
   return parts;
 }
 
-/** 描述里命中词附近的摘录（前 48 / 后 64 字符），供结果第二行展示。 */
+/** Excerpt around the hit in the description (48 chars before / 64 after), shown as the result's second line. */
 function excerptAround(text: string, q: string): string {
   const at = text.toLowerCase().indexOf(q.toLowerCase());
   const start = Math.max(0, at - 48);
@@ -59,7 +62,7 @@ function excerptAround(text: string, q: string): string {
   return `${start > 0 ? "…" : ""}${text.slice(start, end)}${end < text.length ? "…" : ""}`;
 }
 
-/** 结果第二行的命中上下文：优先描述摘录；仅标签命中时列出命中标签。 */
+/** Hit context for the result's second line: prefers a description excerpt; when only tags match, lists the matching tags. */
 function buildContext(item: SearchItem, q: string): string | null {
   if (!q) {
     return null;
@@ -71,7 +74,7 @@ function buildContext(item: SearchItem, q: string): string | null {
   return tags.length > 0 ? tags.map((tag) => `#${tag}`).join("  ") : null;
 }
 
-/** 命中词 <mark> 高亮（bg-highlight 即选区/高亮 token）。 */
+/** <mark> highlight for hits (bg-highlight is the selection/highlight token). */
 function Highlight({ text, q }: { text: string; q: string }) {
   return (
     <>
@@ -92,19 +95,20 @@ export function CommandPalette() {
   const t = useT();
   const { navigate } = useRouter();
   const [open, setOpen] = useState(false);
-  // 退出动画窗口：关闭请求先播 fade-out，动画结束才真正卸载（期间保持
-  // 滚动锁与面板 DOM，视觉上开合对称）
+  // Exit-animation window: a close request plays the fade-out first and the
+  // component unmounts only after the animation ends (the scroll lock and
+  // palette DOM stay put meanwhile, so open/close look visually symmetric)
   const [closing, setClosing] = useState(false);
   const [query, setQuery] = useState("");
   const [index, setIndex] = useState<SearchItem[] | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
-  // 打开时的触发元素，关闭时归还焦点
+  // Element that triggered the open; focus returns to it on close
   const openerRef = useRef<HTMLElement | null>(null);
 
   const typeLabel = useMemo(() => ({ blog: t("search.typeBlog"), project: t("search.typeProject") }) as const, [t]);
 
-  /** 真正卸载：清空查询状态并归还焦点（退出动画结束后由 onAnimationEnd 调用）。 */
+  /** Actual unmount: clears query state and returns focus (called by onAnimationEnd after the exit animation finishes). */
   const finishClose = useCallback(() => {
     setOpen(false);
     setClosing(false);
@@ -113,18 +117,20 @@ export function CommandPalette() {
     openerRef.current?.focus();
   }, []);
 
-  /** 关闭请求：先播退出动画，动画结束再卸载（finishClose）。 */
+  /** Close request: plays the exit animation first, then unmounts (finishClose). */
   const close = useCallback(() => {
     if (!open || closing) {
       return;
     }
     setClosing(true);
-    // 兜底：animationend 依赖渲染管线（页面隐藏时动画时间线冻结、事件可能
-    // 丢失），超时后无条件收尾；finishClose 幂等，与 onAnimationEnd 谁先到一致
+    // Safety net: animationend depends on the rendering pipeline (the
+    // animation timeline freezes while the page is hidden and the event may
+    // be lost), so finish unconditionally after a timeout; finishClose is
+    // idempotent, so whichever of it or onAnimationEnd lands first wins
     window.setTimeout(finishClose, 240);
   }, [open, closing, finishClose]);
 
-  // Ctrl/⌘+K 与自定义事件触发
+  // Triggered by Ctrl/⌘+K and by a custom event
   useEffect(() => {
     const onKeydown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
@@ -152,7 +158,7 @@ export function CommandPalette() {
     };
   }, [close, open, closing]);
 
-  // 首次打开时懒加载索引
+  // Lazily load the index on first open
   useEffect(() => {
     if (!open || index) {
       return;
@@ -175,7 +181,7 @@ export function CommandPalette() {
     };
   }, [open, index]);
 
-  // 打开期间锁定背景滚动；记录触发者并聚焦输入框
+  // Lock background scroll while open; record the trigger and focus the input
   useEffect(() => {
     if (!open) {
       return;
@@ -183,7 +189,7 @@ export function CommandPalette() {
     openerRef.current = document.activeElement as HTMLElement | null;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    // 等待面板挂载后聚焦
+    // Wait for the palette to mount, then focus
     const raf = requestAnimationFrame(() => inputRef.current?.focus());
     return () => {
       cancelAnimationFrame(raf);
@@ -199,7 +205,7 @@ export function CommandPalette() {
     if (!q) {
       return index.slice(0, 8);
     }
-    // 相关度排序：标题命中 > 标签命中 > 描述命中（同 rank 保持索引顺序）
+    // Relevance sort: title hit > tag hit > description hit (ties keep index order)
     return index
       .map((item) => ({ item, rank: matchRank(item, q) }))
       .filter((entry): entry is { item: SearchItem; rank: number } => entry.rank !== null)
@@ -208,7 +214,7 @@ export function CommandPalette() {
       .map((entry) => entry.item);
   }, [index, query]);
 
-  // 渲染期收敛激活下标，避免结果变短时越界
+  // Clamp the active index at render time so it never goes out of bounds when results shrink
   const active = Math.min(activeIndex, Math.max(results.length - 1, 0));
 
   const go = useCallback(
@@ -233,7 +239,7 @@ export function CommandPalette() {
         go(item);
       }
     } else if (e.key === "Tab") {
-      // 焦点陷阱：modal 内只有输入框一个 Tab 位，Tab 循环留在面板里
+      // Focus trap: the input is the only Tab stop inside the modal, so Tab loops within the palette
       e.preventDefault();
     }
   };
@@ -251,7 +257,8 @@ export function CommandPalette() {
         closing ? "animate-fade-out" : "animate-fade-in",
       )}
       onAnimationEnd={(e) => {
-        // 只认背板自身的动画结束（子元素动画冒泡忽略）；退出动画播完才卸载
+        // Only honor the backdrop's own animation end (ignore bubbled child
+        // animations); unmount only after the exit animation finishes
         if (closing && e.target === e.currentTarget) {
           finishClose();
         }
@@ -265,7 +272,7 @@ export function CommandPalette() {
           e.stopPropagation();
         }}
       >
-        {/* 输入框 */}
+        {/* Input */}
         <div className="flex items-center gap-3 border-b border-line px-4">
           <Search aria-hidden="true" className="size-4 shrink-0 text-ink-3" />
           <input
@@ -290,7 +297,7 @@ export function CommandPalette() {
           <kbd className={MONO_CHIP}>ESC</kbd>
         </div>
 
-        {/* 结果列表：listbox 语义，激活项经 aria-activedescendant 播报 */}
+        {/* Result list: listbox semantics; the active entry is announced via aria-activedescendant */}
         <div aria-label={t("search.results")} className="max-h-80 overflow-y-auto p-2" id={LIST_ID} role="listbox">
           {index === null ? (
             <p className={cn(META, "px-3 py-6 text-center")}>{t("search.loading")}</p>
@@ -318,7 +325,7 @@ export function CommandPalette() {
                     setActiveIndex(i);
                   }}
                   ref={(el) => {
-                    // 键盘导航时保证激活项滚动到可见区域
+                    // Keep the active entry scrolled into view during keyboard navigation
                     if (i === active && el) {
                       el.scrollIntoView({ block: "nearest" });
                     }
@@ -350,7 +357,7 @@ export function CommandPalette() {
           )}
         </div>
 
-        {/* 底部提示：按键用 kbd 胶囊（sans 栈渲染箭头字形更稳） */}
+        {/* Footer hints: keys rendered as kbd pills (the sans stack draws arrow glyphs more reliably) */}
         <div className={cn(META, "flex items-center gap-4 border-t border-line px-4 py-2.5 text-xs")}>
           <span className="flex items-center gap-1.5">
             <kbd className={cn(MONO_CHIP, "font-sans")}>↑</kbd>

@@ -1,6 +1,7 @@
-// 文章目录（TOC）：构建期提取的 h2/h3（id 与 rehype-slug 锚点同源）。
-// 桌面宽屏 sticky 右栏；滚动时高亮当前小节（IntersectionObserver 增强，
-// 不支持时退化为纯链接列表）。
+// Table of contents: h2/h3 extracted at build time (ids share the same origin
+// as rehype-slug anchors). A sticky right column on wide desktop screens;
+// highlights the current section while scrolling (an IntersectionObserver
+// enhancement, degrading to a plain link list when unsupported).
 
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/cn.ts";
@@ -22,7 +23,8 @@ export function TableOfContents({ items }: { items: TocItem[] }) {
     if (headings.length === 0) {
       return;
     }
-    // 标题越过视口上沿 1/3 处即视为当前小节
+    // A heading counts as the current section once it crosses the viewport's
+    // upper third
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {

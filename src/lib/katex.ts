@@ -1,6 +1,7 @@
-// KaTeX 样式按需补注：SSR 只对含公式页（needsKatex）注入 /katex.min.css；
-// 客户端从无公式页 SPA 换页到含公式页时，head 不换——这里检测并补一次
-// link（幂等）。文章（Prose）与 deck（DeckViewer）共用。
+// On-demand KaTeX style top-up: SSR only injects /katex.min.css for pages containing
+// formulas (needsKatex); when the client SPA-navigates from a formula-free page to one
+// with formulas, head does not change — this detects that and adds the link once
+// (idempotent). Shared by posts (Prose) and decks (DeckViewer).
 
 export function ensureKatexStyles(): void {
   if (document.querySelector("link[data-katex], style[data-katex]")) {

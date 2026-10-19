@@ -1,13 +1,16 @@
-// giscus 评论区（GitHub Discussions 驱动）：进视口才挂载 iframe（与
-// MermaidRenderer 同一套惰性策略，首屏零请求，审计加载期不注入内容）。
-// 配置未补齐（siteConfig.giscus.categoryId 为空）时渲染占位卡片，不注入
-// 无效 iframe。
+// giscus comments (powered by GitHub Discussions): the iframe mounts only on
+// entering the viewport (the same lazy strategy as MermaidRenderer — zero
+// requests on first paint, nothing injected during audit load). With
+// incomplete config (siteConfig.giscus.categoryId empty), a placeholder card
+// renders instead of an invalid iframe.
 //
-// 明暗联动：theme prop 绑定 html.dark（站内切换与系统切换都会翻转），
-// prop 变化时 @giscus/react 向 iframe postMessage setConfig，giscus 原地
-// 换自托管主题样式表 —— 不重挂 iframe，草稿不丢（同 Justin3go 的
-// VitePress 联动方案）。SPA 换页时以 pathname 为 key 强制重挂，iframe
-// 才会按新路径加载对应讨论。
+// Light/dark coupling: the theme prop is bound to html.dark (both in-site and
+// system switches flip it); when the prop changes, @giscus/react postMessages
+// setConfig to the iframe and giscus swaps its self-hosted theme stylesheet
+// in place — no iframe remount, drafts survive (same approach as Justin3go's
+// VitePress integration). On SPA navigation the pathname becomes the key to
+// force a remount, so the iframe loads the matching discussion for the new
+// path.
 
 import Giscus from "@giscus/react";
 import { MessageSquare } from "lucide-react";
@@ -24,12 +27,14 @@ export function GiscusComments() {
   const t = useT();
   const locale = useLocale();
   const { href } = useRouter();
-  // SPA 换页时 pathname 变化而本组件保持挂载 —— 以 pathname 作为 giscus
-  // widget 的 key 强制重挂载，iframe 才会按新路径加载对应讨论
+  // On SPA navigation the pathname changes while this component stays mounted
+  // — use the pathname as the giscus widget key to force a remount, so the
+  // iframe loads the matching discussion for the new path
   const pathname = new URL(href, "http://localhost").pathname;
-  // 进视口（含 300px 缓冲）才开始挂载
+  // Mounting starts only on entering the viewport (with a 300px buffer)
   const { ref: containerRef, inView: visible } = useInView<HTMLElement>({ once: true });
-  // 站点唯一真源 html.dark 的镜像：初始值在 SSR 也要能算，读 DOM 前守卫 window
+  // Mirror of html.dark, the site's single source of truth: the initial value
+  // must be computable during SSR too, so guard window before reading the DOM
   const [dark, setDark] = useState(
     () => typeof window !== "undefined" && document.documentElement.classList.contains("dark"),
   );
@@ -37,20 +42,24 @@ export function GiscusComments() {
   const { repo, repoId, category, categoryId } = siteConfig.giscus;
   const configured = Boolean(repo && repoId && category && categoryId);
 
-  // 主题联动：html.dark 翻转（站内切换或系统切换）→ 更新 theme prop →
-  // @giscus/react 内部 postMessage setConfig，iframe 原地换主题样式表
+  // Theme coupling: html.dark flips (in-site or system switch) → theme prop
+  // updates → @giscus/react internally postMessages setConfig and the iframe
+  // swaps its theme stylesheet in place
   useEffect(() => watchThemeDark(setDark), []);
 
-  // 自托管主题 CSS（映射站点 token 色板，见 public/giscus-*.css）：giscus
-  // 以完整 URL 加载自定义主题，跨域 iframe 必须用绝对地址。window 仅浏览
-  // 器可用 —— 渲染期触碰会让 SSR 整树崩溃转客户端渲染（.prose 不落盘，
-  // 正文注入断链，文章页全空），SSR 下取空串即可，iframe 本就只在
-  // visible（仅浏览器可为 true）后挂载。
+  // Self-hosted theme CSS (maps the site token palette, see
+  // public/giscus-*.css): giscus loads custom themes by full URL, and a
+  // cross-origin iframe needs an absolute address. window exists only in the
+  // browser — touching it during render crashes the whole SSR tree into
+  // client rendering (.prose is never persisted, body injection breaks its
+  // chain, article pages go fully blank); an empty string is fine under SSR
+  // because the iframe only mounts after visible is true (browser-only).
   const theme = typeof window === "undefined" ? "" : `${window.location.origin}/giscus-${dark ? "dark" : "light"}.css`;
 
   return (
     <section className="print-hide mt-14 border-t border-line pt-8" ref={containerRef}>
-      {/* 文章标题是 h1，评论区是次级章节，用 h2 保持层级连续 */}
+      {/* The article title is the h1 and comments are a secondary section, so
+          an h2 keeps the heading hierarchy continuous */}
       <h2 className="mb-6 flex items-center gap-2 font-serif text-lg font-semibold text-ink">
         <MessageSquare aria-hidden="true" className="size-4 text-ink-3" />
         {t("comments.title")}
@@ -67,8 +76,10 @@ export function GiscusComments() {
             categoryId={categoryId}
             emitMetadata="0"
             inputPosition="top"
-            // key 只含路径：换页整体重挂以加载对应讨论。明暗走 theme prop
-            // 的 postMessage 联动，不进 key —— 切换不重挂 iframe
+            // The key holds only the path: navigation remounts the whole
+            // widget to load the matching discussion. Light/dark goes through
+            // the theme prop's postMessage coupling, not the key — toggling
+            // never remounts the iframe
             key={pathname}
             lang={locale}
             mapping="pathname"

@@ -1,4 +1,5 @@
-// topojson-client 无内置类型；经 tsconfig paths 重定向（仅类型层）。
+// topojson-client has no built-in types; redirected via tsconfig paths
+// (types only).
 declare module "topojson-client" {
   export function feature(topology: unknown, object: unknown, filter?: unknown): unknown;
 }

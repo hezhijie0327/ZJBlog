@@ -1,9 +1,11 @@
-// STL 3D 查看器：three.js 体量大（core 约 150KB gzip），滚动到模型附近才
-// 动态加载（模块级缓存），拖拽旋转 / 滚轮缩放，慢速自转。挂载点由 Prose
-// 扫描 .stl-placeholder（data-stl 存 ASCII 源文）逐个渲染，模式与
-// MermaidRenderer 一致。
-// 渲染循环跟随视口：模型滚出视口即停帧（setAnimationLoop(null)），回到视口
-// 恢复 —— autoRotate 场景下不停帧会持续吃满 CPU/GPU。
+// STL 3D viewer: three.js is heavy (core ~150KB gzip), so it is loaded
+// dynamically only when scrolling nears a model (module-level cache), with
+// drag rotation / wheel zoom and a slow auto-rotation. Prose scans
+// .stl-placeholder (data-stl holds the ASCII source) and renders each mount
+// point, following the same pattern as MermaidRenderer.
+// The render loop follows the viewport: frames pause when the model scrolls
+// out of view (setAnimationLoop(null)) and resume when it returns — with
+// autoRotate, not pausing keeps CPU/GPU pegged continuously.
 
 import { useEffect, useState } from "react";
 import { useT } from "@/lib/i18n.ts";
@@ -21,7 +23,8 @@ type ThreeBundle = [
 
 let threePromise: Promise<ThreeBundle> | null = null;
 
-/** 懒加载 three 全家桶（模块级缓存，全站只加载一次）。 */
+/** Lazy-load the full three bundle (module-level cache; loaded once
+ *  site-wide). */
 function loadThree() {
   threePromise ??= Promise.all([
     import("three"),
@@ -33,7 +36,7 @@ function loadThree() {
 
 export function StlViewer({ stl }: StlViewerProps) {
   const t = useT();
-  // 进入视口（含 300px 缓冲）才触发加载
+  // Load only on entering the viewport (with a 300px buffer)
   const { ref: containerRef, inView: visible } = useInView<HTMLDivElement>({ once: true });
   const [failed, setFailed] = useState(false);
 
@@ -87,8 +90,9 @@ export function StlViewer({ stl }: StlViewerProps) {
         controls.autoRotateSpeed = 1.6;
         controls.enableDamping = true;
 
-        // 渲染循环跟随视口：拖拽/缩放由 OrbitControls 事件驱动，与循环独立；
-        // 停帧只是暂停 autoRotate 的持续重绘
+        // The render loop follows the viewport: drag/zoom is driven by
+        // OrbitControls events, independent of the loop; pausing frames only
+        // stops autoRotate's continuous redraw
         const syncLoop = (inView: boolean) => {
           if (inView) {
             renderer.setAnimationLoop(() => {

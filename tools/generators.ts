@@ -1,13 +1,15 @@
-// 静态资源生成器：RSS / sitemap / robots / 搜索索引 / llms.txt，
-// 构建期由预渲染脚本写入 dist/（迁移前是 Next 路由处理器，逻辑保持一致）。
+// Static asset generators: RSS / sitemap / robots / search index / llms.txt,
+// written into dist/ at build time by the prerender script (pre-migration
+// these were Next route handlers; the logic is unchanged).
 
 import { siteConfig } from "../src/config/site.ts";
 import type { SearchItem } from "../src/lib/types.ts";
 import type { BlogEntry } from "./content.ts";
 import { loadContent } from "./content.ts";
 
-/** 加密博文不进任何公开索引 / 订阅 / 全文导出（URL 存在但 noindex，
- *  正文只以密文形式存在于对应页面）。 */
+/** Locked posts never enter any public index / feed / full-text export (the
+ *  URL exists but is noindex; the body exists on its page only as
+ *  ciphertext). */
 function publicBlogs(blogs: BlogEntry[]): BlogEntry[] {
   return blogs.filter((blog) => !blog.locked);
 }
@@ -54,7 +56,7 @@ ${items}
 
 export function generateSitemap(): string {
   const { blogs, projects, travels } = loadContent();
-  // 与 trailingSlash 语义一致：所有 URL 带尾斜杠
+  // Matches the trailingSlash semantics: every URL carries a trailing slash
   const staticPaths = ["", "/blogs", "/archives", "/projects", "/support"];
   const urls = [
     ...staticPaths.map((p) => ({
@@ -67,7 +69,8 @@ export function generateSitemap(): string {
       lastmod: blog.date ? new Date(blog.date).toISOString() : new Date().toISOString(),
       priority: "0.6",
     })),
-    // 旅行：列表页 + 未上锁的详情（锁定详情 noindex，不进 sitemap）
+    // Travels: list page + unlocked details (locked details are noindex, not
+    // in the sitemap)
     { loc: `${siteConfig.url}/travels/`, lastmod: new Date().toISOString(), priority: "0.6" },
     ...travels
       .filter((travel) => !travel.locked)
@@ -105,10 +108,12 @@ Sitemap: ${siteConfig.url}/sitemap.xml
 `;
 }
 
-/** PWA manifest（DESIGN.md §18）：安装为独立应用所需的元数据。颜色锁固定
- *  浅色基准 #faf9f6（同 §2.2 品牌资产规则：启动画面/安装横幅不随 UI 主题
- *  翻转）；图标矩阵 = favicon.svg（any）+ 192/512 透明栅格（any）+
- *  maskable-512（固定浅底 + 80% 安全区，Android 圆形遮罩裁底不裁字形）。 */
+/** PWA manifest (DESIGN.md §18): metadata required for installing as a
+ *  standalone app. Colors lock to the fixed light baseline #faf9f6 (same as
+ *  the §2.2 brand-asset rule: splash screen / install banner do not flip with
+ *  the UI theme); icon matrix = favicon.svg (any) + 192/512 transparent
+ *  rasters (any) + maskable-512 (fixed light backdrop + 80% safe zone, so
+ *  Android's circular mask crops the backdrop, not the glyph). */
 export function generateManifest(): string {
   const manifest = {
     name: siteConfig.title,
@@ -151,7 +156,8 @@ export function generateSearchIndex(): string {
   return JSON.stringify(items);
 }
 
-/** llms.txt：站点摘要 + 分组链接清单，指向 llms-full.txt 全文版。 */
+/** llms.txt: site summary + grouped link lists, pointing to the full-text
+ *  llms-full.txt. */
 export function generateLlms(): string {
   const { blogs, projects } = loadContent();
   const publicPosts = publicBlogs(blogs);
@@ -160,38 +166,38 @@ export function generateLlms(): string {
   return [
     `# ${siteConfig.title} / Zhijie He's Blog`,
     "",
-    `> ${siteConfig.author} 的个人技术博客与项目展示站点，内容为中文原创：网络工具、DNS、Cloudflare Workers、前端与开发实践。`,
-    `> Personal tech blog and project showcase by ${siteConfig.author} (Chinese content).`,
-    `> 全部页面正文的完整版 / Full-content version: ${abs("/llms-full.txt")}`,
+    `> Personal tech blog and project showcase by ${siteConfig.author}. Original content is written in Chinese: network tools, DNS, Cloudflare Workers, frontend and development practices.`,
+    `> Full-content version: ${abs("/llms-full.txt")}`,
     "",
-    "## 站点导航 / Site Pages",
-    `- [首页 / Home](${abs("/")}): 个人介绍、精选项目、经历与最新文章。`,
-    `- [全部文章 / Blog](${abs("/blogs/")}): 技术文章列表，共 ${publicPosts.length} 篇。`,
-    `- [归档 / Archives](${abs("/archives/")}): 按年份分组的全部文章。`,
-    `- [项目 / Projects](${abs("/projects/")}): 个人项目与精选开源项目，共 ${projects.length} 个。`,
-    `- [支持 / Support](${abs("/support/")}): 赞赏与赞助方式。`,
+    "## Site Pages",
+    `- [Home](${abs("/")}): intro, featured projects, footprint and the latest posts.`,
+    `- [Blog](${abs("/blogs/")}): all technical posts, ${publicPosts.length} in total.`,
+    `- [Archives](${abs("/archives/")}): every post grouped by year.`,
+    `- [Projects](${abs("/projects/")}): personal and starred open-source projects, ${projects.length} in total.`,
+    `- [Support](${abs("/support/")}): ways to tip or sponsor.`,
     "",
-    "## 文章 / Blog Posts",
+    "## Blog Posts",
     ...publicPosts.map(
       (blog) =>
         `- [${blog.title}](${abs(`/blogs/${encodeURIComponent(blog.slug)}/`)}): ${blog.description ?? ""} [${blog.date ?? ""}]`,
     ),
     "",
-    "## 项目 / Projects",
+    "## Projects",
     ...projects.map(
       (project) =>
-        `- [${project.title}](${abs(`/projects/${encodeURIComponent(project.slug)}/`)}): ${project.description ?? ""}${project.link ? ` (源码: ${project.link})` : ""}`,
+        `- [${project.title}](${abs(`/projects/${encodeURIComponent(project.slug)}/`)}): ${project.description ?? ""}${project.link ? ` (source: ${project.link})` : ""}`,
     ),
     "",
-    "## 机器可读入口 / Machine-readable Endpoints",
-    `- [RSS 订阅](${abs("/rss.xml")}): 文章订阅源。`,
-    `- [Sitemap](${abs("/sitemap.xml")}): 全部页面地址。`,
-    `- [搜索索引](${abs("/search-index.json")}): 全部文章与项目的标题/描述/标签 JSON。`,
+    "## Machine-readable Endpoints",
+    `- [RSS](${abs("/rss.xml")}): the post feed.`,
+    `- [Sitemap](${abs("/sitemap.xml")}): every page URL.`,
+    `- [Search index](${abs("/search-index.json")}): titles/descriptions/tags of all posts and projects as JSON.`,
     "",
   ].join("\n");
 }
 
-/** llms-full.txt：全部页面正文全文（原始 Markdown，与迁移前一致）。 */
+/** llms-full.txt: full text of every page body (raw Markdown, identical to
+ *  the pre-migration output). */
 export function generateLlmsFull(): string {
   const { blogs, projects } = loadContent();
   const publicPosts = publicBlogs(blogs);

@@ -1,23 +1,29 @@
-// 构建期图片管线：仓库 public/images/ 存原始 PNG/JPG，
-// 最终产物一律为 webp（对齐 Lab/Web 的 Astro 图片管线）。
-// 在 prerender 之后执行：
-//   1) dist/images 内 jpg/png → 同名 .webp（限宽 1920、q80、永不放大），原文件删除
-//   2) dist 根级联系资产（ROOT_ASSETS 白名单，DESIGN.md §2.4 放 public/ 根）同样转换
-//   3) 扫描 dist 下 .html/.xml/.txt，把已转换文件的引用改写为 .webp
-// 正文里始终引用原始扩展名（/images/x.jpg、/avatar.jpg），dev 直接服务原图；
-// 仓库里的原图永不改动，压缩只发生在构建产物上。
+// Build-time image pipeline: the repo's public/images/ stores the original
+// PNG/JPG; final artifacts are always webp (aligned with Lab/Web's Astro
+// image pipeline). Runs after prerender:
+//   1) jpg/png inside dist/images → same-named .webp (max width 1920, q80,
+//      never upscale), original file deleted
+//   2) dist root-level contact assets (ROOT_ASSETS whitelist, DESIGN.md §2.4
+//      keeps them at the public/ root) converted the same way
+//   3) scan .html/.xml/.txt under dist and rewrite references to converted
+//      files as .webp
+// Post bodies always reference the original extension (/images/x.jpg,
+// /avatar.jpg); dev serves the originals directly. Originals in the repo are
+// never modified — compression only happens on build artifacts.
 import { readdirSync, readFileSync, statSync, unlinkSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import sharp from "sharp";
 
 const dist = process.argv[2] ?? "dist";
 const imagesDir = join(dist, "images");
-const MAX_WIDTH = 1920; // 超过则等比缩小，永不放大
+const MAX_WIDTH = 1920; // Shrink proportionally above this; never upscale
 
-/** dist 根级联系资产白名单（原图不进 images/，构建期在此转 webp）。
- *  maxWidth 按显示位设置，原图永不改动；favicon / apple-touch / og-default
- *  必须保持 png（平台兼容），收款二维码体积已小，均不入列。 */
-const ROOT_ASSETS = [{ file: "avatar.jpg", maxWidth: 512 }]; // 头像显示位 176px，512 ≈ 3x
+/** Whitelist of dist root-level contact assets (originals do not live in
+ *  images/; converted to webp here at build time). maxWidth is set per
+ *  display slot and originals are never modified; favicon / apple-touch /
+ *  og-default must stay png (platform compatibility) and the payment QR code
+ *  is already small, so none of them are listed. */
+const ROOT_ASSETS = [{ file: "avatar.jpg", maxWidth: 512 }]; // avatar display slot is 176px, 512 ≈ 3x
 
 /** @param {string} dir @param {RegExp} pattern @returns {Generator<string, void, void>} */
 function* walk(dir, pattern) {
@@ -33,7 +39,8 @@ let count = 0;
 let srcBytes = 0;
 let webpBytes = 0;
 
-/** jpg/png → webp（限宽、q80、永不放大），删除产物中的原文件并登记引用改写。 */
+/** jpg/png → webp (max width, q80, never upscale); deletes the original from
+ *  the artifacts and registers the reference rewrite. */
 /** @param {string} p @param {string} relTo @param {string} urlBase @param {number} maxWidth */
 async function toWebp(p, relTo, urlBase, maxWidth) {
   const webpPath = p.replace(/\.(jpe?g|png)$/i, ".webp");
@@ -56,11 +63,13 @@ async function toWebp(p, relTo, urlBase, maxWidth) {
   console.log(`${from}: ${(srcSize / 1024) | 0}kB -> ${(webpSize / 1024) | 0}kB webp${shrunk}`);
 }
 
-// 加密文引用的共享图保护清单（prerender 落盘；读完即删，不进发布物）：
-// 这些文件的原始扩展名被锁进 AES-GCM 密文、引用改写不可达，转 webp 并删除
-// 原图会让解锁后的加密文共享图 404。
+// Protection list of shared images referenced by locked posts (written by
+// prerender; deleted right after reading, never shipped): these files'
+// original extensions are locked inside the AES-GCM ciphertext and out of
+// reach of reference rewriting, so converting to webp and deleting the
+// originals would 404 the shared images after the locked post is unlocked.
 const PROTECTED_LIST = join(dist, ".locked-shared-images.json");
-/** @type {Set<string>} dist 相对路径（如 "images/markdown-test/favicon.png"） */
+/** @type {Set<string>} dist-relative paths (e.g. "images/markdown-test/favicon.png") */
 const protectedFiles = new Set();
 try {
   const list = JSON.parse(readFileSync(PROTECTED_LIST, "utf8"));
@@ -68,12 +77,12 @@ try {
     protectedFiles.add(src.replace(/^\//, ""));
   }
 } catch {
-  // 无锁定文或清单不存在：无保护对象
+  // No locked posts or manifest missing: nothing to protect
 }
 try {
   unlinkSync(PROTECTED_LIST);
 } catch {
-  // 清单不存在即无锁定文
+  // A missing manifest means no locked posts
 }
 
 if (statSync(imagesDir, { throwIfNoEntry: false })) {
@@ -94,10 +103,14 @@ for (const { file, maxWidth } of ROOT_ASSETS) {
 }
 
 let files = 0;
-// 改写面 = .html/.xml/.txt（prerender 产物与生成文件，payload JSON 内嵌其中）
-// + .js（SPA 换页后组件从 bundle 里的字面量重新挂载，不改写则引用已删除的
-//   原扩展名而 404）+ .json（search-index 等生成索引里的正文引用）
-// + .md（导出的原始 Markdown：图片引用不同步 webp 则复制/直取出去即死链）。
+// Rewrite surface = .html/.xml/.txt (prerender output and generated files,
+// with payload JSON embedded inside)
+// + .js (after SPA navigation, components remount from literals in the
+//   bundle; without rewriting they would reference the deleted original
+//   extension and 404)
+// + .json (post-body references inside generated indexes like search-index)
+// + .md (exported raw Markdown: image references out of sync with webp make
+//   copy/direct fetch dead links).
 for (const p of walk(dist, /\.(html|xml|txt|js|json|md)$/i)) {
   let html = readFileSync(p, "utf8");
   let changed = false;
@@ -114,5 +127,5 @@ for (const p of walk(dist, /\.(html|xml|txt|js|json|md)$/i)) {
 }
 
 console.log(
-  `compress-images: ${count} 张图转 webp（${(srcBytes / 1024).toFixed(0)}kB -> ${(webpBytes / 1024).toFixed(0)}kB），引用改写 ${files} 个文件`,
+  `compress-images: ${count} images converted to webp (${(srcBytes / 1024).toFixed(0)}kB -> ${(webpBytes / 1024).toFixed(0)}kB), references rewritten in ${files} files`,
 );

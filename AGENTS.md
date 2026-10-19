@@ -12,7 +12,9 @@ pnpm dev
 # 生产构建（vite build → vite build --ssr → scripts/prerender.mjs 预渲染全部路由 + 静态资源 → dist/）
 pnpm build
 
-# Biome 检查（lint + 格式；pnpm lint:fix 自动修复）
+# 语言门禁（CJK 审计）+ Biome 检查（lint + 格式；pnpm lint:fix 自动修复）
+# audit-cjk：中文只许活在 src/lib/i18n/**（词库 + zh 基准模块），其余源码
+# （含注释、构建脚本、public 资产、workflow/配置注释）一律英文（见 Conventions）
 pnpm lint
 
 # 类型检查
@@ -53,7 +55,8 @@ src/
 │   ├── types.ts         # payload 判别联合 + 类型守卫 + 跨端共享契约（SearchItem 等）
 │   ├── theme.ts         # 明暗（localStorage + html.dark + pre-paint 内联脚本防闪烁；watchThemeDark 主题订阅）
 │   ├── useInView.ts     # 进视口检测（懒挂载 once / 持续跟踪；单元素观察统一走此封装）
-│   ├── i18n.ts + i18n/  # EN 基准词库 + zh-CN；useT/translateFor
+│   ├── i18n.ts + i18n/  # EN 基准词库 + zh-CN；useT/translateFor；baseline.ts（构建期
+│   │                    #  中文基准字面量——中文在源码里的唯一合法居所，audit-cjk 豁免区）
 │   ├── styles.ts        # 设计片段单一来源（DESIGN.md §5）
 │   └── cn / format / link
 ├── styles/              # global.css 入口 → tokens → base → prose → behaviors
@@ -66,7 +69,8 @@ tools/
 └── ssr.tsx              # SSR 整页组装（dev 中间件与预渲染共用；含 KaTeX 按需注入）
 scripts/
 ├── prerender.mjs        # 预渲染全部路由 + 落盘静态资源到 dist/
-└── audit.mjs            # Lighthouse 双端门禁（本地静态服务器镜像生产 CDN：压缩、缓存、404 语义、sw.js 头）+ PWA 安装性检查
+├── audit.mjs            # Lighthouse 双端门禁（本地静态服务器镜像生产 CDN：压缩、缓存、404 语义、sw.js 头）+ PWA 安装性检查
+└── audit-cjk.mjs        # CJK 语言门禁：中文只许出现在 src/lib/i18n/**（挂在 pnpm lint）
 ```
 
 ## Content
@@ -95,6 +99,7 @@ scripts/
 
 ## Conventions
 
+- **语言纪律（audit-cjk 门禁，同 ZJSearch 家族契约）**：中文只允许出现在 `src/lib/i18n/**`（en/zh-CN 词库 + `baseline.ts` 构建期中文基准模块）；其余一切源码 —— 客户端/构建期 TS、`scripts/`、`public/` 资产、`vite.config.ts`、`wrangler.jsonc`、`.env.example`、`.github/` workflow —— **含注释在内一律英文**（CML 标点同管：全角标点只许出现在正则/代码上下文行）。构建期必须以 zh 烘焙的字符串（代码卡复制按钮、旅行地图 aria-label/聚合针脚标题、GeoJSON 图示标签）从 `src/lib/i18n/baseline.ts` 导入，不得在工具代码里内联中文；客户端可校正的键与词库同源。`content/*.md` 与 `*.md` 文档不受此门禁约束（内容/文档保持中文）。生成物语言：`llms.txt` 为英文机器索引（指向中文正文），sw.js 离线兜底页为英文（独立文档无法走 i18n 运行时）。
 - **仅命名导出**（零 default export）；组件 PascalCase.tsx；lib 辅助模块小写 topic 命名；hook 就近领域文件。
 - 导入：`@/` 别名 + 显式扩展名（`@/lib/i18n.ts`）；`verbatimModuleSyntax`，type-only 导入必须 `import type`。
 - TypeScript strict（含 `noUncheckedIndexedAccess`），禁 `any`（外部响应用 `Raw*` 接口收窄）。
@@ -109,7 +114,7 @@ scripts/
 ## Quality Gates
 
 1. `pnpm tsc` 零错误
-2. `pnpm lint`（biome）零错误
+2. `pnpm lint` 零错误 = biome（lint + 格式）+ `lint:cjk`（audit-cjk 语言门禁：中文只在 `src/lib/i18n/**`，见 Conventions 首条）
 3. `pnpm build` 成功（全部路由预渲染）
 4. `pnpm run audit`（桌面）与 `LH_FORM_FACTOR=mobile pnpm run audit`（移动）每页全类别 100 分（性能/可访问性/最佳实践/SEO/Agentic Browsing；压缩用 brotli 镜像生产 CDN）——**不属于常规门禁，不是每次改动都要跑**：仅在用户明确要求审计时执行；注意 headless Chrome 连跑多页会不稳，audit 脚本每 4 页自动重启浏览器
 5. 注意 `pnpm audit`（无 run）是 pnpm 内置安全审计，不是本项目的门禁

@@ -1,7 +1,11 @@
-// 文末署名卡：信件落款语言（DESIGN.md §7，与锁屏封缄信同叙事）——素面撕边
-// 纸 + 单胶带压角 + CC 协议小邮戳。戳文与正文内许可链接重复，退为装饰层
-// （§7：邮戳是唯一承载真实信息的纸感件，前提是信息没有其他正身）。
-// 打印不进纸面：print.ts 注入的 .print-wordmark 是打印件署名，避免双落款。
+// End-of-post author card: letter-signoff language (DESIGN.md §7, same
+// narrative as the lock screen's sealed letter) -- blank torn-edge paper +
+// a single tape pressed on one corner + a small CC-license postmark. The
+// postmark text duplicates the in-body license link, so it demotes to a
+// decorative layer (§7: the postmark is the only paper-craft piece allowed to
+// carry real information, provided the information has no other source).
+// Not printed onto the paper: the .print-wordmark injected by print.ts is the
+// printed copy's signature, avoiding a double signoff.
 
 import { Tape } from "@/components/Tape.tsx";
 import { useT } from "@/lib/i18n.ts";
@@ -11,7 +15,8 @@ export function AuthorCard() {
   const author = t("site.author");
   return (
     <div className="print-hide relative mt-12 rotate-[0.35deg]">
-      {/* 单胶带压角（§7：胶带必须是被裁剪元素的兄弟节点，进纸内会被撕边裁掉） */}
+      {/* Single tape on one corner (§7: the tape must be a sibling of the
+          clipped element; inside the paper it gets cut off by the torn edge) */}
       <Tape className="w-20 bg-accent-soft/60" corner="end" seed={author} />
       <div className="paper-note paper-note--blank flex items-center gap-4 p-5">
         <img
@@ -41,7 +46,8 @@ export function AuthorCard() {
           className="paper-postmark pointer-events-none hidden size-16 shrink-0 rotate-12 text-ink-3 sm:grid"
         >
           <span className="font-mono text-xs font-semibold">CC</span>
-          {/* 负右距抵消 tracking 尾隙，戳文光学居中（LockScreen 同手法） */}
+          {/* Negative right margin cancels the trailing tracking gap so the
+              postmark text is optically centered (same trick as LockScreen) */}
           <span className="-mr-[0.18em] font-mono text-[7px] leading-none tracking-[0.18em]">BY-NC-SA</span>
         </div>
       </div>

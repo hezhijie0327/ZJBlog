@@ -1,7 +1,8 @@
-// 启动引导：解析页面内嵌 payload → React 接管 #app。
-// 用 hydrateRoot 复用预渲染 DOM（不用 createRoot 重建 —— 那会先清空文档，
-// 页脚等远端内容短暂坍缩回视口再弹回，产生 0.25 的 CLS）。要求首帧渲染
-// 与 SSR 完全一致：任何依赖浏览器状态的 UI 都必须在挂载后才分化。
+// Bootstrapping: parse the page's embedded payload → React takes over #app.
+// hydrateRoot reuses the prerendered DOM (createRoot would rebuild it — first clearing
+// the document, making distant content like the footer briefly collapse into the viewport
+// and pop back, producing 0.25 CLS). The first frame must render exactly like SSR: any UI
+// that depends on browser state must branch only after mount.
 
 import { hydrateRoot } from "react-dom/client";
 import { App } from "@/app.tsx";
@@ -16,8 +17,9 @@ if (container) {
   const data = parseEmbeddedPageData();
   void (async () => {
     if (data) {
-      // 首帧水合前取好当前页 chunk：水合首帧即真实内容，与预渲染 HTML 一致。
-      // 无此步 Suspense 会先用骨架顶掉 SSR 内容（CLS + #419 水合报错）。
+      // Fetch the current page's chunk before the first hydration frame: hydration renders
+      // real content immediately, matching the prerendered HTML. Without this, Suspense
+      // would first knock out the SSR content with a skeleton (CLS + #419 hydration errors).
       const { page } = data.globals;
       if (page !== "not-found") {
         await pageLoaders[page]();
@@ -27,10 +29,11 @@ if (container) {
   })();
 }
 
-/* PWA 安装层（DESIGN.md §18）：直通 worker（离线兜底、刻意免缓存）让
-   manifest 可安装。load 之后注册 —— 安装层绝不挡启动；失败静默（无痕
-   模式等场景没有 worker 也一切照常）；dev 不注册，避免残留 worker 干扰
-   后续 dev 会话。 */
+/* PWA install layer (DESIGN.md §18): a pass-through worker (offline fallback,
+   deliberately cache-free) makes the manifest installable. Registered after load — the
+   install layer never blocks startup; failures are silent (incognito-mode-like
+   environments without a worker work just the same); not registered in dev to avoid a
+   leftover worker interfering with later dev sessions. */
 if (import.meta.env.PROD && "serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     void navigator.serviceWorker.register("/sw.js").catch(() => {});

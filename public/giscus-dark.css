@@ -1,13 +1,17 @@
-/*! ZJBlog giscus 主题（dark）。基于 giscus 现行样式表消费的全部变量
- *  （104 个，新旧两套 primer 命名并存）给出完整定义，取值映射 ZJBlog
- *  设计 token（DESIGN.md §3）。注意 giscus 官方主题文件尚未覆盖新版变量
- *  （--color-text-* / --color-bg-* / --color-border-primary 等），未定义时
- *  border-color 回退 currentColor、背景回退透明，评论区会破相 —— 本文件
- *  是唯一覆盖源，升级 giscus 后需对照其样式表的变量消费清单核补。
- *  站点明暗由 html.dark 翻转，light/dark 两份经 GiscusComments 切换。 */
+/*! ZJBlog giscus theme (dark). Complete definitions for every variable
+ *  consumed by giscus's current stylesheets (104 of them, old and new primer
+ *  naming coexisting), with values mapped from ZJBlog design tokens
+ *  (DESIGN.md §3). Note that giscus's official theme files do not yet cover
+ *  the new variables (--color-text-* / --color-bg-* / --color-border-primary
+ *  etc.); when undefined, border-color falls back to currentColor and
+ *  backgrounds fall back to transparent, which breaks the comments section —
+ *  this file is the single override source; after upgrading giscus, check its
+ *  stylesheet's variable consumption list and fill in any gaps.
+ *  Site light/dark flips via html.dark; the light/dark pair is switched by
+ *  GiscusComments. */
 
 main {
-  /* 前景 */
+  /* Foreground */
   --color-fg-default: #eceae4;
   --color-fg-muted: #a8a399;
   --color-fg-subtle: #9b958a;
@@ -18,7 +22,7 @@ main {
   --color-text-success: #3fb950;
   --color-text-danger: #f85149;
 
-  /* 背景（暖黑到暖炭灰的三级面层） */
+  /* Background (three surface tiers from warm black to warm charcoal) */
   --color-canvas-default: #232120;
   --color-canvas-subtle: #2c2a27;
   --color-canvas-inset: #1b1a18;
@@ -33,7 +37,7 @@ main {
   --color-neutral-muted: rgb(236 234 228 / 10%);
   --color-hidden-text-expander-bg: #2c2a27;
 
-  /* 边框 */
+  /* Borders */
   --color-border-default: #45403a;
   --color-border-muted: #38342f;
   --color-border-primary: #45403a;
@@ -41,7 +45,7 @@ main {
   --color-border-tertiary: #4a453e;
   --color-label-border: #38342f;
 
-  /* 按钮 */
+  /* Buttons */
   --color-btn-text: #eceae4;
   --color-btn-bg: #2c2a27;
   --color-btn-border: #38342f;
@@ -52,7 +56,7 @@ main {
   --color-btn-shadow: 0 0 transparent;
   --color-btn-inset-shadow: 0 0 transparent;
 
-  /* 主按钮（站点琥珀黄） */
+  /* Primary button (site amber yellow) */
   --color-btn-primary-text: #241d0e;
   --color-btn-primary-bg: #fec843;
   --color-btn-primary-border: #fec843;
@@ -63,12 +67,13 @@ main {
   --color-btn-primary-shadow: 0 0 transparent;
   --color-btn-primary-inset-shadow: 0 0 transparent;
   --color-btn-primary-disabled-text: rgb(36 29 14 / 55%);
-  /* 禁用态 = accent-strong 朝表面色实心混合（暗色 50%）——不用 alpha：
-     半透明金叠在深纸底上会浑成脏橄榄色 */
+  /* Disabled state = accent-strong mixed opaquely toward the surface color
+     (dark 50%) — no alpha: translucent gold over the dark paper base turns
+     into a muddy olive */
   --color-btn-primary-disabled-bg: #917531;
   --color-btn-primary-disabled-border: #917531;
 
-  /* 强调与状态 */
+  /* Accent and status */
   --color-accent-fg: #fec843;
   --color-accent-emphasis: #fec843;
   --color-accent-muted: rgb(254 200 67 / 40%);
@@ -81,7 +86,7 @@ main {
   --color-danger-muted: rgb(229 83 75 / 40%);
   --color-danger-subtle: rgb(229 83 75 / 10%);
 
-  /* 分段控件（最早/最新排序）与表情回应 */
+  /* Segmented control (oldest/newest sorting) and emoji reactions */
   --color-segmented-control-bg: rgb(236 234 228 / 10%);
   --color-segmented-control-button-bg: #2c2a27;
   --color-segmented-control-button-selected-border: #6e685e;
@@ -89,19 +94,20 @@ main {
   --color-social-reaction-bg-hover: #38342f;
   --color-social-reaction-bg-reacted-hover: rgb(254 200 67 / 18%);
 
-  /* 输入框 */
+  /* Input boxes */
   --color-input-bg: #232120;
   --color-input-border: #45403a;
   --color-input-contrast-bg: #2c2a27;
 
-  /* 杂项 */
+  /* Misc */
   --color-auto-gray-7: #c9c5bc;
   --color-diff-blob-num-text: #9b958a;
   --color-diff-blob-num-hover-text: #eceae4;
   --color-box-border-info: rgb(254 200 67 / 40%);
   --color-border-info: rgb(254 200 67 / 40%);
 
-  /* 评论内代码高亮（GitHub prettylights 语义色，保持官方取值） */
+  /* Code highlighting inside comments (GitHub prettylights semantic colors,
+     keeping the official values) */
   --color-prettylights-syntax-comment: #8b949e;
   --color-prettylights-syntax-constant: #79c0ff;
   --color-prettylights-syntax-entity: #d2a8ff;
@@ -134,7 +140,7 @@ main {
   --color-prettylights-syntax-constant-other-reference-link: #a5d6ff;
 }
 
-/* 分页加载占位线：官方是 GitHub 网纹图，站点不需要 */
+/* Pagination loader placeholder: the official one is a GitHub halftone image, not wanted here */
 main .pagination-loader-container {
   background-image: none;
 }
@@ -143,9 +149,10 @@ main .gsc-loading-image {
   background-image: url("https://github.githubassets.com/images/mona-loading-dark.gif");
 }
 
-/* 输入框的 Branding 接管：giscus 未写 textarea 背景（落到浏览器默认值，
- * 暗色模式下会与色板脱钩），placeholder 硬编码为冷灰 #9ca3af —— 均与
- * 站点色板不符。 */
+/* Branding takeover of the input box: giscus leaves the textarea background
+ * unset (falling back to browser defaults, which decouple from the palette in
+ * dark mode) and hardcodes the placeholder to cool gray #9ca3af — both clash
+ * with the site palette. */
 main .gsc-comment-box-textarea {
   background-color: var(--color-input-bg);
 }

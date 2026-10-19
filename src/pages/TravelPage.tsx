@@ -1,6 +1,6 @@
-// 旅行详情：头部（日期区间 · 地点 · 同行）+ 构建期故事正文 + giscus。
-// 锁定旅行（trip.locked 有值）以锁屏替代正文：故事与照片都在信封里，
-// 解锁缓存走 travel:<slug> 命名空间（与博客 slug 互不冲突）。
+// Travel detail: header (date range · place · companion) + build-time story body + giscus.
+// Locked trips (trip.locked set) replace the body with a lock screen: story and photos live in
+// the envelope; the unlock cache uses the travel:<slug> namespace (no collision with blog slugs).
 
 import { Heart, MapPin, User } from "lucide-react";
 import { useState } from "react";
@@ -19,7 +19,8 @@ import type { TravelData } from "@/lib/types.ts";
 export function TravelPage({ data }: { data: TravelData }) {
   const t = useT();
   const { trip } = data;
-  // 解锁态从会话缓存初始化（首载必空 = SSR 一致，水合安全）
+  // Initialize unlocked state from the session cache (always empty on first load = consistent
+  // with SSR, hydration-safe)
   const [unlocked, setUnlocked] = useState<UnlockedBundle | null>(() =>
     trip.locked ? (getCachedUnlock(`travel:${trip.slug}`) ?? null) : null,
   );
@@ -27,7 +28,8 @@ export function TravelPage({ data }: { data: TravelData }) {
 
   return (
     <div className={SECTION_DETAIL}>
-      {/* 页头直接置于容器下：全站标题同一左缘（DESIGN.md §6） */}
+      {/* Header sits directly under the container: site-wide titles share one left edge
+          (DESIGN.md §6) */}
       <BackLink href="/travels/" label={t("travel.back")} />
 
       <header className="mb-10 mt-8 border-b border-line pb-8">
@@ -35,7 +37,7 @@ export function TravelPage({ data }: { data: TravelData }) {
           <h1 className="font-serif text-3xl font-black leading-tight tracking-tight text-ink sm:text-4xl">
             {trip.title}
           </h1>
-          {/* 导出动作组；锁定旅行不提供任何导出 */}
+          {/* Export action group; locked trips offer no exports */}
           {!trip.locked && (
             <div className="flex shrink-0 items-center gap-1 pt-1 print-hide">
               <CopyMarkdownButton href={`/travels/${encodeURIComponent(trip.slug)}/index.md`} />
@@ -72,11 +74,12 @@ export function TravelPage({ data }: { data: TravelData }) {
 
       <div className="mx-auto max-w-3xl">
         {trip.locked && !unlocked ? (
-          /* 锁定旅行：锁屏即正文位（故事/照片都属加密内容） */
+          /* Locked trip: the lock screen takes the body slot (story/photos are encrypted
+             content) */
           <LockScreen locked={trip.locked} onUnlock={setUnlocked} slug={trip.slug} unlockKey={`travel:${trip.slug}`} />
         ) : (
           <>
-            {/* 故事正文（锁定文 = 解锁后的明文） */}
+            {/* Story body (locked trip = plaintext after unlock) */}
             <Prose html={html} needsKatex={trip.needsKatex} />
             <GiscusComments />
           </>

@@ -1,13 +1,19 @@
-// 加密博文独占图片的构建期管线（Node 侧专用）：分析全站引用图（blogs +
-// projects 的编译后 HTML），只被锁定文引用的「独占图」随文加密 —— 密文以
-// `<原路径>.<slug>.bin` 资产落盘（生产由 prerenderAll 写入 dist 并删除明文
-// 原图；dev 由 vite 中间件经本模块现算，见 vite.config plgDevServer）。
-// 加密复用该文的 Argon2id 派生密钥（口令同正文），IV 独立随机并写进正文
-// 信封的明文（客户端解锁后才能拿到 IV 表）。共享图（任何公开内容也引用）
-// 物理上无法加密 —— 保持明文并告警，文档要求私密照片独占文件。
+// Build-time pipeline for images exclusive to locked posts (Node side only):
+// analyzes every image referenced site-wide (compiled HTML of blogs +
+// projects); "exclusive images" referenced only by locked posts are encrypted
+// along with their post — the ciphertext lands as a `<orig-path>.<slug>.bin`
+// asset (production: prerenderAll writes it to dist and deletes the plaintext
+// original; dev: the vite middleware computes it on the fly through this
+// module, see plgDevServer in vite.config). Encryption reuses the post's
+// Argon2id derived key (same password as the body); the IV is independently
+// random and written into the post envelope's plaintext (the client only gets
+// the IV table after unlocking). Shared images (referenced by any public
+// content) physically cannot be encrypted — kept plaintext with a warning;
+// docs require private photos to use files exclusive to the locked post.
 //
-// jpg/png 构建期统一 sharp→webp（限宽 1920 / q80，与公开图压缩管线对齐）
-// 后再加密；其余格式原字节加密。
+// jpg/png are uniformly sharp→webp at build time (max width 1920 / q80,
+// aligned with the public image compression pipeline) before encryption;
+// other formats are encrypted as raw bytes.
 
 import { createCipheriv, randomBytes } from "node:crypto";
 import { readFileSync } from "node:fs";
@@ -17,34 +23,41 @@ import { keyFor } from "./crypto";
 
 const MAX_WIDTH = 1920;
 
-/** 编译后 HTML 里的站内图片引用（rehype-stringify 归一化为双引号属性） */
+/** Site-image references in compiled HTML (rehype-stringify normalizes to
+ *  double-quoted attributes) */
 const IMG_TAG = /<img[^>]*?src="(\/images\/[^"]+)"/g;
 
-/** `<kind>:<slug>` 命名空间键 → 该文正文引用的站内图片（与 crypto 的密钥
- *  命名空间一致 —— blogs 与 travels 的 slug 可能同名，裸 slug 会互相覆盖）。 */
+/** `<kind>:<slug>` namespace key → site images referenced by that post's body
+ *  (matches the crypto key namespace — blogs and travels may share a slug,
+ *  and bare slugs would overwrite each other). */
 const refsByKey = new Map<string, Set<string>>();
-/** 被任何非锁定内容引用的图片（公开面，无法加密） */
+/** Images referenced by any non-locked content (public surface, cannot be
+ *  encrypted) */
 const publicRefs = new Set<string>();
-/** 加密文引用但仍保持明文的共享图（compress-images 必须保留原扩展名 ——
- *  信封密文里的引用改写不到，原图删了解锁后就 404） */
+/** Shared images referenced by locked posts yet kept plaintext
+ *  (compress-images must keep the original extension — the reference inside
+ *  the envelope ciphertext cannot be rewritten, and deleting the original
+ *  would 404 after unlock) */
 const sharedLockedSrcs = new Set<string>();
-/** 独占图登记：bin 相对路径（不含 /images/ 前缀）→ 加密材料 */
+/** Exclusive-image registry: bin relative path (without the /images/ prefix)
+ *  → encryption material */
 interface SealedImage {
-  /** `<kind>:<slug>` 命名空间密钥 */
+  /** `<kind>:<slug>` namespace key */
   key: string;
   slug: string;
   src: string;
   iv: Buffer;
-  /** 解密后 blob 的 MIME */
+  /** MIME of the decrypted blob */
   ct: string;
 }
 const sealedByRel = new Map<string, SealedImage>();
 const bytesCache = new Map<string, Promise<Buffer>>();
 const warnedShared = new Set<string>();
 
-/** 密封前登记一条内容的图片引用（必须对全量条目调用后再密封 —— 独占性是
- *  全站判定）。locked=false 的引用使图片进入公开面。key 是 `<kind>:<slug>`
- *  命名空间键，与 sealImagesForPost / crypto 密钥一致。 */
+/** Register a content item's image refs before sealing (must be called for
+ *  every entry before sealing — exclusivity is a site-wide judgment).
+ *  locked=false references push the image onto the public surface. key is the
+ *  `<kind>:<slug>` namespace key, matching sealImagesForPost / crypto keys. */
 export function noteImageRefs(key: string, html: string, locked: boolean): void {
   let refs: Set<string> | undefined;
   for (const match of html.matchAll(IMG_TAG)) {
@@ -63,17 +76,21 @@ export function noteImageRefs(key: string, html: string, locked: boolean): void 
   }
 }
 
-/** 密封内容：为锁定文生成独占图 IV 表（随正文一起进信封密文）。
- *  key = `<kind>:<slug>` 命名空间密钥；slug 仅用于 .bin 资产命名。
- *  共享图告警并跳过（登记进 sharedLockedSrcs，由压缩管线保留原文件）；
- *  返回值直接并入信封明文 JSON。 */
+/** Seal content: produce the exclusive-image IV table for a locked post
+ *  (goes into the envelope ciphertext together with the body).
+ *  key = `<kind>:<slug>` namespace key; slug is only for .bin asset naming.
+ *  Shared images are warned about and skipped (registered into
+ *  sharedLockedSrcs; the compression pipeline keeps the original file);
+ *  the return value merges directly into the envelope plaintext JSON. */
 export function sealImagesForPost(key: string, slug: string): Record<string, { iv: string; ct: string }> {
   const images: Record<string, { iv: string; ct: string }> = {};
   for (const src of refsByKey.get(key) ?? []) {
     if (publicRefs.has(src)) {
       if (!warnedShared.has(src)) {
         warnedShared.add(src);
-        console.warn(`[crypto] ${src} 同时被公开内容引用，无法加密（保持明文）—— 私密照片请使用加密文独占的文件`);
+        console.warn(
+          `[crypto] ${src} is also referenced by public content and cannot be encrypted (kept plaintext) — private photos must use files exclusive to the locked post`,
+        );
       }
       sharedLockedSrcs.add(src);
       continue;
@@ -81,12 +98,14 @@ export function sealImagesForPost(key: string, slug: string): Record<string, { i
     const reencoded = /\.(jpe?g|png)$/i.test(src);
     const iv = randomBytes(12);
     const rel = `${src}.${slug}.bin`.replace(/^\/images\//, "");
-    // 同名 slug 的加密文（blogs:foo 与 travels:foo）独占同一张图时，.bin 资产
-    // 路径会相撞、密钥却不同 —— 后写覆盖会让其中一篇永远解不开，fail-closed
+    // When locked posts sharing a slug (blogs:foo and travels:foo) both claim
+    // the same image, the .bin asset paths collide while the keys differ —
+    // last-write-wins would leave one of them forever undecryptable;
+    // fail-closed
     const existing = sealedByRel.get(rel);
     if (existing && existing.key !== key) {
       throw new Error(
-        `[crypto] ${rel}: 独占图资产名冲突（${existing.key} 与 ${key} 的 slug 同名）—— 请给其中一篇改 slug`,
+        `[crypto] ${rel}: exclusive-image asset name collision (${existing.key} and ${key} share a slug) — rename the slug of one of them`,
       );
     }
     sealedByRel.set(rel, { key, slug, src, iv, ct: reencoded ? "image/webp" : mimeForSrc(src) });
@@ -95,8 +114,10 @@ export function sealImagesForPost(key: string, slug: string): Record<string, { i
   return images;
 }
 
-/** 加密文引用但仍保持明文的共享图（prerender 落清单，compress-images 据此
- *  跳过转换并保留原文件 —— 信封密文里的原始扩展名引用改写不到）。 */
+/** Shared images referenced by locked posts yet kept plaintext (prerender
+ *  writes the manifest; compress-images skips conversion and keeps the
+ *  original file accordingly — the original-extension reference inside the
+ *  envelope ciphertext cannot be rewritten). */
 export function allLockedSharedSrcs(): string[] {
   return [...sharedLockedSrcs];
 }
@@ -117,7 +138,8 @@ function mimeForSrc(src: string): string {
   }
 }
 
-/** 独占图密文字节（prerender 落盘与 dev 中间件共用；同进程内缓存）。 */
+/** Exclusive-image ciphertext bytes (shared by prerender disk writes and the
+ *  dev middleware; cached within the process). */
 export function imageBinBytes(rel: string): Promise<Buffer> | undefined {
   const sealed = sealedByRel.get(rel);
   if (!sealed) {
@@ -143,7 +165,7 @@ async function encryptImage(sealed: SealedImage): Promise<Buffer> {
   return Buffer.concat([cipher.update(payload), cipher.final(), cipher.getAuthTag()]);
 }
 
-/** 全部独占图（prerenderAll 落盘用）。 */
+/** All exclusive images (for prerenderAll disk writes). */
 export function allSealedImages(): Array<{ rel: string; src: string; bytes: Promise<Buffer> }> {
   return [...sealedByRel.entries()].map(([rel, sealed]) => ({
     rel,
@@ -152,7 +174,8 @@ export function allSealedImages(): Array<{ rel: string; src: string; bytes: Prom
   }));
 }
 
-/** dev 中间件：明文地址是否属于加密独占图（是则必须 404，与生产 dist 同构） */
+/** Dev middleware: does a plaintext address belong to an encrypted exclusive
+ *  image (if so it must 404, isomorphic with the production dist) */
 export function isLockedImageSrc(src: string): boolean {
   for (const sealed of sealedByRel.values()) {
     if (sealed.src === src) {

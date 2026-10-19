@@ -1,10 +1,14 @@
-// 正文图元灯箱（位图 / 内联 SVG 图表）：原生 <dialog> 顶层弹层 —— Esc 原生
-// 关闭、模态期焦点困在弹层内。固定尺寸舞台（不随内容与缩放变化），内容
-// object-contain 居中；0.5×–5× 缩放（滚轮 / +− 键 / 按钮，双击或 0 复位），
-// 放大后拖拽平移；点击背板关闭。零依赖实现。
-// SVG 条目必须内联克隆而不能走 <img src>：mermaid 流程图默认 htmlLabels，
-// 节点文字住在 <foreignObject> 里，SVG-as-image 的 secure static mode 不渲染
-// foreignObject —— 会只剩框和箭头。内联 SVG 缩放是矢量，放大不糊。
+// Lightbox for body figures (bitmaps / inline SVG diagrams): a native
+// <dialog> top-layer popup -- Esc closes natively and focus is trapped inside
+// while modal. Fixed-size stage (does not change with content or zoom),
+// content centered with object-contain; 0.5x-5x zoom (wheel / +- keys /
+// buttons, double-click or 0 to reset), drag to pan while zoomed in; click
+// the backdrop to close. Zero-dependency implementation.
+// SVG entries must be cloned inline rather than going through <img src>:
+// mermaid flowcharts default to htmlLabels, node text lives inside
+// <foreignObject>, and SVG-as-image secure static mode does not render
+// foreignObject -- you would be left with boxes and arrows. Inline SVG zooms
+// as vectors, so it stays sharp when magnified.
 
 import { ChevronLeft, ChevronRight, Minus, Plus, X } from "lucide-react";
 import {
@@ -22,8 +26,9 @@ import { CARD, ICON_BTN } from "@/lib/styles.ts";
 
 export type LightboxItem =
   | { alt: string; kind: "img"; src: string }
-  // html 是点击瞬间序列化的受信 SVG（mermaid securityLevel: "strict" 的产物，
-  // 与正文注入同源）；内联 max-width（自然尺寸）保留 —— 小图不放大
+  // html is the trusted SVG serialized at click time (the product of mermaid
+  // securityLevel: "strict", same origin as the body injection); the inline
+  // max-width (natural size) is kept -- small images are not upscaled
   | { alt: string; html: string; kind: "svg" };
 
 const ZOOM_MIN = 0.5;
@@ -51,10 +56,13 @@ export function Lightbox({
   const t = useT();
   const item = items[index];
 
-  // 挂载即模态；所有关闭路径统一走原生 close()（Esc 天然如此），父级经
-  // close 事件同步状态 —— 先关弹层（释放顶层、焦点可移出）再卸载组件，
-  // 否则带焦点卸载会把焦点抢回 body，无法归还给触发图片。
-  // 守卫 open：HMR/重挂载下 effect 重跑时对已打开的 dialog 再 showModal 会抛错。
+  // Modal from mount; every close path goes through the native close()
+  // (Esc does so naturally) and the parent syncs state via the close event --
+  // close the dialog first (releases the top layer, focus can move out), then
+  // unmount the component; otherwise unmounting while focused yanks focus
+  // back to body and it can never return to the triggering image.
+  // Guard on open: re-running the effect under HMR/remount would throw when
+  // calling showModal on an already-open dialog.
   useEffect(() => {
     const dialog = dialogRef.current;
     if (dialog && !dialog.open) {
@@ -81,7 +89,8 @@ export function Lightbox({
     resetZoom();
   };
 
-  // 滚轮缩放（React 合成事件是 passive 的，preventDefault 需手动挂非被动监听）
+  // Wheel zoom (React synthetic wheel events are passive; preventDefault needs
+  // a manually attached non-passive listener)
   useEffect(() => {
     const stage = stageRef.current;
     if (!stage) {
@@ -95,7 +104,7 @@ export function Lightbox({
     return () => stage.removeEventListener("wheel", onWheel);
   }, []);
 
-  /** 关闭面板（背板/关闭按钮）：交给原生 close()，close 事件驱动父级卸载。 */
+  /** Close the panel (backdrop/close button): delegate to the native close(); the close event drives the parent's unmount. */
   const close = () => dialogRef.current?.close();
 
   const onDialogClick = (event: MouseEvent<HTMLDialogElement>) => {
@@ -155,7 +164,7 @@ export function Lightbox({
       onKeyDown={onKeyDown}
       ref={dialogRef}
     >
-      {/* 工具条：计数 + 缩放档位 + 关闭 */}
+      {/* Toolbar: counter + zoom controls + close */}
       <div className="flex min-h-9 items-center justify-end gap-2 pb-2">
         {items.length > 1 && (
           <span className="mr-auto font-mono text-xs text-ink-3">
@@ -171,7 +180,7 @@ export function Lightbox({
         >
           <Minus aria-hidden="true" className="size-4" />
         </button>
-        {/* 点击百分比复位 100% */}
+        {/* Clicking the percentage resets to 100% */}
         <button
           className="min-w-12 rounded px-1 font-mono text-xs text-ink-2 transition-colors hover:text-ink"
           onClick={resetZoom}
@@ -193,8 +202,9 @@ export function Lightbox({
         </button>
       </div>
 
-      {/* 舞台：固定尺寸，内容 object-contain 居中；缩放/平移走 transform，
-          不改变布局 —— 框永远不因内容大小或缩放档位变化 */}
+      {/* Stage: fixed size, content centered with object-contain; zoom/pan go
+          through transform and never touch layout -- the frame never changes
+          with content size or zoom level */}
       <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden" ref={stageRef}>
         <div
           className={cn("flex items-center justify-center", item.kind === "svg" && "w-full", zoom > 1 && "touch-none")}
@@ -233,9 +243,11 @@ export function Lightbox({
               src={item.src}
             />
           ) : (
-            // 宽度链拉满（舞台定宽 → wrapper w-full）让 svg 的百分比宽有
-            // 确定基；mermaid 内联 max-width 保自然尺寸上限，超出部分靠
-            // preserveAspectRatio 居中 letterbox，高度超舞台由 max-height 截
+            // The width chain is maxed out (fixed-width stage -> wrapper
+            // w-full) so the svg's percentage width has a definite basis;
+            // mermaid's inline max-width keeps the natural-size cap, anything
+            // beyond it is center-letterboxed via preserveAspectRatio, and
+            // height past the stage is clipped by max-height
             <div
               aria-hidden="true"
               className="w-full max-w-[min(86vw,52rem)] select-none [&_svg]:mx-auto [&_svg]:block [&_svg]:h-auto [&_svg]:max-h-[64dvh] [&_svg]:w-full"

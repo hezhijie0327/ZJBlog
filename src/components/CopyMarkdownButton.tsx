@@ -1,6 +1,8 @@
-// 「复制为 Markdown」按钮：抓取预渲染的同名 index.md（构建期随详情页落
-// 盘，原始 frontmatter + 正文 100% 保真）写入剪贴板。锁定文不落盘也不
-// 渲染本按钮（fail-closed）。打印/预览纸面上隐藏（styles/print.css）。
+// "Copy as Markdown" button: fetches the prerendered index.md of the same
+// name (written to disk alongside the detail page at build time, original
+// frontmatter + body 100% faithful) and writes it to the clipboard. Locked
+// posts get no file on disk and this button is not rendered (fail-closed).
+// Hidden on the print/preview paper (styles/print.css).
 
 import { Check, Copy } from "lucide-react";
 import { useState } from "react";

@@ -1,10 +1,13 @@
-// 文章正文渲染：构建期编译好的 HTML 直接注入（dangerouslySetInnerHTML），
-// mermaid 占位容器在挂载后逐个替换为懒加载渲染器；代码块的复制按钮走
-// 事件委托（构建期生成的静态按钮，无需逐个挂 React）。
-// 曾经的 content-visibility:auto + contain-intrinsic-size 优化已移除：
-// Chromium 146+/Edge 153 实测「相关度」不再触发展开，长文在占位高度处被
-// 裁断（正文 92% 不可达，复现页在 Electron 41 与 Edge 153 双双确认）。
-// 正确性优先 —— 屏外渲染成本本就只省一次性 layout，量级远小于内容不可达。
+// Article body rendering: the build-time-compiled HTML is injected directly
+// (dangerouslySetInnerHTML); after mount, mermaid placeholder containers are
+// replaced one by one with lazy renderers; code-block copy buttons use event
+// delegation (the buttons are static build-time output, no per-button React).
+// The old content-visibility:auto + contain-intrinsic-size optimization has
+// been removed: on Chromium 146+/Edge 153 the "relevance" heuristic no longer
+// triggers expansion, so long articles were cut off at the placeholder height
+// (92% of the body unreachable; reproduced on both Electron 41 and Edge 153).
+// Correctness first — offscreen rendering only ever saved a one-time layout,
+// far smaller a cost than unreachable content.
 
 import { useEffect, useRef, useState } from "react";
 import { createRoot, type Root } from "react-dom/client";
@@ -18,12 +21,14 @@ import { ensureKatexStyles } from "@/lib/katex.ts";
 export function Prose({ html, needsKatex }: { html: string; needsKatex?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
   const [preview, setPreview] = useState<{ items: LightboxItem[]; index: number } | null>(null);
-  // 关闭灯箱后焦点归还给触发元素（键盘/读屏用户回到原位）
+  // Return focus to the trigger element after the lightbox closes (keyboard /
+  // screen reader users land back where they started)
   const lastTriggerRef = useRef<HTMLElement | null>(null);
   const t = useT();
 
-  // html 是语义依赖：正文更新后 DOM 里的占位容器换了，需要重新挂载渲染器
-  // biome-ignore lint/correctness/useExhaustiveDependencies: 显式依赖 html 以重挂载渲染器
+  // html is a semantic dependency: once the body updates, the placeholder
+  // containers in the DOM are replaced and the renderers must remount
+  // biome-ignore lint/correctness/useExhaustiveDependencies: html is intentional so the renderers remount
   useEffect(() => {
     const container = ref.current;
     if (!container) {
@@ -38,9 +43,12 @@ export function Prose({ html, needsKatex }: { html: string; needsKatex?: boolean
       root.render(<MermaidRenderer chart={el.dataset.chart ?? ""} lightbox />);
       roots.push(root);
     }
-    // ```marp fence 的嵌入幻灯片（tools/deck.ts 占位结构）：从 DOM 提取构建期
-    // 样式与幻灯片 HTML，交给 DeckViewer 重渲染增强版（无 JS 时占位结构本身
-    // 就是完整堆叠视图）。锁定文解锁注入的明文同样走这里（html 变化重挂）。
+    // Embedded slides from ```marp fences (tools/deck.ts placeholder
+    // structure): extract the build-time CSS and slide HTML from the DOM and
+    // hand them to DeckViewer to re-render the enhanced version (without JS,
+    // the placeholder structure itself is the full stacked view). Plaintext
+    // injected after unlocking a locked post goes through here too (html
+    // change remounts).
     for (const el of container.querySelectorAll<HTMLElement>(".deck-embed")) {
       const css = el.querySelector("style[data-deck-css]")?.textContent ?? "";
       const body = el.querySelector("[data-deck-content]")?.innerHTML ?? "";
@@ -63,10 +71,13 @@ export function Prose({ html, needsKatex }: { html: string; needsKatex?: boolean
     };
   }, [html, needsKatex]);
 
-  // 复制代码按钮：构建期生成的是静态 HTML（初始文案是构建基准语言），
-  // 事件委托一处接管全部代码块；水合时先把所有按钮文案校正为当前 UI 语言。
-  // html 是语义依赖：加密文解锁后注入的明文里也有构建期按钮，需同样校正。
-  // biome-ignore lint/correctness/useExhaustiveDependencies: 显式依赖 html 以重校按钮文案
+  // Copy-code buttons: the build output is static HTML (initial label in the
+  // build baseline language); one delegated handler takes over all code
+  // blocks. At hydration, first correct every button's label to the current
+  // UI language. html is a semantic dependency: plaintext injected after
+  // unlocking an encrypted post also carries build-time buttons that need the
+  // same correction.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: html is intentional so button labels re-correct
   useEffect(() => {
     const container = ref.current;
     if (!container) {
@@ -84,9 +95,10 @@ export function Prose({ html, needsKatex }: { html: string; needsKatex?: boolean
         return;
       }
       const text = code.textContent ?? "";
-      // baseline 2022 全员支持异步剪贴板（https/localhost 均为安全上下文），
-      // 失败（如内嵌 WebView 拒授权）就不出「已复制」反馈 —— 不再保留
-      // execCommand 老回退
+      // Baseline 2022: async clipboard is supported everywhere (https and
+      // localhost are both secure contexts); on failure (e.g. an embedded
+      // WebView denying permission) no "copied" feedback appears — the old
+      // execCommand fallback is not kept
       navigator.clipboard.writeText(text).then(
         () => {
           button.textContent = t("post.copied");
@@ -105,9 +117,12 @@ export function Prose({ html, needsKatex }: { html: string; needsKatex?: boolean
     };
   }, [t, html]);
 
-  // 灯箱：委托点击正文图片与 mermaid 图卡（宽图在正文栏受挤，点开灯箱全屏
-  // 看 —— SVG 矢量缩放不失真；条目按点击瞬间序列化，与当前主题一致）。
-  // 链接内的图片也拦截 —— 先看大图，preventDefault 阻止跳转。
+  // Lightbox: delegated clicks on body images and mermaid figure cards (wide
+  // images get squeezed in the body column; open the lightbox to view them
+  // fullscreen — SVG vector scaling never blurs; items are serialized at the
+  // click instant, consistent with the current theme).
+  // Images inside links are intercepted too — view the large image first;
+  // preventDefault stops the navigation.
   useEffect(() => {
     const container = ref.current;
     if (!container) {
@@ -118,7 +133,8 @@ export function Prose({ html, needsKatex }: { html: string; needsKatex?: boolean
       if (!(target instanceof Element) || !container.contains(target)) {
         return;
       }
-      // 嵌入幻灯片由 DeckViewer 自管（翻页语义），图片与 mermaid 都不进全文灯箱
+      // Embedded slides are managed by DeckViewer itself (paging semantics);
+      // neither images nor mermaid enter the article-wide lightbox
       if (target.closest(".deck-embed")) {
         return;
       }
@@ -127,8 +143,10 @@ export function Prose({ html, needsKatex }: { html: string; needsKatex?: boolean
       if (!image && !mermaid) {
         return;
       }
-      // 画廊 = 全部图片 + 已出图的 mermaid（未进视口的还是占位，无 svg 跳过）；
-      // querySelectorAll 按文档序返回混排序列，prev/next 顺一遍全文图元
+      // Gallery = all images + already-rendered mermaid figures (those not yet
+      // in the viewport are still placeholders; no svg means skip);
+      // querySelectorAll returns the interleaved sequence in document order,
+      // so prev/next walks every figure in the article
       const items: LightboxItem[] = [];
       let index = -1;
       for (const node of container.querySelectorAll("img, [data-mermaid-figure]")) {
@@ -168,8 +186,9 @@ export function Prose({ html, needsKatex }: { html: string; needsKatex?: boolean
     };
   }, []);
 
-  // dialog 的 close 事件触发（此时顶层已释放）：焦点先归还触发元素，
-  // 再卸载灯箱 —— 顺序反了会被带焦点卸载抢回 body。
+  // Fired by the dialog's close event (the top layer is already released):
+  // return focus to the trigger element first, then unmount the lightbox —
+  // reversed, an unmount that carries focus would snap it back to body.
   const closePreview = () => {
     const trigger = lastTriggerRef.current;
     if (trigger) {

@@ -1,5 +1,6 @@
-// 页面骨架：SPA Link（拦截站内导航 + hover 预取）+ 顶部加载进度条 +
-// Shell（skip link / 导航 / 主区 / 页脚 + 悬浮返回顶部）。
+// Page shell: SPA Link (intercepts internal navigation + hover prefetch) +
+// top loading progress bar + Shell (skip link / navigation / main / footer +
+// floating back-to-top).
 
 import type { MouseEvent, ReactNode } from "react";
 import { BackToTop } from "@/components/BackToTop.tsx";
@@ -10,7 +11,8 @@ import { isModifiedClick } from "@/lib/link.ts";
 import { useRouter } from "@/lib/router.tsx";
 import { prefetchHref } from "@/pages/registry.ts";
 
-/** 锚点：站内 URL 走 SPA 导航，其余（外链 / 带扩展名的 /rss.xml 等）走默认行为。 */
+/** Anchor: internal URLs go through SPA navigation; everything else (external
+ * links / extension-bearing ones like /rss.xml) uses the default behavior. */
 export function Link({
   href,
   children,
@@ -24,10 +26,10 @@ export function Link({
   children: ReactNode;
   className?: string;
   ariaLabel?: string;
-  /** 当前项标记（导航激活态），如 aria-current="page" */
+  /** Current-item marker (navigation active state), e.g. aria-current="page" */
   ariaCurrent?: "page" | "location" | "step" | "true";
   title?: string;
-  /** 追加的点击回调（如关闭移动端菜单），先于导航逻辑执行 */
+  /** Additional click callback (e.g. closing the mobile menu), runs before the navigation logic */
   onClick?: () => void;
 }) {
   const { navigate } = useRouter();
@@ -43,7 +45,8 @@ export function Link({
     navigate(href);
   };
 
-  // hover/focus 预取目标页 chunk：点击时大概率已在缓存，导航近乎即时
+  // Prefetch the target page chunk on hover/focus: it is likely cached by
+  // click time, making navigation near-instant
   const handlePrefetch = () => {
     if (internal) {
       prefetchHref(href);
@@ -66,7 +69,7 @@ export function Link({
   );
 }
 
-/** 换页时的顶部进度条（纯装饰，aria-hidden）。 */
+/** Top progress bar during page transitions (purely decorative, aria-hidden). */
 function ProgressBar({ active }: { active: boolean }) {
   if (!active) {
     return null;
@@ -78,11 +81,13 @@ function ProgressBar({ active }: { active: boolean }) {
   );
 }
 
-/** 页面骨架：与迁移前 layout 的结构一致（skip link + sticky 导航 + main + 页脚 + 悬浮返回顶部）。 */
+/** Page shell: same structure as the pre-migration layout (skip link + sticky
+ * nav + main + footer + floating back-to-top). */
 export function Shell({ children }: { children: ReactNode }) {
   const { href, loading } = useRouter();
   const t = useT();
-  // OG 分享卡页（/og/）：1200×630 截图画布，隐藏全部站点 chrome
+  // OG share-card page (/og/): a 1200x630 screenshot canvas that hides all
+  // site chrome
   if (new URL(href, "http://localhost").pathname === "/og/") {
     return <div className="min-h-dvh bg-bg">{children}</div>;
   }

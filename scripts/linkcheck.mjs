@@ -1,12 +1,14 @@
-// 死链检查（手动/定期运行，不在构建门禁里）：扫描 dist/ 全部 HTML 中的
-// 外部链接，逐个发 GET 验证可达性。内部链接（站内路径 / 锚点）由
-// `pnpm run audit` 的 sitemap 覆盖，这里只查 http(s) 外链。
+// Dead link check (run manually/periodically, not part of the build gate):
+// scans all external links in every HTML file under dist/ and sends a GET for
+// each to verify reachability. Internal links (site paths / anchors) are
+// covered by `pnpm run audit`'s sitemap crawl; only http(s) external links
+// are checked here.
 //
-//   pnpm run linkcheck            # 全量检查
-//   pnpm run linkcheck -- --fast  # 只查每页前 10 个链接（快速抽样）
+//   pnpm run linkcheck            # full check
+//   pnpm run linkcheck -- --fast  # only the first 10 links per page (quick sampling)
 //
-// 429/5xx 视为「无法确认」而非死链（GitHub 匿名限额等），退出码 1 = 存在
-// 确认死链（404/410/DNS 失败）。
+// 429/5xx count as "unconfirmed" rather than dead (GitHub anonymous rate
+// limits etc.); exit code 1 = confirmed dead links exist (404/410/DNS failure).
 
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";

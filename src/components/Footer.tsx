@@ -1,5 +1,6 @@
-// 页脚：版权一行。安装入口在导航右上角（Navigation 的 InstallAppButton，
-// beforeinstallprompt 驱动，DESIGN.md §18）—— ZJSearch HeaderActions 同位。
+// Footer: a single copyright line. The install entry lives at the top-right
+// of the navigation (Navigation's InstallAppButton, driven by
+// beforeinstallprompt, DESIGN.md §18) -- same spot as ZJSearch HeaderActions.
 
 import { siteConfig } from "@/config/site.ts";
 
@@ -8,9 +9,10 @@ export function Footer() {
   return (
     <footer className="border-t border-line/80 bg-bg">
       <div className="container mx-auto px-4 py-8">
-        {/* 年份跨年构建/访问会不一致，抑制水合警告（客户端值才是对的）。
-            版权持有者取 siteConfig.copyright（个人字标 Zhijie Online，
-            不随产品名 ZJBlog 变动）。 */}
+        {/* The year drifts out of sync across year-boundary builds/visits;
+            suppress the hydration warning (the client value is the right one).
+            The copyright holder comes from siteConfig.copyright (the personal
+            wordmark Zhijie Online, unaffected by the product name ZJBlog). */}
         <p className="text-center text-xs text-ink-3" suppressHydrationWarning>
           © {currentYear} {siteConfig.copyright}
         </p>

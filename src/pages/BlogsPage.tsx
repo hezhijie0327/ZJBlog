@@ -1,4 +1,5 @@
-// 全部文章列表页：标签云 + 文章列表（幽灵日期水印）+ 右栏最近文章（xl 宽屏）。
+// All-posts list page: tag cloud + post list (ghost date watermark) + right rail of recent
+// posts (xl+ screens).
 
 import { Lock } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState.tsx";
@@ -14,13 +15,14 @@ import type { BlogsData } from "@/lib/types.ts";
 export function BlogsPage({ data }: { data: BlogsData }) {
   const t = useT();
   const recent = data.blogs.slice(0, 5);
-  // 标签排序用 codepoint 比较：localeCompare 的 collation 在构建期 Node 与
-  // 浏览器 ICU 之间不一致，曾致水合文本顺序不匹配（React #418）
+  // Tag sorting uses codepoint comparison: localeCompare's collation differs between build-time
+  // Node and browser ICU, which once caused hydration text order mismatch (React #418)
   const tags = [...new Set(data.blogs.flatMap((blog) => blog.tags))].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
 
   return (
     <div className={SECTION}>
-      {/* 页头直接置于 SECTION 容器下：全站标题同一左缘（DESIGN.md §6） */}
+      {/* Header sits directly under the SECTION container: site-wide titles share one left
+          edge (DESIGN.md §6) */}
       <SectionHeading
         en={t("page.blogs.en")}
         hint={t("count.posts", { n: data.blogs.length })}
@@ -29,7 +31,7 @@ export function BlogsPage({ data }: { data: BlogsData }) {
       />
       <div className="mx-auto flex max-w-6xl justify-center gap-10">
         <div className="min-w-0 max-w-3xl flex-1">
-          {/* 标签云：点击进入标签筛选页 */}
+          {/* Tag cloud: click through to the tag filter page */}
           {tags.length > 0 && (
             <div className="mb-10 flex flex-wrap items-center gap-2">
               {tags.map((tag) => (
@@ -51,7 +53,7 @@ export function BlogsPage({ data }: { data: BlogsData }) {
           )}
         </div>
 
-        {/* 右栏：最近文章（xl 宽屏 sticky 跟随） */}
+        {/* Right rail: recent posts (sticky on xl+ screens) */}
         {recent.length > 0 && (
           <aside className="hidden w-60 shrink-0 xl:block">
             <div className="sticky top-[calc(5rem+env(safe-area-inset-top))]">
@@ -70,7 +72,7 @@ export function BlogsPage({ data }: { data: BlogsData }) {
                         {blog.title}
                         {blog.locked && (
                           <>
-                            <span className="sr-only">（{t("post.locked")}）</span>
+                            <span className="sr-only">({t("post.locked")})</span>
                             <Lock aria-hidden="true" className="ml-1 inline size-3.5 text-accent-strong" />
                           </>
                         )}

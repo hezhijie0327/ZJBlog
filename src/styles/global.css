@@ -1,10 +1,13 @@
-/* ZJBlog 设计系统 —— 单一 CSS 入口。
-   组件样式 = Tailwind utilities（TSX 内）；这里的分件只承载 utilities
-   够不到的部分：token、元素默认值、长文排印、文档级行为。
-   KaTeX 样式不在此处（全站 render-blocking 代价过高）：构建期由
-   rehypeLocalImageSize 同级的管线标记含公式页（needsKatex），SSR 对这些
-   页面注入 /katex.min.css，客户端 SPA 换页时由 Prose 按需补注。
-   导入顺序即级联顺序 —— behaviors.css 有意不入层，必须最后。 */
+/* ZJBlog design system — single CSS entry.
+   Component styling = Tailwind utilities (in TSX); the modules here only
+   carry what utilities cannot reach: tokens, element defaults, long-form
+   typography, document-level behaviors.
+   KaTeX styles are not here (render-blocking site-wide costs too much): the
+   build pipeline sitting alongside rehypeLocalImageSize flags formula-bearing
+   pages (needsKatex), SSR injects /katex.min.css for those pages, and the
+   client SPA re-injects on demand via Prose when swapping routes.
+   Import order is cascade order — behaviors.css deliberately stays out of
+   layers and must come last. */
 @import "tailwindcss";
 @import "./tokens.css";
 @import "./base.css";
@@ -15,8 +18,9 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* 项目卡品牌化封面（无 frontmatter.image 时的纸面占位）：横线纸纹 +
-   自左上的暖色微渐变，纯 token 驱动，明暗随整页交叉淡化。 */
+/* Branded project-card cover (paper placeholder when frontmatter.image is
+   absent): ruled paper texture + a subtle warm gradient from the top-left,
+   purely token-driven, cross-fading with the page light/dark. */
 .project-cover {
   display: flex;
   flex-direction: column;
@@ -29,15 +33,19 @@
     linear-gradient(135deg, color-mix(in oklab, var(--accent-soft) 55%, var(--surface)), var(--surface) 65%);
 }
 
-/* 空心描边水印文字（借鉴 justin3go 的 hollow-text）：填充透明只留描边，
-   描边色默认柔金，可用 --hollow-stroke 覆盖。纯装饰，消费方必须 aria-hidden。 */
+/* Hollow stroked watermark text (after justin3go's hollow-text): transparent
+   fill, stroke only; the stroke color defaults to soft gold and can be
+   overridden via --hollow-stroke. Pure decoration — consumers must
+   aria-hidden it. */
 .hollow-text {
   color: transparent;
   -webkit-text-stroke: 1px var(--hollow-stroke, var(--accent-soft));
 }
 
-/* 胶片齿孔编号（故事分镜条章节数字）：左右片边 + 上下打孔排，
-   颜色走 currentColor，由消费方用文本色类切换激活态。 */
+/* Film sprocket number (chapter numerals for the story storyboard strip):
+   film edges left/right + perforation rows top/bottom; the color follows
+   currentColor, and consumers toggle the active state with text color
+   classes. */
 .film-number {
   display: inline-grid;
   place-items: center;
@@ -50,9 +58,11 @@
     repeating-linear-gradient(90deg, currentColor 0 2px, transparent 2px 6px) left bottom / 100% 2px repeat-x;
 }
 
-/* 撕边纸条按钮（借鉴 justin3go 的 paper-button-edge）：纸片底由 ::before
-   承载撕边 clip-path（box-shadow 会被裁掉，投影用 drop-shadow 跟随轮廓）。
-   纸色经 --strip 注入，文本/悬停态由消费方用 utilities 组合。 */
+/* Torn-edge paper strip button (after justin3go's paper-button-edge): the
+   paper backing lives on ::before with a torn-edge clip-path (box-shadow
+   would be clipped, so drop-shadow follows the outline).
+   Paper color is injected via --strip; text/hover states are composed by
+   consumers with utilities. */
 .paper-strip {
   position: relative;
   isolation: isolate;
@@ -97,8 +107,9 @@
   filter: drop-shadow(2px 4px 0 color-mix(in oklab, var(--ink) 14%, transparent));
 }
 
-/* 首页章节手绘分隔线（对标 justin3go 的 home-section + home-section:before）：
-   细线轻微旋转，模拟纸页之间的手账分隔。 */
+/* Hand-drawn home section dividers (modeled on justin3go's home-section +
+   home-section:before): a hairline slightly rotated, mimicking the journal
+   divider between paper pages. */
 .paper-chapter {
   position: relative;
 }
@@ -114,8 +125,10 @@
   opacity: 0.7;
 }
 
-/* Hero 标题的马克笔高亮：撕边纸条代替直线矩形 + 轻微歪斜 ——
-   物理世界里手贴的纸带不会与文字基线严格平行，边缘也不会是直线。 */
+/* Marker-pen highlight for the Hero title: a torn-edge strip instead of a
+   straight rectangle, slightly askew — in the physical world hand-applied
+   tape is never exactly parallel to the text baseline, and its edges are
+   never straight. */
 .marker-strip {
   clip-path: polygon(
     0 14%,
@@ -143,19 +156,23 @@
   transform: rotate(-0.5deg);
 }
 
-/* 圆形邮戳（封缄信的 SEALED 戳记；DESIGN.md §7 登记，配方与 zjsearch
-   侧 paper.css 两侧同步 §17）：外圈虚线 + ::before 内圈实线，双环夹住
-   中央的真实元数据文字（日期/标签）——不同于上方的装饰件，邮戳承载
-   信息，不用 aria-hidden。尺寸与确定性旋转由消费方给。本文件其余分件
-   是无层裸 CSS，但邮戳自带 display，必须入 components 层让 utilities
-   （hidden / sm:grid）能覆盖它。 */
+/* Round postmark (the SEALED stamp on a sealed letter; registered in
+   DESIGN.md §7, recipe kept in two-way sync with zjsearch's paper.css per
+   §17): a dashed outer ring + a solid inner ring via ::before, sandwiching
+   the real metadata text at the center (date/label) — unlike the decorative
+   pieces above, the postmark carries information and is not aria-hidden.
+   Size and the deterministic rotation come from the consumer. The other
+   modules in this file are un-layered bare CSS, but the postmark ships its
+   own display, so it must live in the components layer for utilities
+   (hidden / sm:grid) to be able to override it. */
 @layer components {
   .paper-postmark {
     position: relative;
     display: grid;
     place-content: center;
-    /* 条目在轨道内也要居中：place-content 只居中轨道组，图标会在最宽
-       子项（戳文）的轨道里 start 对齐，看起来整体偏歪 */
+    /* Items must center within their tracks too: place-content only centers
+       the track group, so the icon would start-align inside the track of the
+       widest child (the stamp text), making the whole thing look askew */
     place-items: center;
     gap: 0.125rem;
     border-radius: 9999px;
@@ -172,22 +189,26 @@
   }
 }
 
-/* 正文图片灯箱背板（dialog::backdrop 无法用 utilities 命中） */
+/* Article image lightbox backdrop (dialog::backdrop cannot be targeted by utilities) */
 .lightbox::backdrop {
   background: var(--scrim);
 }
 
-/* ===== 旅行地图（/travels/ 构建期真实地理 SVG + 纯 CSS 逐站点亮） =====
-   配色全走 token；针脚/轨迹/地名由 tools/travelMap.ts 产出并带 --seq 序号，
-   「逐个点亮」的编排（针脚 pop → 轨迹描画 → 地名浮现）全在 CSS —— SSR 自带
-   .lit 类（打开页面即自动播放），重放 = JS 摘掉 .lit 强制回流再挂回；
-   prefers-reduced-motion 由 behaviors.css 全局收掉动画时长，退化为静态全亮。 */
+/* ===== Travel map (/travels/ build-time real-geography SVG + pure CSS
+   per-stop lighting) =====
+   All colors go through tokens; pins/paths/place names are produced by
+   tools/travelMap.ts carrying --seq ordinals. The "light up one by one"
+   choreography (pin pops → path draws → name fades in) lives entirely in
+   CSS — SSR ships the .lit class (auto-plays on page open); replay = JS
+   removes .lit, forces a reflow, then re-attaches it. Under
+   prefers-reduced-motion, behaviors.css collapses animation durations
+   globally, degrading to a static fully-lit map. */
 .travel-map {
   display: block;
   width: 100%;
   height: auto;
 }
-/* 缩放/平移（TravelsPage 的控制器）：指针手势接管，拖拽时抓手光标 */
+/* Zoom/pan (TravelsPage controls): pointer gestures take over; grab cursor while dragging */
 .travel-map-svg {
   touch-action: none;
   cursor: grab;
@@ -195,7 +216,8 @@
 .travel-map-svg:active {
   cursor: grabbing;
 }
-/* 针脚定位 + 反缩放：针脚/标签随 --map-zoom 反向缩放，屏幕大小恒定 */
+/* Pin positioning + inverse scaling: pins/labels counter-scale against
+   --map-zoom so their on-screen size stays constant */
 .travel-map .trip-pos {
   transform: translate(var(--x), var(--y)) scale(calc(1 / var(--map-zoom, 1)));
 }
@@ -236,8 +258,10 @@
   stroke-width: 3.5px;
   transition: fill 0.2s ease;
 }
-/* 手机上地图视口仅 ~310px 宽（针脚/标签随 --map-zoom 反缩放，屏上尺寸 =
-   单位值 × 容器宽/1280），13 单位标签只有 ~3-6px —— 小屏加大单位字号补偿 */
+/* On phones the map viewport is only ~310px wide (pins/labels counter-scale
+   with --map-zoom: on-screen size = unit value × container width / 1280), so
+   13-unit labels are a mere ~3-6px — small screens bump the unit font size
+   to compensate */
 @media (max-width: 640px) {
   .travel-map .trip-label {
     font-size: 30px;
@@ -247,9 +271,10 @@
   cursor: pointer;
 }
 
-/* 逐站点亮编排：未点亮基态 opacity:0（fill-mode both 兜住 delay 期）。
-   节奏：第 i 站轨迹在 i*1.3s 起描画 0.9s，针脚在 +0.95s 落点弹出，
-   地名再 +0.4s 浮现。 */
+/* Per-stop lighting choreography: the unlit base state is opacity:0
+   (fill-mode both covers the delay window).
+   Cadence: stop i's path starts drawing at i*1.3s for 0.9s, the pin pops in
+   at +0.95s, and the name fades in another +0.4s later. */
 .travel-map .trip-pin,
 .travel-map .trip-line,
 .travel-map .trip-label {
@@ -304,8 +329,9 @@
   }
 }
 
-/* 市内视角层（点击「城市 ×N」组合针脚 / 重放进站时随倍率淡入）：
-   10m 海岸线细节 + 成员针脚；组合针脚在市内视角下隐藏让位。 */
+/* City-level detail layer (fades in with zoom when clicking a "city ×N"
+   cluster pin / when the replay flies into a city): 10m coastline detail +
+   member pins; the cluster pin hides to make way at city level. */
 .travel-map .map-detail,
 .travel-map .cluster-member {
   opacity: 0;
@@ -324,7 +350,8 @@
   opacity: 0;
   pointer-events: none;
 }
-/* 重放编排（JS 逐元素挂 .on，无 delay）：与 .lit 初始编排共用关键帧 */
+/* Replay choreography (JS attaches .on per element, no delays): shares the
+   keyframes of the .lit initial choreography */
 .travel-map .trip-anchor.on .trip-pin {
   animation: travel-pin-pop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }

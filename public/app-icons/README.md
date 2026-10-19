@@ -1,4 +1,5 @@
-# app-icons 图床
+# app-icons hosting
 
-Cloudflare Access 各应用图标的静态托管位。图标经 `/app-icons/<name>.svg`
-直接外链引用（Cloudflare Zero Trust 控制台填本站 URL），跟随站点一起部署。
+Static hosting for the Cloudflare Access application icons. Icons are
+hot-linked directly as `/app-icons/<name>.svg` (fill in this site's URL in
+the Cloudflare Zero Trust console) and deploy together with the site.

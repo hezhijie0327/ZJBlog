@@ -1,4 +1,5 @@
-// 项目列表页：个人项目卡片网格（有 frontmatter.image 时渲染封面，无图即为纯文字卡）。
+// Projects list page: personal project card grid (cover renders when frontmatter.image exists;
+// without one the card is text-only).
 
 import { EmptyState } from "@/components/EmptyState.tsx";
 import { GithubIcon } from "@/components/icons.tsx";
@@ -23,7 +24,7 @@ export function ProjectsPage({ data }: { data: ProjectsData }) {
         title={t("page.projects.title")}
       />
 
-      {/* 个人项目 */}
+      {/* Personal projects */}
       {personalProjects.length > 0 && (
         <section className="mb-16">
           <p className={cn(EYEBROW, "mb-5 flex items-center gap-2")}>
@@ -38,12 +39,13 @@ export function ProjectsPage({ data }: { data: ProjectsData }) {
         </section>
       )}
 
-      {/* 空状态 */}
+      {/* Empty state */}
       {data.projects.length === 0 && (
         <EmptyState className="mx-auto max-w-md" desc={t("projects.empty.desc")} title={t("projects.empty.title")} />
       )}
 
-      {/* GitHub 入口（mt-10 与上方 section 的 mb-16 折叠，只在空状态下提供间隔） */}
+      {/* GitHub entry (mt-10 collapses with the section above's mb-16, providing spacing only
+          in the empty state) */}
       <div className="mt-10 text-center">
         <a className={BTN_OUTLINE} href={siteConfig.social.github} rel="noopener noreferrer" target="_blank">
           <GithubIcon aria-hidden="true" className="size-4" />

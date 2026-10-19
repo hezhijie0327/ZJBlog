@@ -1,11 +1,13 @@
-/* 设计 token：暖纸 / 墨字 / 琥珀金调色板，
-   色彩 token 以 <color> @property 注册（light / dark 两态），加 Tailwind
-   主题映射与命名 keyframes。博客扩展：--font-serif 衬线栈与代码色板。 */
+/* Design tokens: warm paper / ink text / amber-gold palette.
+   Color tokens are registered as <color> @property (light / dark states),
+   plus Tailwind theme mappings and named keyframes.
+   Blog extensions: the --font-serif serif stack and the code palette. */
 
-/* 把主题色彩 token 注册为 <color> 自定义属性：.dark 翻转时变量本身在
-   <html> 上插值（behaviors.css 的 html transition），一条过渡驱动整页
-   交叉淡化。不支持 @property 的浏览器退化为瞬时切换。initial-value 取
-   浅色调色板。 */
+/* Register the theme color tokens as <color> custom properties: when .dark
+   flips, the variables themselves interpolate on <html> (the behaviors.css
+   html transition), with a single transition driving the whole-page
+   cross-fade. Browsers without @property degrade to instant switching.
+   initial-value takes the light palette. */
 @property --bg {
   syntax: "<color>";
   inherits: true;
@@ -91,9 +93,11 @@
   inherits: true;
   initial-value: #15803d;
 }
-/* 博客扩展：代码色板（浅色态暖奶油底 / 暗色态深暖黑底，随调色板一起
-   参与交叉淡化）。两态底色都只比各自 shiki 高对比主题的基准底更接近
-   极端（浅态更浅、暗态更暗），令语法色的 AA 对比度只会更高 */
+/* Blog extension: the code palette (warm cream background in light / deep
+   warm black in dark, joining the palette cross-fade). Both state
+   backgrounds sit one step closer to the extreme than each shiki
+   high-contrast theme's base background (lighter in light, darker in dark),
+   so syntax colors only gain AA contrast */
 @property --code-bg {
   syntax: "<color>";
   inherits: true;
@@ -105,7 +109,7 @@
   initial-value: #24211a;
 }
 
-/* 暖纸调色板：暖中性 + 琥珀强调 */
+/* Warm paper palette: warm neutrals + amber accents */
 :root {
   --bg: #faf9f6;
   --surface: #ffffff;
@@ -113,9 +117,9 @@
   --line: #e6e2d7;
   --ink: #201d17;
   --ink-2: #6b675c;
-  /* 次级文字：对其所在的一切表面保持 ≥ 4.5:1（最坏 surface-2 #f1efe8） */
+  /* Secondary text: keeps ≥ 4.5:1 on every surface it sits on (worst case surface-2 #f1efe8) */
   --ink-3: #716c61;
-  /* 文字强调兼任小号文字色（链接 / chips）—— AA 对比度见 DESIGN.md */
+  /* Text accent doubles as small-text color (links / chips) — AA contrast in DESIGN.md */
   --accent: #8c6800;
   --accent-hover: #7a5c00;
   --accent-strong: #f5c84c;
@@ -126,12 +130,13 @@
   --danger: #dc2626;
   --warning: #b45309;
   --ok: #15803d;
-  /* 博客扩展：文章代码块（浅色态暖奶油底，配 github-light-high-contrast） */
+  /* Blog extension: article code blocks (warm cream background in light,
+     paired with github-light-high-contrast) */
   --code-bg: #fbfaf6;
   --code-fg: #24211a;
   --shadow-card: 0 1px 2px rgb(32 29 23 / 0.05), 0 4px 16px rgb(32 29 23 / 0.05);
   --shadow-pop: 0 4px 6px rgb(32 29 23 / 0.07), 0 12px 32px rgb(32 29 23 / 0.16);
-  /* 灯箱背板遮罩：明暗同值（物理黑，不随主题翻转） */
+  /* Lightbox backdrop scrim: same value in both modes (physical black, never flips with theme) */
   --scrim: rgb(0 0 0 / 0.6);
   color-scheme: light;
 }
@@ -185,8 +190,10 @@
   --shadow-card: var(--shadow-card);
   --shadow-pop: var(--shadow-pop);
 
-  /* 零 webfont 策略：全部系统字体栈，无字体下载、无阻塞。
-     --font-serif 为博客扩展（编辑排印：标题与正文衬线）。 */
+  /* Zero webfont policy: all system font stacks, no font downloads, no
+     blocking.
+     --font-serif is a blog extension (editorial typography: serif headings
+     and body). */
   --font-sans:
     ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC",
     "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;

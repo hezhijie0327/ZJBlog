@@ -1,10 +1,13 @@
-// 轻量 SPA 路由（fetch-and-swap）：每条路由都是完整预渲染
-// HTML；站内导航 fetch 目标 URL，从返回的 HTML 提取 page-data payload，
-// pushState 换页。网络级失败回退整页加载。
+// Lightweight SPA router (fetch-and-swap): every route is fully prerendered HTML;
+// in-site navigation fetches the target URL, extracts the page-data payload from the
+// returned HTML, and pushState-swaps the page. Network-level failures fall back to a
+// full page load.
 //
-// 会话级 payload 缓存（payload 是不可变构建产物）：前进/后退与重访零请求；
-// scrollRestoration 手工接管（浏览器自动恢复发生在换页前，位置必然错）；
-// 换页后把焦点移到 main h1，读屏器与键盘用户才能感知页面已变更。
+// Session-level payload cache (payloads are immutable build artifacts): forward/back and
+// revisits cost zero requests; scrollRestoration is taken over manually (the browser's
+// automatic restore happens before the swap, so the position is guaranteed wrong); after
+// navigation, focus moves to the main h1 so screen-reader and keyboard users can perceive
+// that the page changed.
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { extractPageData } from "@/lib/pageData.ts";
@@ -14,28 +17,28 @@ interface RouterContextValue {
   data: AnyPageData | null;
   loading: boolean;
   error: string | null;
-  /** 站内导航；失败时回退整页加载。 */
+  /** In-site navigation; falls back to a full page load on failure. */
   navigate: (url: string) => void;
-  /** 当前完整 href（含 origin），供导航高亮等使用。 */
+  /** Current full href (including origin), for nav highlighting and the like. */
   href: string;
 }
 
 const RouterContext = createContext<RouterContextValue | null>(null);
 
-/** 缓存 / 滚动位置的键：pathname + search（去 hash，跨 encode 稳定）。 */
+/** Key for cache / scroll positions: pathname + search (hash stripped, stable across encodings). */
 function routeKey(value: string): string {
   const url = new URL(value, window.location.href);
   return `${url.pathname}${url.search}`;
 }
 
-/** 换页时同步文档头：title + description（爬虫看预渲染 HTML，这里服务用户）。 */
+/** Sync the document head on client-side navigation: title + description (crawlers read the prerendered HTML; this serves users). */
 function applyDocumentHead(data: AnyPageData) {
   document.title = data.globals.title;
   const description = document.querySelector('meta[name="description"]');
   description?.setAttribute("content", data.globals.description);
 }
 
-/** 把焦点移到页面标题（无 h1 时退到 main）。preventScroll：滚动由路由接管。 */
+/** Move focus to the page heading (falls back to main when no h1). preventScroll: scrolling is owned by the router. */
 function focusPageHeading() {
   const target = document.querySelector<HTMLElement>("main h1") ?? document.querySelector<HTMLElement>("main");
   if (!target) {
@@ -47,9 +50,9 @@ function focusPageHeading() {
   target.focus({ preventScroll: true });
 }
 
-/** 会话级 payload 缓存：模块作用域，切换页面不丢失。 */
+/** Session-level payload cache: module-scoped, survives page switches. */
 const payloadCache = new Map<string, AnyPageData>();
-/** 离开页面时的滚动位置（routeKey → scrollY）。 */
+/** Scroll position when leaving a page (routeKey → scrollY). */
 const scrollPositions = new Map<string, number>();
 
 export function RouterProvider({
@@ -58,19 +61,19 @@ export function RouterProvider({
   children,
 }: {
   initialData: AnyPageData | null;
-  /** payload 提取后、渲染前回调（预取目标页 chunk，让 Suspense 骨架尽量不出现）。 */
+  /** Callback after payload extraction, before render (prefetches the target page chunk so the Suspense skeleton shows as little as possible). */
   onPageData?: (data: AnyPageData) => void;
   children: React.ReactNode;
 }) {
   const [data, setData] = useState<AnyPageData | null>(initialData);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // SSR（预渲染/dev SSR）无 window，以 "/" 占位；客户端启动即取真实 href
+  // SSR (prerender/dev SSR) has no window; use "/" as a placeholder and take the real href at client startup
   const [href, setHref] = useState(() => (typeof window !== "undefined" ? window.location.href : "/"));
   const abortRef = useRef<AbortController | null>(null);
   const seqRef = useRef(0);
 
-  // 浏览器的 auto 恢复发生在旧页面上（换页是异步的），位置必然错——全量手工接管
+  // The browser's "auto" restore runs on the old page (swapping is async), so the position is guaranteed wrong — take over manually in full
   useEffect(() => {
     window.history.scrollRestoration = "manual";
   }, []);
@@ -86,11 +89,11 @@ export function RouterProvider({
 
       const finish = (pageData: AnyPageData) => {
         if (seq !== seqRef.current) {
-          return; // 已被更新的导航取代
+          return; // superseded by a newer navigation
         }
         onPageData?.(pageData);
         if (historyMode !== "none") {
-          // payload 不进 history state：数据在 React 状态里，popstate 按 URL 重取（走缓存）
+          // payloads do not go into history state: data lives in React state, popstate re-fetches by URL (hitting the cache)
           window.history.pushState(null, "", url);
         }
         setHref(new URL(url, window.location.href).href);
@@ -98,7 +101,7 @@ export function RouterProvider({
         setLoading(false);
         applyDocumentHead(pageData);
         if (historyMode === "none") {
-          // 前进/后退：恢复离开时的阅读位置
+          // Forward/back: restore the reading position from when we left
           window.scrollTo(0, scrollPositions.get(key) ?? 0);
         } else {
           window.scrollTo(0, 0);
@@ -106,7 +109,7 @@ export function RouterProvider({
         focusPageHeading();
       };
 
-      // 命中会话缓存：零请求即时换页
+      // Session cache hit: instant page swap with zero requests
       if (cached) {
         finish(cached);
         return;
@@ -131,7 +134,7 @@ export function RouterProvider({
         if (controller.signal.aborted || seq !== seqRef.current) {
           return;
         }
-        // 网络/CORS 失败：整页加载兜底
+        // Network/CORS failure: full page load as the fallback
         if (err instanceof TypeError) {
           window.location.assign(url);
           return;
@@ -148,7 +151,7 @@ export function RouterProvider({
       if (url === window.location.href) {
         return;
       }
-      // 记录离开页的阅读位置（前进/后退恢复用）
+      // Record the leaving page's reading position (restored on forward/back)
       scrollPositions.set(routeKey(window.location.href), window.scrollY);
       void load(url, "push");
     },
@@ -160,7 +163,7 @@ export function RouterProvider({
 
   useEffect(() => {
     const onPopState = () => {
-      // 忽略纯 hash 变化
+      // Ignore hash-only changes
       const stripHash = (value: string) => {
         const url = new URL(value);
         url.hash = "";

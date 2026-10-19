@@ -1,8 +1,10 @@
-/* 长文排印：Tailwind Typography 插件的 token 化主题（博客产品级扩展 ——
-   编辑排印取向：衬线正文 / 衬线标题 / 等宽代码）。
-   注意：--tw-prose-* 覆盖必须保持非分层（顶层规则）—— typography 插件
-   自身的默认值就是非分层的，放进 @layer 会打不过它（曾致暗色下正文
-   变成 #101828，对比度 1.02）。 */
+/* Long-form typography: a token-ized theme for the Tailwind Typography
+   plugin (blog-grade extension — editorial orientation: serif body /
+   serif headings / monospace code).
+   Note: the --tw-prose-* overrides must stay un-layered (top-level rules) —
+   the typography plugin's own defaults are un-layered, so moving these into
+   @layer would lose to it (this once turned the dark-mode body text into
+   #101828 with 1.02 contrast). */
 .prose {
   --tw-prose-body: color-mix(in oklab, var(--ink) 85%, transparent);
   --tw-prose-headings: var(--ink);
@@ -15,17 +17,18 @@
   --tw-prose-quotes: color-mix(in oklab, var(--ink) 90%, transparent);
   --tw-prose-quote-borders: var(--accent-strong);
   --tw-prose-captions: var(--ink-2);
-  /* 行内代码主色用 hover 档（#7a5c00）：--accent(#8c6800) 在 --surface-2
-     底上对比度 4.46:1，过不了 4.5 门禁 */
+  /* Inline code foreground uses the hover tier (#7a5c00): --accent (#8c6800)
+     on a --surface-2 background is 4.46:1, failing the 4.5 gate */
   --tw-prose-code: var(--accent-hover);
   --tw-prose-pre-code: var(--code-fg);
   --tw-prose-pre-bg: var(--code-bg);
   --tw-prose-th-borders: var(--line);
   --tw-prose-td-borders: var(--line);
   font-family: var(--font-serif);
-  /* 中文衬线长文刻度（DESIGN.md §4）：17px/1.8 —— Typography 插件默认
-     16px/1.75 对衬线中文偏小；标题/代码/表格都是 em 刻度，跟着整体放大。
-     与上面的颜色覆盖同理必须保持非分层才压得过插件。 */
+  /* CJK serif long-form scale (DESIGN.md §4): 17px/1.8 — the Typography
+     plugin default of 16px/1.75 runs small for serif Chinese; headings,
+     code and tables are all em scales and grow with it. Like the color
+     overrides above, this must stay un-layered to beat the plugin. */
   font-size: 1.0625rem;
   line-height: 1.8;
 }
@@ -41,10 +44,13 @@
   letter-spacing: -0.01em;
 }
 
-/* 文内标题刻度（DESIGN.md §4，2026-10 审计）：Typography 默认五处不可辨/倒挂——
-   h1 2.25em 会大过页题（sm:text-4xl 36px），h4 与正文同号只剩加粗，h5/h6 同号
-   同字重完全隐身。收成六档可辨链：34 → 25.5 → 21.3 → 19.1 → 17 → 14.9。
-   :where 同构插件选择器（零特异性）+ 非分层后置，覆盖手法同上方颜色 token。 */
+/* In-article heading scale (DESIGN.md §4, 2026-10 audit): five Typography
+   defaults are indistinguishable or inverted — h1 at 2.25em would dwarf the
+   page title (sm:text-4xl 36px), h4 equals body size leaving only bold, and
+   h5/h6 are same size and same weight, fully invisible. Collapsed into a
+   six-tier distinguishable chain: 34 → 25.5 → 21.3 → 19.1 → 17 → 14.9.
+   :where mirrors the plugin selectors (zero specificity) + un-layered late
+   placement — same override technique as the color tokens above. */
 .prose :where(h1):not(:where([class~="not-prose"] *)) {
   font-size: 2em;
 }
@@ -63,7 +69,8 @@
   font-weight: 600;
 }
 
-/* 脚注区小于正文（与表格/代码同为 0.875em 档），排版惯例 */
+/* Footnote block smaller than body (same 0.875em tier as tables/code) —
+   typesetting convention */
 .prose :where(.footnotes):not(:where([class~="not-prose"] *)) {
   font-size: 0.875em;
 }
@@ -82,22 +89,22 @@
   font-family: var(--font-mono);
 }
 
-/* 行内代码在暖黑代码块体系下用表面色小底 */
+/* Inline code gets a subtle surface-color chip under the warm code-block scheme */
 .prose :where(:not(pre) > code):not(:where([class~="not-prose"] *)) {
   background: var(--surface-2);
   border-radius: 4px;
   padding: 0.1em 0.35em;
 }
 
-/* 脚注返回符 ↩ 字形极小：padding 撑大命中区（≥24px），负 margin 抵消
-   保持版面不变 */
+/* The footnote backref ↩ glyph is tiny: padding enlarges the hit area to
+   ≥24px while negative margins cancel it out, keeping the layout unchanged */
 .prose :where(a.data-footnote-backref):not(:where([class~="not-prose"] *)) {
   display: inline-block;
   padding: 0.45em 0.55em;
   margin: -0.45em -0.55em;
 }
 
-/* GFM 任务清单：复选框为装饰（构建期已 aria-hidden），去掉列表符号 */
+/* GFM task lists: checkbox is decorative (aria-hidden at build time), drop the list bullet */
 .prose :where(.task-list-item):not(:where([class~="not-prose"] *)) {
   list-style: none;
   padding-left: 0;
@@ -107,13 +114,13 @@
   padding-left: 0.5rem;
 }
 
-/* mermaid 占位容器（构建期生成，客户端挂载渲染器） */
+/* mermaid placeholder container (generated at build time, the client mounts the renderer) */
 .mermaid-placeholder {
   min-height: 2rem;
 }
 
-/* 图示卡（geojson/topojson/plantuml 的构建期产物）：与 code-card 同构的
-   头部标签 + 主题化图体 */
+/* Diagram card (build-time output of geojson/topojson/plantuml): a header
+   label isomorphic to code-card + a themed figure body */
 .prose .diagram-card {
   margin-block: 1.5em;
   overflow: hidden;
@@ -129,7 +136,7 @@
   height: auto;
 }
 
-/* GeoJSON 投影 SVG：几何元素 token 配色，随整页明暗交叉淡化 */
+/* GeoJSON projected SVG: geometry colored via tokens, cross-fades with the page light/dark */
 .prose .geo-map-bg {
   fill: color-mix(in oklab, var(--accent-soft) 30%, var(--surface));
 }
@@ -155,7 +162,8 @@
   stroke-width: 1.5;
 }
 
-/* 点位标注：描边光环保证在地图底色上可读（--ink 随调色板，暗色下才可读） */
+/* Map point labels: a stroke halo keeps them readable over the map fill
+   (--ink follows the palette, which is what keeps dark mode readable) */
 .prose .geo-label {
   fill: var(--ink);
   font-size: 13px;
@@ -166,7 +174,7 @@
   stroke-linejoin: round;
 }
 
-/* STL 3D 查看器占位：渲染前的最小高度防布局跳动 */
+/* STL 3D viewer placeholder: min-height prevents layout jump before rendering */
 .prose .stl-placeholder {
   min-height: 280px;
 }
@@ -181,9 +189,11 @@
   cursor: grabbing;
 }
 
-/* 代码块卡片（构建期生成）：语言标签 + 复制按钮 + shiki 双主题高亮。
-   shiki 以 defaultColor:false 输出 --shiki-light/dark 变量（无内联色），
-   文字颜色与底色都由站点 token 驱动，明暗切换与整页交叉淡化同步。 */
+/* Code block card (generated at build time): language label + copy button +
+   shiki dual-theme highlighting.
+   shiki emits the --shiki-light/dark variables with defaultColor:false (no
+   inline colors); text and background are both driven by site tokens, so the
+   light/dark switch cross-fades in sync with the whole page. */
 .prose .code-card {
   margin-block: 1.5em;
   overflow: hidden;
@@ -244,7 +254,7 @@
   color: var(--shiki-dark);
 }
 
-/* mermaid 错误文本的 pre 不继承 prose pre 的代码底色 */
+/* A mermaid error's pre must not inherit prose pre's code background */
 .prose .mermaid-placeholder pre {
   background: transparent;
   border: none;
@@ -252,7 +262,8 @@
   color: inherit;
 }
 
-/* 表格：横向滚动容器（构建期包裹），窄屏保持列宽可读而不是挤压换行 */
+/* Tables: horizontal scroll container (wrapped at build time) keeps columns
+   readable on narrow screens instead of squeezing them to wrap */
 .prose .table-scroll {
   overflow-x: auto;
 }
@@ -261,8 +272,9 @@
   min-width: 36rem;
 }
 
-/* Hero 纸片便签（纯装饰，aria-hidden）：撕边 clip-path + 横线纸纹 +
-   随撕边轮廓的投影（clip-path 会裁掉 box-shadow，故用 drop-shadow）。 */
+/* Hero paper note (pure decoration, aria-hidden): torn-edge clip-path +
+   ruled paper lines + a shadow following the torn outline (clip-path clips
+   box-shadow, hence drop-shadow). */
 .paper-note {
   background:
     repeating-linear-gradient(transparent 0 30px, color-mix(in oklab, var(--line) 60%, transparent) 30px 31px),
@@ -302,19 +314,21 @@
   filter: drop-shadow(0 10px 18px color-mix(in oklab, var(--ink) 14%, transparent));
 }
 
-/* 素面变体：同一撕边与投影，去掉横线纸纹 —— 横线只配静态列表；
-   中段可滚动的交互纸面（zjsearch 澄清门问询纸条）钉在素面条上，
-   文字滚动才不会漂过固定的横线。 */
+/* Blank variant: same torn edge and shadow, minus the ruled lines — ruling
+   only suits static lists; the scrollable interactive paper (the zjsearch
+   clarification-gate query slip) is pinned to this blank strip so scrolling
+   text never drifts past fixed ruled lines. */
 .paper-note--blank {
   background: var(--surface);
 }
 
-/* 正文图片可点开灯箱（Prose 委托），放大镜光标提示可预览 */
+/* Article images open in a lightbox (delegated by Prose); the zoom-in cursor
+   hints at the preview */
 .prose :where(img):not(:where([class~="not-prose"] *)) {
   cursor: zoom-in;
 }
 
-/* ==高亮== / <mark>：柔金底、墨字 */
+/* ==highlight== / <mark>: soft gold background, ink text */
 .prose :where(mark):not(:where([class~="not-prose"] *)) {
   padding: 0.05em 0.25em;
   border-radius: 0.25rem;
@@ -322,9 +336,11 @@
   color: var(--ink);
 }
 
-/* <kbd> 键盘键：键帽感 —— 细边 + 底部厚边 + 等宽。
-   文字色显式取 --ink（不可继承 prose 的半透明 body 色 —— 带 alpha 的前景
-   色会让对比度无法判定，a11y 审计直接判 fail）。 */
+/* <kbd> keyboard keys: keycap feel — thin border + thick bottom edge +
+   monospace.
+   Text color explicitly takes --ink (it must not inherit prose's
+   semi-transparent body color — an alpha-bearing foreground makes contrast
+   undecidable and the a11y audit fails outright). */
 .prose :where(kbd):not(:where([class~="not-prose"] *)) {
   display: inline-block;
   padding: 0.1em 0.45em;
@@ -338,14 +354,16 @@
   line-height: 1.4;
 }
 
-/* KaTeX 渲染失败的原文本（零宽字符等场景）：danger 色提示作者修复。
-   KaTeX 给错误片段注入行内 style="#cc0000"，必须 !important 压过 ——
-   否则暗色底对比度 2.95:1，挂 Lighthouse color-contrast 门禁。 */
+/* KaTeX's raw fallback text on render failure (zero-width chars etc.):
+   danger color prompts the author to fix it.
+   KaTeX injects inline style="#cc0000" on the error fragment, so !important
+   is required to beat it — otherwise it is 2.95:1 on the dark background and
+   fails the Lighthouse color-contrast gate. */
 .prose :where(.katex-error):not(:where([class~="not-prose"] *)) {
   color: var(--danger) !important;
 }
 
-/* <details> 折叠块 */
+/* <details> disclosure block */
 .prose :where(details):not(:where([class~="not-prose"] *)) {
   margin-block: 1.25em;
   padding: 0.6rem 1rem;
@@ -360,8 +378,10 @@
   color: var(--ink);
 }
 
-/* Obsidian Callouts（tools/callouts.ts 输出）：类别 → --callout-color，
-   边框与底色都从这一个变量派生，叠加在表意之上只差一层透明度 */
+/* Obsidian Callouts (output of tools/callouts.ts): category →
+   --callout-color; both border and background derive from this one variable,
+   the background being just the semantic color one transparency layer above
+   the surface */
 .prose .callout {
   --callout-color: var(--accent-strong);
   margin-block: 1.5em;
@@ -378,8 +398,9 @@
 .prose .callout-title {
   margin: 0 0 0.35rem;
   font-weight: 600;
-  /* 装饰色直接当标题色对比度不足（amber note 在自着色底上仅 1.53:1）：
-     往墨色收 55% 保住色相，明暗两态全部类型 ≥ 4.5:1（最差 light note 5.56） */
+  /* The raw decorative color as title color lacks contrast (amber note on
+     its own tinted background is only 1.53:1): pulled 55% toward ink to keep
+     the hue; every type in both modes is ≥ 4.5:1 (worst is light note 5.56) */
   color: color-mix(in oklab, var(--callout-color) 45%, var(--ink));
 }
 

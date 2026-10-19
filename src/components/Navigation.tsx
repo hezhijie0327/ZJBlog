@@ -1,5 +1,7 @@
-// 顶部导航：sticky 毛玻璃、桌面链接 + 移动端抽屉、搜索/主题/语言/RSS/GitHub/支持操作区。
-// 窄屏（<sm）时 RSS/支持 收进抽屉（抽屉内本就有第二入口），头部图标行才放得下 320px。
+// Top navigation: sticky frosted glass, desktop links + mobile drawer, and a
+// search/theme/language/RSS/GitHub/support action area.
+// On narrow screens (<sm) RSS/support fold into the drawer (it already holds a
+// second entry) so the header icon row fits within 320px.
 
 import { Languages, Menu, MonitorDown, Search, X } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -13,10 +15,13 @@ import { ICON_BTN } from "@/lib/styles.ts";
 
 const MOBILE_MENU_ID = "mobile-menu";
 
-/** 「安装 App」图标钮（beforeinstallprompt 驱动，DESIGN.md §18）——位次与
-    ZJSearch HeaderActions 同语言：右侧图标组首位、搜索左侧。按钮只在事件
-    捕获后出现（SSR 与水合初帧都不渲染，无水合分歧）；iOS Safari 不派发该
-    事件，按钮永不出现，安装走系统「分享 → 添加到主屏幕」。 */
+/** "Install App" icon button (driven by beforeinstallprompt, DESIGN.md §18)
+    -- placement speaks the same language as ZJSearch HeaderActions: first in
+    the right icon group, left of search. The button appears only after the
+    event is captured (not rendered during SSR or the first hydrated frame, no
+    hydration mismatch); iOS Safari never dispatches the event so the button
+    never appears there, and installation goes through the system
+    "Share -> Add to Home Screen". */
 function InstallAppButton() {
   const t = useT();
   const [available, setAvailable] = useState(false);
@@ -54,8 +59,9 @@ export function Navigation() {
     { name: t("nav.support"), href: "/support/" },
   ];
 
-  // 激活态从 payload 的页面类型推导（而非 window.location）：
-  // SSR 与客户端首帧渲染完全一致，hydration 才能无缝复用预渲染 DOM
+  // Active state is derived from the payload's page type (not window.location):
+  // SSR and the client's first render match exactly, so hydration can reuse
+  // the prerendered DOM seamlessly
   const activeHref = (() => {
     switch (data?.globals.page) {
       case "home":
@@ -83,7 +89,8 @@ export function Navigation() {
     window.dispatchEvent(new CustomEvent("open-command-palette"));
   };
 
-  // Escape 关闭抽屉；换页（含前进/后退）后收起，避免遮住新页面
+  // Escape closes the drawer; it also collapses after navigation (including
+  // back/forward) so it never covers the new page
   useEffect(() => {
     if (!isMenuOpen) {
       return;
@@ -98,7 +105,7 @@ export function Navigation() {
       window.removeEventListener("keydown", onKeydown);
     };
   }, [isMenuOpen]);
-  // biome-ignore lint/correctness/useExhaustiveDependencies: href 变化即导航信号（含前进/后退），收起抽屉
+  // biome-ignore lint/correctness/useExhaustiveDependencies: a href change is the navigation signal (including back/forward); collapse the drawer
   useEffect(() => {
     setIsMenuOpen(false);
   }, [href]);
@@ -107,11 +114,13 @@ export function Navigation() {
     <header className="app-bar sticky top-0 z-50 border-b border-line/80 bg-bg/80 backdrop-blur-md">
       <div className="container mx-auto px-4">
         <div className="flex h-14 items-center justify-between gap-3">
-          {/* Logo（纯文字字标 + 品牌句号，头像只在 Hero 纸片与署名卡出现） */}
+          {/* Logo (text wordmark + brand period only; the avatar appears only
+              on the Hero paper card and the author card) */}
           <Link className="group flex items-center" href="/">
             <span className="whitespace-nowrap font-serif text-xl font-semibold tracking-tight sm:text-2xl">
               {t("site.brand")}
-              {/* 品牌句号（DESIGN.md §2.1）：实心金点收尾，与品牌标句号同色系 */}
+              {/* Brand period (DESIGN.md §2.1): a solid gold dot as the closing
+                  mark, same color family as the logo's period */}
               <span
                 aria-hidden="true"
                 className="ms-[0.14em] inline-block size-[0.25em] rounded-full bg-accent-strong"
@@ -119,7 +128,7 @@ export function Navigation() {
             </span>
           </Link>
 
-          {/* 桌面导航 */}
+          {/* Desktop nav */}
           <nav className="hidden items-center gap-1 md:flex">
             {navigation.map((item) => {
               const isActive = item.href === activeHref;
@@ -142,7 +151,8 @@ export function Navigation() {
             })}
           </nav>
 
-          {/* 右侧操作区（安装/搜索/主题/语言 + 小屏菜单） */}
+          {/* Right action area (install/search/theme/language + small-screen
+              menu) */}
           <div className="flex items-center gap-0.5">
             <InstallAppButton />
             <button
@@ -155,8 +165,9 @@ export function Navigation() {
               <Search aria-hidden="true" className="size-4" />
             </button>
             <ThemeToggle />
-            {/* UI 语言切换：文A 图标（与整体图标语言统一）；aria-label/title
-                播报目标语言（t("nav.language") 随当前语言翻转） */}
+            {/* UI language switch: the Languages icon (consistent with the
+                overall icon language); aria-label/title announce the target
+                language (t("nav.language") flips with the current locale) */}
             <button
               aria-label={t("nav.language")}
               className={ICON_BTN}
@@ -185,8 +196,9 @@ export function Navigation() {
           </div>
         </div>
 
-        {/* 移动端导航：常驻 DOM + grid-rows 高度过渡（展开/收起都有动画，
-            收起态 invisible 使链接不可聚焦），页面链接（RSS 已常驻顶栏，不进抽屉） */}
+        {/* Mobile nav: persistent DOM + grid-rows height transition (animated
+            both ways; invisible when collapsed so links are unfocusable), page
+            links only (RSS already lives in the top bar, not in the drawer) */}
         <nav
           aria-hidden={!isMenuOpen}
           aria-label={t("nav.mobileNav")}

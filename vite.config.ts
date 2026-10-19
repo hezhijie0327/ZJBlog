@@ -1,10 +1,13 @@
-// ZJBlog — Vite 构建配置
+// ZJBlog — Vite build config
 //
-// 两条构建线：
-//   vite build              → 客户端 bundle 到 dist/（含 manifest 供预渲染读取资产名）
-//   vite build --ssr tools/ssr.tsx → SSR 渲染入口到 .vite-ssr/（scripts/prerender.mjs 消费）
-// 预渲染把每条路由写成完整 HTML（dist/<route>/index.html），站内导航由
-// fetch-and-swap 路由接管（见 src/lib/router.tsx）。
+// Two build lines:
+//   vite build              → client bundle into dist/ (with a manifest for
+//                             prerender to read asset names)
+//   vite build --ssr tools/ssr.tsx → SSR render entry into .vite-ssr/
+//                             (consumed by scripts/prerender.mjs)
+// Prerender writes every route as full HTML (dist/<route>/index.html);
+// in-site navigation is taken over by the fetch-and-swap router (see
+// src/lib/router.tsx).
 
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -13,8 +16,10 @@ import browserslistToEsbuild from "browserslist-to-esbuild";
 import { defineConfig, type Plugin, type ViteDevServer } from "vite";
 import manifest from "./package.json" with { type: "json" };
 
-/** 构建期生成的静态文件：生产由预渲染落盘 dist/，dev 缺了会导致命令面板
- *  索引 404、RSS 入口失效 —— dev 中间件按同一路径同构地产出。 */
+/** Static files generated at build time: in production, prerender writes them
+ *  into dist/; missing in dev, the command palette index 404s and the RSS
+ *  entry breaks — the dev middleware serves them isomorphically at the same
+ *  paths. */
 const GENERATED_FILES: Record<string, { fn: string; type: string }> = {
   "/rss.xml": { fn: "generateRss", type: "application/rss+xml; charset=utf-8" },
   "/sitemap.xml": { fn: "generateSitemap", type: "application/xml; charset=utf-8" },
@@ -25,24 +30,28 @@ const GENERATED_FILES: Record<string, { fn: string; type: string }> = {
   "/manifest.json": { fn: "generateManifest", type: "application/manifest+json; charset=utf-8" },
 };
 
-/** Dev 中间件：页面请求走与生产一致的 SSR 渲染（ssrLoadModule 复用 tools/ssr.tsx），
- *  生成文件同构地产出（GENERATED_FILES），资源 / 模块请求放行给 Vite。
- *  content/ 下的 md 变更触发整页刷新。 */
+/** Dev middleware: page requests go through the same SSR rendering as
+ *  production (ssrLoadModule reuses tools/ssr.tsx), generated files are
+ *  produced isomorphically (GENERATED_FILES), and asset/module requests pass
+ *  through to Vite. md changes under content/ trigger a full page reload. */
 function plgDevServer(): Plugin {
   return {
     name: "blog-dev-server",
     apply: "serve",
     configureServer(server: ViteDevServer) {
       server.watcher.add("content");
-      // content 下的文件变动必须让 SSR 模块失效：loadContent 的索引缓存在
-      // 模块作用域里，不失效的话新增/移动/删除 md 在 dev 里都不生效。
-      // vite 6+ 按环境拆分模块图——server.moduleGraph 只覆盖 client，
-      // ssrLoadModule 的缓存挂在 ssr 环境上，两端都要失效（只调前者时
-      // 内容改动在 dev 里永远拿旧编译）。
+      // Content file changes must invalidate the SSR modules: loadContent's
+      // index cache lives in module scope, so without invalidation,
+      // adding/moving/deleting md files has no effect in dev.
+      // Vite 6+ splits the module graph per environment — server.moduleGraph
+      // only covers the client, while ssrLoadModule's cache hangs off the ssr
+      // environment; both must be invalidated (calling only the former means
+      // content edits keep serving stale compilation in dev forever).
       const invalidateContent = (file: string) => {
-        // watcher 事件在 Windows 下是「相对路径 + 反斜杠」（实测
-        // content\blogs\x.md），规范化后按路径段锚定匹配，避免误伤
-        // mycontent/ 一类目录名
+        // Watcher events on Windows are "relative path + backslashes"
+        // (observed as content\blogs\x.md); normalize, then anchor-match on
+        // path segments to avoid false positives on directory names such as
+        // mycontent/
         if (!/(^|\/)content\//.test(file.replaceAll("\\", "/"))) {
           return;
         }
@@ -56,8 +65,10 @@ function plgDevServer(): Plugin {
       server.middlewares.use(async (req, res, next) => {
         const raw = req.url ?? "/";
         const path = raw.split("?")[0] ?? "/";
-        // 加密博文独占图与生产 dist 同构：明文一律 404（vite 会直接服
-        // public/ 原图，必须先拦下），.bin 密文由构建管线现算
+        // Locked-post-exclusive images mirror the production dist semantics:
+        // plaintext always 404s (Vite would serve the original straight from
+        // public/, so intercept first); .bin ciphertext is computed on the
+        // fly by the build pipeline
         if (path.startsWith("/images/")) {
           try {
             const mod = (await server.ssrLoadModule("/tools/lockedImages.ts")) as {
@@ -68,7 +79,7 @@ function plgDevServer(): Plugin {
             try {
               decoded = decodeURIComponent(path);
             } catch {
-              // 非法编码按原样处理
+              // Malformed encoding: fall back to the raw value
             }
             if (decoded.endsWith(".bin")) {
               const bytes = mod.imageBinBytes(decoded.replace(/^\/images\//, ""));
@@ -88,8 +99,9 @@ function plgDevServer(): Plugin {
             return;
           }
         }
-        // 导出的原始 Markdown（与生产 index.md 同源同语义）：dev 直接服
-        // content/ 原文；锁定文 404（fail-closed，与 prerender 不落盘一致）
+        // Exported raw Markdown (same source and semantics as the production
+        // index.md): dev serves the content/ original directly; locked posts
+        // 404 (fail-closed, consistent with prerender not writing them to disk)
         const mdMatch = /\/(blogs|projects|travels)\/(.+)\/index\.md$/.exec(path);
         if (mdMatch) {
           try {
@@ -105,7 +117,7 @@ function plgDevServer(): Plugin {
             try {
               slug = decodeURIComponent(slug);
             } catch {
-              // 非法编码按原样处理
+              // Malformed encoding: fall back to the raw value
             }
             const entry = mod.loadContent()[kind].find((item) => item.slug === slug);
             if (!entry || entry.locked !== undefined) {
@@ -170,10 +182,12 @@ export default defineConfig(({ isSsrBuild }) => ({
   publicDir: "public/",
   server: {
     port: 5175,
-    // giscus iframe 以 <link crossorigin="anonymous"> 加载自托管主题
-    // public/giscus-*.css，跨域（giscus.app）必须回 ACAO，否则主题样式表
-    // 被浏览器拦截、评论区只剩 currentColor 黑框（生产侧由 public/_headers
-    // 提供同一头）。Vite 默认 origin 白名单只含 localhost。
+    // The giscus iframe loads the self-hosted themes public/giscus-*.css via
+    // <link crossorigin="anonymous">; the cross-origin request (giscus.app)
+    // must get ACAO back, otherwise the browser blocks the theme stylesheet
+    // and the comments section degrades to currentColor black boxes (the
+    // production side provides the same header via public/_headers). Vite's
+    // default origin whitelist only contains localhost.
     cors: {
       origin: [/^https?:\/\/(?:(?:[^:]+\.)?localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/, "https://giscus.app"],
     },
@@ -184,9 +198,11 @@ export default defineConfig(({ isSsrBuild }) => ({
     emptyOutDir: true,
     manifest: !isSsrBuild,
     sourcemap: false,
-    // 客户端入口直接指 src/main.tsx：项目没有手写 HTML 模板（所有路由的
-    // HTML 由 ssr.tsx 生成、预渲染落盘），Vite 默认的 index.html 输入是死重。
-    // dev 侧同理 —— dev 中间件在 Vite 内置中间件之前拦截全部文档请求。
+    // The client entry points directly at src/main.tsx: the project has no
+    // handwritten HTML template (every route's HTML is generated by ssr.tsx
+    // and written to disk by prerender), so Vite's default index.html input
+    // is dead weight. Same on the dev side — the dev middleware intercepts
+    // all document requests ahead of Vite's built-in middlewares.
     rollupOptions: isSsrBuild
       ? { output: { entryFileNames: "ssr.mjs" } }
       : { input: fileURLToPath(new URL("./src/main.tsx", import.meta.url)) },

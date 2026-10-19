@@ -1,12 +1,15 @@
-/* Marpit 主题「zjblog」：deck 幻灯片的构建期主题（tools/deck.ts 经
- * themeSet.add 注册为默认主题）。颜色/字体一律引用站点 token 变量
- * （src/styles/tokens.css），deck 自动跟随站点明暗主题交叉淡化。
+/* Marpit theme "zjblog": build-time theme for deck slides (registered as the
+ * default theme by tools/deck.ts via themeSet.add). Colors/fonts all reference
+ * site token variables (src/styles/tokens.css), so the deck automatically
+ * cross-fades with the site's light/dark theme.
  *
- * 注意 marpit 会把本文件的选择器 scoping 到 `div.marpit > section` 下
- * （实测产物），因此这里只写「亮态默认值」；依赖 html.dark 祖先的选择器
- * 会被 scoping 改写破坏，一律放 DeckViewer 的宿主 CSS（如 shiki 暗态切换）。
- * 字号用 px（画布 1280×720 固定，整体由播放器 transform 缩放）。
- * 选择器按特异性升序排列（biome noDescendingSpecificity）：.lead 覆盖放最后。 */
+ * Note that marpit scopes this file's selectors under `div.marpit > section`
+ * (verified in the output), so only "light-mode defaults" are written here;
+ * selectors relying on an html.dark ancestor would be broken by the scoping
+ * rewrite and belong in DeckViewer's host CSS (e.g. the shiki dark switch).
+ * Font sizes are px (canvas fixed at 1280×720, scaled as a whole by the
+ * player's transform). Selectors are ordered by ascending specificity
+ * (biome noDescendingSpecificity): the .lead override goes last. */
 
 /* @theme zjblog */
 
@@ -21,9 +24,10 @@ section {
   line-height: 1.65;
 }
 
-/* 页题层级说明：deck.ts 构建期把标题整体降一级（h1 让给文章题），因此
- * `#` 页题渲染为 h2、`##` 子标题渲染为 h3——主题按降级后的真实层级配置
- * 字号（60/44/32），不要按源码层级思维调这里。 */
+/* Slide heading levels: deck.ts demotes all headings one level at build time
+ * (h1 is ceded to the post title), so a `#` slide title renders as h2 and a
+ * `##` subtitle as h3 — sizes here are configured for the demoted, effective
+ * levels (60/44/32); do not tune them thinking in source-level terms. */
 h1,
 h2,
 h3,
@@ -108,7 +112,7 @@ hr {
   margin: 1em 0;
 }
 
-/* 行内代码 */
+/* Inline code */
 section code {
   font-family: var(--font-mono);
   font-size: 0.82em;
@@ -118,7 +122,7 @@ section code {
   padding: 0.08em 0.35em;
 }
 
-/* 键位芯片（raw HTML <kbd>） */
+/* Key chips (raw HTML <kbd>) */
 section kbd {
   font-family: var(--font-mono);
   font-size: 0.8em;
@@ -130,9 +134,11 @@ section kbd {
   padding: 0.1em 0.5em;
 }
 
-/* mermaid 图表（站内同款占位容器，DeckViewer 挂 MermaidRenderer 惰性渲染）：
-   保持 block（flex 会外层 shrink-to-fit，svg 的 width:100% 循环依赖回落
-   300px 默认宽）+ 撑满版心，限高 430px 防顶碎 720px 定高幻灯片 */
+/* Mermaid diagrams (same placeholder container as the site; DeckViewer mounts
+   MermaidRenderer for lazy rendering): keep block (flex would shrink-to-fit
+   the outer layer and the svg's width:100% circular dependency falls back to
+   the 300px default width) + fill the content width, capped at 430px so it
+   does not blow apart the fixed-height 720px slide */
 section .mermaid-placeholder {
   margin: 0 auto 0.8em;
 }
@@ -144,7 +150,8 @@ section .mermaid-placeholder svg {
   max-height: 430px !important;
 }
 
-/* Callouts（deckCallouts 移植，类别配色对齐 prose.css 的 token 映射） */
+/* Callouts (ported in deckCallouts; category colors align with prose.css's
+   token mapping) */
 section .callout {
   --callout-color: var(--accent-strong);
   margin: 0 0 0.8em;
@@ -195,14 +202,14 @@ section .callout-quote {
   --callout-color: var(--ink-3);
 }
 
-/* KaTeX：块级公式居中限宽，防止溢出画布 */
+/* KaTeX: center display math and cap its width to keep it inside the canvas */
 section .katex-display {
   margin: 0.4em 0 0.8em;
   overflow-x: auto;
   overflow-y: hidden;
 }
 
-/* 定义列表 */
+/* Definition lists */
 section dl {
   margin: 0 0 0.8em;
 }
@@ -218,13 +225,14 @@ section dd {
   color: var(--ink-2);
 }
 
-/* 任务清单：复选框为纯装饰（构建期 aria-hidden），隐藏原生列表标记 */
+/* Task lists: checkboxes are purely decorative (aria-hidden at build time);
+   hide the native list marker */
 section li:has(> input[type="checkbox"]) {
   list-style: none;
   margin-inline-start: -1.1em;
 }
 
-/* 行内标签（raw HTML）：<mark>/<u>/<del>/<sup>/<sub> */
+/* Inline marks (raw HTML): <mark>/<u>/<del>/<sup>/<sub> */
 section mark {
   background: var(--highlight-bg);
   color: var(--ink);
@@ -247,7 +255,8 @@ section sub {
   font-size: 0.7em;
 }
 
-/* raw <hr>（markdown 层的 ---/*** 全是分页符，分隔线只能显式写 HTML） */
+/* raw <hr> (at the markdown layer ---/*** are all page breaks; a rule can
+   only be written as explicit HTML) */
 section hr {
   height: 3px;
   border: none;
@@ -256,8 +265,9 @@ section hr {
   margin: 1em 0;
 }
 
-/* 代码块（deck.ts 构建期已重高亮为 shiki 双主题变量；亮态默认值在此，
- * 暗态切换在 DeckViewer 宿主 CSS） */
+/* Code blocks (re-highlighted at build time by deck.ts into shiki dual-theme
+ * variables; light-mode defaults here, dark-mode switch in DeckViewer's host
+ * CSS) */
 section pre {
   margin: 0 0 0.8em;
   padding: 20px 26px;
@@ -308,21 +318,24 @@ td {
 
 img {
   max-width: 100%;
-  /* 幻灯片画布定高：图片不许把内容顶出 720px（超出部分会被裁掉） */
+  /* The slide canvas has a fixed height: images must not push content past
+     720px (overflow is clipped) */
   max-height: 480px;
   object-fit: contain;
   border-radius: 12px;
 }
 
-/* 页码：marpit 归一化已给 section::after 定位（右下、padding: inherit），
- * 主题只负责外观；指令默认关闭，deck 里写 <!-- paginate: true --> 开启 */
+/* Page numbers: marpit normalization already positions section::after
+ * (bottom right, padding: inherit); the theme only handles appearance. The
+ * directive is off by default; enable with <!-- paginate: true --> in a deck */
 section::after {
   font-family: var(--font-mono);
   font-size: 17px;
   color: var(--ink-3);
 }
 
-/* 标题页变体：<!-- _class: lead -->（放最后，覆盖上面的元素默认值） */
+/* Title-slide variant: <!-- _class: lead --> (placed last, overriding the
+   element defaults above) */
 section.lead {
   display: flex;
   flex-direction: column;

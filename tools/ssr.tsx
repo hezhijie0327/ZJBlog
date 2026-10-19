@@ -1,9 +1,11 @@
-// SSR 渲染入口（tools/ 下的 Node 侧模块）：dev 中间件与预渲染共用的整页
-// HTML 组装器。每条路由输出完整 HTML —— 首屏（爬虫 / Lighthouse / 用户）
-// 看到全量内容，站内导航由客户端 fetch-and-swap 路由接管。
+// SSR render entry (Node-side module under tools/): the full-page HTML
+// assembler shared by the dev middleware and prerender. Every route outputs
+// complete HTML — first paint (crawlers / Lighthouse / users) sees the full
+// content, while in-site navigation is taken over by the client-side
+// fetch-and-swap router.
 //
 //   vite build --ssr tools/ssr.tsx → .vite-ssr/ssr.mjs
-//   scripts/prerender.mjs → import .vite-ssr/ssr.mjs 调用 prerenderAll()
+//   scripts/prerender.mjs → imports .vite-ssr/ssr.mjs and calls prerenderAll()
 
 import { copyFileSync, cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -46,8 +48,9 @@ import {
 import { allLockedSharedSrcs, allSealedImages } from "./lockedImages.ts";
 import { allRoutes, buildPayload } from "./payloads.ts";
 
-/** SSR 用同步页面表：renderToString 无法等待 React.lazy，经此表直接渲染
- *  真实内容（客户端由 main.tsx 预取 chunk 后水合，见 pages/registry.ts）。 */
+/** Synchronous page table for SSR: renderToString cannot await React.lazy,
+ *  so real content is rendered directly via this table (the client prefetches
+ *  the chunk in main.tsx before hydrating; see pages/registry.ts). */
 const SYNC_PAGES: SyncPages = {
   home: IndexPage,
   blogs: BlogsPage,
@@ -62,7 +65,7 @@ const SYNC_PAGES: SyncPages = {
   og: OgPage,
 };
 
-/** 页面 payload kind → registry 里对应 chunk 的源文件（manifest 键）。 */
+/** Page payload kind → the corresponding chunk's source file in the registry (manifest key). */
 const PAGE_CHUNK_SOURCES: Record<Exclude<PageKind, "not-found">, string> = {
   home: "src/pages/IndexPage.tsx",
   blogs: "src/pages/BlogsPage.tsx",
@@ -80,15 +83,15 @@ const PAGE_CHUNK_SOURCES: Record<Exclude<PageKind, "not-found">, string> = {
 interface AssetUrls {
   js: string;
   css: string[];
-  /** 入口 CSS 内容（构建期读出，内联进每页 <head>，消除串行请求的渲染阻塞） */
+  /** Entry CSS content (read at build time, inlined into each page's <head>, removing the render-blocking serial request) */
   cssInline: string;
-  /** 生产构建完整 manifest，用于解析每页 chunk 的 modulepreload */
+  /** Full production-build manifest, used to resolve each page chunk's modulepreload */
   manifest?: Record<string, { file: string }>;
 }
 
 const DIST_DIR = path.resolve("dist");
 
-/** 客户端资产名（构建期 manifest 解析，哈希文件名）。 */
+/** Client asset names (resolved from the build-time manifest; hashed file names). */
 function clientAssets(): AssetUrls {
   const manifestPath = path.join(DIST_DIR, ".vite", "manifest.json");
   const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as Record<
@@ -97,18 +100,19 @@ function clientAssets(): AssetUrls {
   >;
   const entry = Object.values(manifest).find((chunk) => chunk.isEntry);
   if (!entry) {
-    throw new Error("manifest 中找不到客户端入口");
+    throw new Error("client entry not found in the Vite manifest");
   }
   const css = (entry.css ?? []).map((file) => `/${file}`);
-  // 单一 CSS 入口是既有设计（请求合并）；内联省掉它仅剩的一次串行 RTT。
-  // </style> 防御性转义：构建产物 CSS 理论上不会包含该子串。
+  // A single CSS entry is an existing design decision (request coalescing);
+  // inlining saves its one remaining serial RTT. Defensive escaping of
+  // </style>: build-output CSS should not contain that substring in theory.
   const cssInline = css
     .map((href) => readFileSync(path.join(DIST_DIR, href.slice(1)), "utf8").replaceAll("</style", "<\\/style"))
     .join("\n");
   return { js: `/${entry.file}`, css, cssInline, manifest };
 }
 
-/** 当前页 chunk 的 modulepreload（与入口 JS 并行取块，水合前就绪）。 */
+/** modulepreload for the current page's chunk (fetched in parallel with the entry JS, ready before hydration). */
 function pagePreload(kind: PageKind, assets: AssetUrls): string {
   if (kind === "not-found" || !assets.manifest) {
     return "";
@@ -117,16 +121,17 @@ function pagePreload(kind: PageKind, assets: AssetUrls): string {
   return chunk ? `\n    <link rel="modulepreload" crossorigin href="/${chunk}">` : "";
 }
 
-/** Dev 模式资产：源码入口 + vite client（CSS 经 JS 模块注入）。 */
+/** Dev-mode assets: source entry + vite client (CSS injected via JS modules). */
 const DEV_ASSETS: AssetUrls = { js: "/src/main.tsx", css: [], cssInline: "" };
 
 function escapeHtml(text: string): string {
   return text.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
 }
 
-/** page-data 剔除大体积字段：正文 HTML（contentHtml）与旅行地图 SVG
- *  （mapSvg）均单份存于 DOM（SEO/首帧看 DOM，客户端换页时从 fetch 到的
- *  文档解析回填），避免 SPA 契约让文档体积翻倍。 */
+/** Strip bulky fields from page-data: body HTML (contentHtml) and the travel
+ *  map SVG (mapSvg) are stored single-source in the DOM (SEO/first paint read
+ *  the DOM; on client page swaps they are parsed back out of the fetched
+ *  document), so the SPA contract does not double the document size. */
 function slimForClient(data: AnyPageData): AnyPageData {
   if (isBlogPostData(data)) {
     const { contentHtml: _contentHtml, ...post } = data.post;
@@ -147,11 +152,12 @@ function slimForClient(data: AnyPageData): AnyPageData {
   return data;
 }
 
-/** 默认分享卡（public/og-default.png，1200×630；源页面 /og/，截图命令见 OgPage.tsx 头注）。 */
+/** Default share card (public/og-default.png, 1200×630; source page /og/, see the OgPage.tsx header comment for the screenshot command). */
 const OG_IMAGE = "/og-default.png";
 
-/** KaTeX 样式按需加载：仅含公式的页面注入（全站 render-blocking 代价过高）。
- *  文件在预渲染阶段从 node_modules 拷入 dist/（版本随 pnpm-lock 固定）。 */
+/** KaTeX styles loaded on demand: injected only on pages containing formulas
+ *  (render-blocking site-wide would cost too much). The file is copied from
+ *  node_modules into dist/ during prerender (version pinned by pnpm-lock). */
 const KATEX_HREF = "/katex.min.css";
 
 function katexAssetPath(): string {
@@ -159,7 +165,7 @@ function katexAssetPath(): string {
   return require.resolve("katex/dist/katex.min.css");
 }
 
-/** 页面 payload 是否需要 KaTeX 样式。 */
+/** Whether the page payload needs KaTeX styles. */
 function needsKatex(payload: AnyPageData): boolean {
   if (isBlogPostData(payload)) {
     return payload.post.needsKatex === true;
@@ -173,8 +179,9 @@ function needsKatex(payload: AnyPageData): boolean {
   return false;
 }
 
-/** 结构化数据：文章页 BlogPosting，首页 WebSite + Person，其余页不输出。
- *  加密博文不输出（description/headline 之外的元数据不该给爬虫画像）。 */
+/** Structured data: BlogPosting for post pages, WebSite + Person for the home
+ *  page, nothing elsewhere. Locked posts emit none (metadata beyond
+ *  description/headline should not profile the post for crawlers). */
 function jsonLdFor(payload: ReturnType<typeof buildPayload>, pathname: string): string {
   const g = payload.globals;
   if (isBlogPostData(payload)) {
@@ -219,7 +226,7 @@ function jsonLdFor(payload: ReturnType<typeof buildPayload>, pathname: string): 
   return "";
 }
 
-/** 规范化请求路径：解码、补全首尾斜杠（与 trailingSlash 语义一致）。 */
+/** Normalize the request path: decode, complete leading/trailing slashes (consistent with trailingSlash semantics). */
 function normalizePathname(raw: string): string {
   let pathname = "/";
   try {
@@ -236,7 +243,7 @@ function normalizePathname(raw: string): string {
   return pathname;
 }
 
-/** 渲染整页 HTML。assets 缺省 = dev 模式。 */
+/** Render the full page HTML. Omitted assets = dev mode. */
 export async function renderRoute(rawPath: string, assets?: AssetUrls): Promise<string> {
   const pathname = normalizePathname(rawPath);
   const payload = buildPayload(pathname);
@@ -247,10 +254,14 @@ export async function renderRoute(rawPath: string, assets?: AssetUrls): Promise<
     g.page === "not-found"
       ? ""
       : `<link rel="canonical" href="${escapeHtml(`${g.siteUrl}${pathname === "/" ? "/" : pathname}`)}">`;
-  // 加密博文与 /og/ 一样不进索引：URL 的存在可以公开，但搜索结果里不该
-  // 出现标题/描述快照（描述已是兜底文案，标题的索引价值由作者自决）
-  // 加密博文/旅行与 /og/ 一样不进索引：URL 的存在可以公开，但搜索结果里
-  // 不该出现标题/描述快照（描述已是兜底文案，标题的索引价值由作者自决）
+  // Locked posts are noindexed like /og/: the URL's existence can be public,
+  // but search results should not show title/description snapshots (the
+  // description is already fallback copy; whether the title is worth indexing
+  // is the author's call)
+  // Locked posts/travels are noindexed like /og/: the URL's existence can be
+  // public, but search results should not show title/description snapshots
+  // (the description is already fallback copy; whether the title is worth
+  // indexing is the author's call)
   const noindex =
     g.page === "og" ||
     (isBlogPostData(payload) && payload.post.locked !== undefined) ||
@@ -272,8 +283,9 @@ export async function renderRoute(rawPath: string, assets?: AssetUrls): Promise<
   ].join("\n    ");
   const jsonLd = jsonLdFor(payload, pathname);
   const jsonLdTag = jsonLd ? `<script type="application/ld+json">${jsonLd.replaceAll("<", "\\u003c")}</script>` : "";
-  // 原始 Markdown 直链（复制为 Markdown / agent 直取，prerenderAll 落盘
-  // index.md）；锁定文不提供。三种详情页各指自己的 <kind>/<slug>/index.md。
+  // Direct link to the raw Markdown (Copy as Markdown / direct agent fetch;
+  // prerenderAll writes index.md to disk); locked posts get none. Each of the
+  // three detail pages points at its own <kind>/<slug>/index.md.
   const markdownAltHref = (() => {
     if (isBlogPostData(payload) && payload.post.locked === undefined) {
       return `${g.siteUrl}/blogs/${encodeURIComponent(payload.post.slug)}/index.md`;
@@ -289,11 +301,14 @@ export async function renderRoute(rawPath: string, assets?: AssetUrls): Promise<
   const markdownAltTag = markdownAltHref
     ? `<link rel="alternate" type="text/markdown" href="${escapeHtml(markdownAltHref)}">`
     : "";
-  // KaTeX 样式只服务正文深处的公式（首屏不可见），以 print→all 异步技巧
-  // 加载避免阻塞首帧（实测 desktop 审计 97→99）；noscript 兜底无 JS 场景。
-  // 生产指向拷贝到 dist 的文件，dev 直连 node_modules（/@fs/ 需要 URL 形态
-  // 路径：POSIX 去掉开头一根斜杠（与前缀拼回），Windows 盘符路径 C:\… 反
-  // 斜杠转正斜杠（/ @fsC:\… 会 404，公式页 dev 无样式））。
+  // KaTeX styles only serve formulas deep in the body (invisible at first
+  // paint), loaded via the print→all async trick to avoid blocking the first
+  // frame (measured: desktop audit 97→99); noscript covers the no-JS case.
+  // Production points at the file copied into dist; dev links node_modules
+  // directly (/@fs/ needs a URL-shaped path: on POSIX strip the leading slash
+  // (it is rejoined with the prefix); on Windows turn the drive path C:\…
+  // backslashes into forward slashes (/ @fsC:\… would 404 and formula pages
+  // would have no styles in dev)).
   const katexHref = a.js.startsWith("/src/")
     ? `/@fs/${katexAssetPath()
         .replace(/^[/\\]/, "")
@@ -303,19 +318,23 @@ export async function renderRoute(rawPath: string, assets?: AssetUrls): Promise<
     ? `<link data-katex="true" rel="stylesheet" href="${katexHref}" media="print" onload="this.media='all'">` +
       `<noscript><link data-katex="true" rel="stylesheet" href="${katexHref}"></noscript>`
     : "";
-  // 生产：入口 CSS 以 <link> 送达（单一 CSS 入口=请求合并的既有设计；对比
-  // 实验显示内联与 <link> 的 simulated FCP 相同，首帧由关键链之外的因素
-  // 主导，保留 <link> 换取浏览器 CSS 缓存复用）。dev：CSS 经 vite JS 模块
-  // 注入，KaTeX 走 /@fs/。
+  // Production: entry CSS is delivered via <link> (single CSS entry = the
+  // existing request-coalescing design; the comparison experiment showed
+  // inline and <link> have identical simulated FCP — first paint is dominated
+  // by factors outside the critical chain — so keep <link> in exchange for
+  // browser CSS cache reuse). Dev: CSS is injected via vite JS modules; KaTeX
+  // goes through /@fs/.
   const cssLinks = a.css
     .map((href) => `<link rel="stylesheet" crossorigin href="${href}">`)
     .concat(katexLink)
     .join("\n    ");
   const devClient = a.js.startsWith("/src/") ? `<script type="module" src="/@vite/client"></script>` : "";
-  // 幻灯片默认逐页形态把后续页裁剪在 16:9 舞台外；无 JS 时用这份样式展开为
-  // 堆叠视图（head 里的 noscript 内容仅在 JS 不可用时生效，SPA 换页必然有
-  // JS，不需跟随）。样式随 head 送达，避免 body 内 HOST_CSS 覆盖顺序问题
-  // 之外的耦合。
+  // The slides' default one-page-at-a-time form clips later slides outside
+  // the 16:9 stage; without JS this style expands them into a stacked view
+  // (noscript content in the head only applies when JS is unavailable — SPA
+  // page swaps always have JS, so it does not need to follow). The style
+  // arrives with the head, avoiding coupling beyond the HOST_CSS override
+  // ordering issue inside the body.
   const deckNoscript =
     isBlogPostData(payload) && payload.post.deck
       ? `<noscript><style data-deck-noscript>${DECK_NOSCRIPT_CSS}</style></noscript>`
@@ -355,14 +374,14 @@ export async function renderRoute(rawPath: string, assets?: AssetUrls): Promise<
 </html>`;
 }
 
-/** 预渲染全部路由 + 静态资源文件到 dist/。 */
+/** Prerender all routes + static asset files into dist/. */
 export async function prerenderAll(): Promise<void> {
   const assets = clientAssets();
   const routes = allRoutes();
 
   for (const route of routes) {
     const html = await renderRoute(route, assets);
-    // 路由 URL 里的 slug 是 encode 过的，磁盘路径用解码后的原始 slug
+    // Slugs in route URLs are encoded; disk paths use the decoded raw slug
     const relative = route === "/" ? "index.html" : `${route.slice(1)}index.html`;
     const filePath = path.join(DIST_DIR, ...relative.split("/").map((segment) => decodeURIComponent(segment)));
     mkdirSync(path.dirname(filePath), { recursive: true });
@@ -370,13 +389,14 @@ export async function prerenderAll(): Promise<void> {
     console.log(`  prerendered ${route}`);
   }
 
-  // 404 页（wrangler not_found_handling = 404-page 时直接服用）
+  // 404 page (served directly when wrangler not_found_handling = 404-page)
   writeFileSync(path.join(DIST_DIR, "404.html"), await renderRoute("/__not_found__", assets));
 
-  // 原始 Markdown 导出（「复制为 Markdown」按钮的数据源 + agent 直取的
-  // index.md 直链，<head> 有 alternate 指向）：未锁定内容各落一份原文，
-  // 100% 保真；锁定文不落盘（fail-closed，页面也不渲染按钮）。deck 文
-  // 导出的就是标准 Marp 文档。
+  // Raw Markdown export (data source of the "Copy as Markdown" button + the
+  // index.md direct link agents fetch, pointed at by the <head> alternate):
+  // unlocked content each writes one verbatim copy, 100% faithful; locked
+  // posts are never written to disk (fail-closed; the page does not render
+  // the button either). Deck posts export as standard Marp documents.
   const markdownTargets: Array<readonly ["blogs" | "projects" | "travels", { slug: string; locked?: unknown }]> = [
     ...loadContent().blogs.map((entry) => ["blogs", entry] as const),
     ...loadContent().projects.map((entry) => ["projects", entry] as const),
@@ -397,7 +417,7 @@ export async function prerenderAll(): Promise<void> {
     console.log(`  exported ${markdownCount} markdown file(s) (index.md)`);
   }
 
-  // 机器可读静态文件
+  // Machine-readable static files
   const staticFiles: Array<[string, string]> = [
     ["rss.xml", generateRss()],
     ["sitemap.xml", generateSitemap()],
@@ -412,9 +432,11 @@ export async function prerenderAll(): Promise<void> {
     console.log(`  generated /${name}`);
   }
 
-  // 加密文的独占图：加密为 .bin 资产并删除 dist 内明文原图（vite 已从
-  // public/ 拷入）。必须发生在 compress-images 之前 —— 明文删除后压缩器
-  // 自然跳过；密文内的图片引用整体位于密文内部，不受其改写影响。
+  // Locked posts' exclusive images: encrypt into .bin assets and delete the
+  // plaintext originals in dist (vite already copied them from public/).
+  // This must happen before compress-images — with the plaintext deleted the
+  // compressor naturally skips them; image references inside the ciphertext
+  // live entirely within it and are unaffected by its rewriting.
   const sealedImages = allSealedImages();
   for (const { rel, src, bytes } of sealedImages) {
     const binPath = path.join(DIST_DIR, "images", ...rel.split("/"));
@@ -426,20 +448,24 @@ export async function prerenderAll(): Promise<void> {
     console.log(`  sealed ${sealedImages.length} locked image(s) as .bin (plaintext removed)`);
   }
 
-  // 加密文引用的共享明文图清单：compress-images 据此跳过转换并保留原扩展名
-  // 文件 —— 信封密文里的引用改写不到，原图被转 webp 后删除会让解锁后的
-  // 共享图 404（压缩脚本读完即删，不进发布物）。
+  // Manifest of shared plaintext images referenced by locked posts:
+  // compress-images skips conversion based on it and keeps the original
+  // extension files — references inside the envelope ciphertext cannot be
+  // rewritten, and deleting the originals after converting to webp would 404
+  // the shared images after unlock (the compression script deletes the
+  // manifest right after reading; it never ships).
   const sharedSrcs = allLockedSharedSrcs();
   if (sharedSrcs.length > 0) {
     writeFileSync(path.join(DIST_DIR, ".locked-shared-images.json"), JSON.stringify(sharedSrcs));
     console.log(`  protected ${sharedSrcs.length} shared plaintext image(s) for locked posts`);
   }
 
-  // manifest 只在构建期用于解析资产名，发布物不需要
+  // The manifest is only used at build time to resolve asset names; the published artifact does not need it
   rmSync(path.join(DIST_DIR, ".vite"), { recursive: true, force: true });
 
-  // KaTeX 样式按需加载（needsKatex 页面注入引用）；CSS 内字体是相对路径
-  // （fonts/…），随文件一并拷入 dist/fonts/
+  // KaTeX styles loaded on demand (needsKatex pages inject the reference);
+  // fonts inside the CSS use relative paths (fonts/…) and are copied into
+  // dist/fonts/ along with the file
   const katexDist = path.dirname(katexAssetPath());
   copyFileSync(path.join(katexDist, "katex.min.css"), path.join(DIST_DIR, "katex.min.css"));
   cpSync(path.join(katexDist, "fonts"), path.join(DIST_DIR, "fonts"), { recursive: true });

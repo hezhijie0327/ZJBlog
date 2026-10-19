@@ -1,7 +1,8 @@
-// 应用组装：Provider 树 + payload 分发（判别联合 switch）。
-// 所有页面（含首页）按页分块（pages/registry.ts）；SSR/预渲染传 syncPages
-// 同步渲染真实内容，客户端首帧经 main.tsx 预取 chunk 后水合，站内换页由
-// Suspense 骨架兜底。404 体积小，保持急加载。
+// App assembly: Provider tree + payload dispatch (discriminated-union switch).
+// All pages (including home) are chunked per page (pages/registry.ts); SSR/prerender pass
+// syncPages to render real content synchronously, the client's first frame hydrates after
+// prefetching the chunk via main.tsx, and in-site navigation falls back to the Suspense
+// skeleton. 404 is small; keep it eagerly loaded.
 
 import { LoaderCircle } from "lucide-react";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
@@ -55,10 +56,12 @@ function PageFallback() {
   );
 }
 
-// 标签页标题随 UI 语言的页面：预渲染 document.title 是 zh-CN 基准（globals.title
-// 构建期拼死），EN 偏好用户在水合校正与每次换页后用当前词库重写。只覆盖标题
-// 来自词库的列表/工具页；内容页（文章/旅行/项目详情/标签）标题属作者原文、
-// 首页与 404 两语同文，均保持 payload 原值。
+// Pages whose tab titles follow the UI language: the prerendered document.title is the
+// zh-CN baseline (globals.title is baked at build time); EN-preference users get it
+// rewritten with the current wordbook after hydration correction and on every navigation.
+// Only covers list/utility pages whose titles come from the wordbook; content pages
+// (posts/travels/project details/tags) have author-original titles, and home + 404 read
+// the same in both languages — all keep the original payload values.
 const PAGE_TITLE_KEYS: Partial<Record<PageKind, StringKey>> = {
   archives: "page.archives.title",
   blogs: "page.blogs.title",
@@ -67,7 +70,7 @@ const PAGE_TITLE_KEYS: Partial<Record<PageKind, StringKey>> = {
   travels: "page.travels.title",
 };
 
-/** 挂在 Router 内的零渲染组件：locale ≠ payload 基准（zh-CN）时重写 document.title。 */
+/** Zero-render component mounted inside the Router: rewrites document.title when locale ≠ the payload baseline (zh-CN). */
 function DocumentTitleSync() {
   const { data } = useRouter();
   const locale = useLocale();
@@ -94,8 +97,9 @@ function Pages({ syncPages }: { syncPages?: SyncPages }) {
     );
   }
 
-  // payload 分发（类型守卫见 lib/types.ts）；syncPages 有值 = 服务端，同步
-  // 组件渲染真实内容（renderToString 等不了 lazy），否则走分块 + Suspense。
+  // Payload dispatch (type guards in lib/types.ts); syncPages present = server side,
+  // where sync components render real content (renderToString cannot await lazy),
+  // otherwise chunking + Suspense.
   if (isHomeData(data)) {
     const Sync = syncPages?.home;
     return (
@@ -166,12 +170,13 @@ export function App({
   syncPages,
 }: {
   initialData: AnyPageData | null;
-  /** SSR/预渲染的同步页面组件表；客户端不传，走 registry 分块。 */
+  /** Sync page component table for SSR/prerender; the client omits it and uses registry chunking. */
   syncPages?: SyncPages;
 }) {
-  // UI 语言默认跟随 payload（zh-CN，与预渲染一致保证水合无差）；挂载后从
-  // localStorage 校正一次用户偏好（与 ThemeToggle 同款模式——无法 pre-paint，
-  // 英文偏好用户会有一帧中文闪烁）。切换即时生效并同步 <html lang>。
+  // The UI language initially follows the payload (zh-CN, matching prerender so hydration
+  // has no mismatch); after mount the user preference is corrected once from localStorage
+  // (same pattern as ThemeToggle — it cannot run pre-paint, so EN-preference users see one
+  // frame of Chinese flash). Switching takes effect immediately and syncs <html lang>.
   const [locale, setLocale] = useState<UiLocale>(initialData?.globals.locale ?? "zh-CN");
   useEffect(() => {
     const stored = readLocalePreference();

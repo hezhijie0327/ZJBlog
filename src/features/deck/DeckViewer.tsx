@@ -1,17 +1,24 @@
-// 幻灯片播放器：整篇 deck 博文（BlogPostPage）与正文嵌入（Prose 占位）共用。
-// 首帧输出全部幻灯片纵向堆叠（= SSR/无 JS 形态，内容全量进 DOM，水合安全），
-// 挂载后升级为逐页播放：键盘（←→/PgUp/PgDn/Home/End）、按钮、页码、#N 深链
-// （仅整篇）、演讲者备注、全屏放映，可切回连续浏览。
+// Slide player: shared by full-deck blog posts (BlogPostPage) and in-post
+// embeds (Prose placeholder). The first frame renders all slides stacked
+// vertically (= the SSR/no-JS shape: full content in the DOM, hydration-safe);
+// after mounting it upgrades to page-by-page playback: keyboard
+// (←→/PgUp/PgDn/Home/End), buttons, page counter, #N deep link (full mode
+// only), speaker notes, fullscreen show, with a switch back to continuous
+// (stacked) browsing.
 //
-// 缩放纯 CSS：stage 为 inline-size 查询容器，--deck-scale 用
-// tan(atan2(100cqw, 1280px)) 求容器宽与 1280px 画布之比 —— 全屏/换栏自动
-// 跟随，无需 JS 测量；连续模式下画布总高随缩放未知，由 ResizeObserver 同步
-// stage 高度（transform 不参与布局，父级须显式让高）。
+// Scaling is pure CSS: the stage is an inline-size query container and
+// --deck-scale uses tan(atan2(100cqw, 1280px)) to get the ratio of container
+// width to the 1280px canvas — fullscreen/column changes follow automatically
+// with no JS measurement; in stacked mode the canvas total height is unknown
+// under scaling, so a ResizeObserver syncs the stage height (transform does
+// not participate in layout; the parent must explicitly give it height).
 //
-// 宿主 CSS（HOST_CSS）只收工具类够不到的规则：目标是 dangerouslySetInnerHTML
-// 注入的惰性 section（mode 显隐、shiki 暗态切换、marpit scoping 之外的装饰）；
-// 颜色一律 token。deck 主题 CSS（tools/deckTheme.css 经 marpit scoping）由
-// payload/占位结构带来，在此处一并注入。
+// Host CSS (HOST_CSS) holds only the rules utility classes cannot reach:
+// they target the inert sections injected via dangerouslySetInnerHTML (mode
+// show/hide, shiki dark-theme switching, decoration beyond marpit scoping);
+// colors are always tokens. The deck theme CSS (tools/deckTheme.css after
+// marpit scoping) arrives with the payload/placeholder structure and is
+// injected here alongside.
 
 import { ChevronLeft, ChevronRight, Maximize, Minimize, Printer, StickyNote } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -25,26 +32,32 @@ import { startPrintPreview } from "@/lib/print.ts";
 import { CHIP, ICON_BTN, META } from "@/lib/styles.ts";
 
 export interface DeckViewerProps {
-  /** 幻灯片 HTML（构建期产物；整篇 = contentHtml 回填，嵌入 = 占位结构提取） */
+  /** Slide HTML (build-time artifact; full post = contentHtml backfill,
+   *  embed = extracted from the placeholder structure) */
   html: string;
-  /** deck 主题 CSS（整篇 = payload post.deck.css；嵌入 = 占位结构内联） */
+  /** Deck theme CSS (full post = payload post.deck.css; embed = inlined in
+   *  the placeholder structure) */
   css?: string;
-  /** 嵌入形态：无 #N 深链，键盘只在容器聚焦时生效 */
+  /** Embed form: no #N deep link; keyboard works only while the container is
+   *  focused */
   embedded?: boolean;
-  /** 打印文件名主体（zjblog_<title>），嵌入场景由调用方给所在文章标题 */
+  /** Print filename base (zjblog_<title>); in embeds the caller passes the
+   *  host article title */
   titleBase?: string;
-  /** 幻灯片含 KaTeX 公式（SPA 换页补注 /katex.min.css，同 Prose） */
+  /** Slides contain KaTeX formulas (re-injects /katex.min.css on SPA
+   *  navigation, same as Prose) */
   needsKatex?: boolean;
 }
 
 interface ParsedSlide {
-  /** 剥掉备注后的幻灯片 HTML（逐页渲染用） */
+  /** Slide HTML with speaker notes stripped (for page-by-page rendering) */
   slide: string;
-  /** 演讲者备注（构建期注入的 .deck-notes，已转义） */
+  /** Speaker notes (the build-time-injected .deck-notes, already escaped) */
   notes: string;
 }
 
-/** 切分逐页 HTML（marpit 的 section 不嵌套，可安全非贪婪匹配）。 */
+/** Split into per-slide pages (marpit sections never nest, so non-greedy
+ *  matching is safe). */
 function splitSlides(html: string): ParsedSlide[] {
   return [...html.matchAll(/<section\b[\s\S]*?<\/section>/g)].map((match) => {
     const raw = match[0] ?? "";
@@ -62,7 +75,8 @@ function parseSlideHash(hash: string): number | null {
   return Number.isFinite(n) && n >= 1 ? n - 1 : null;
 }
 
-/** 宿主样式：仅 JSX 工具类表达不了的规则（见文件头注）。 */
+/** Host styles: only rules JSX utility classes cannot express (see the file
+ *  header comment). */
 const HOST_CSS = `
 .deck-root { --deck-canvas-w: 1280px; }
 .deck-stage {
@@ -80,7 +94,8 @@ const HOST_CSS = `
   transform: scale(var(--deck-scale));
   transform-origin: top left;
 }
-/* 逐页：stage 锁 16:9，画布绝对定位在原点缩放 */
+/* Paged mode: the stage locks 16:9; the canvas is absolutely positioned at
+   the origin and scaled */
 .deck-root[data-mode="paged"] .deck-stage { aspect-ratio: 16 / 9; }
 .deck-root[data-mode="paged"] .deck-canvas { position: absolute; left: 0; top: 0; }
 .deck-root[data-mode="paged"] .deck-canvas section { animation: deck-slide-in 0.28s ease; }
@@ -88,19 +103,24 @@ const HOST_CSS = `
   from { opacity: 0; transform: translateX(14px); }
   to { opacity: 1; transform: none; }
 }
-/* 连续：画布依次纵排（高度由 JS 按缩放后实际值同步到 stage） */
+/* Stacked: sections stack vertically (JS syncs the stage height to the
+   scaled canvas) */
 .deck-root[data-mode="stacked"] .deck-canvas section + section { border-top: 1px solid var(--line); }
-/* 演讲者备注不进画布（逐页模式下由 React 面板展示当前页备注） */
+/* Speaker notes never enter the canvas (paged mode shows them in the React
+   panel) */
 .deck-root .marpit section .deck-notes { display: none; }
-/* shiki 双主题：亮态默认值在 deck 主题 CSS（marpit scoping 无法写 .dark
- * 祖先选择器），暗态切换在此收口 */
+/* shiki dual theme: light defaults live in the deck theme CSS (marpit scoping
+ * cannot write .dark ancestor selectors); dark switching is handled here */
 .dark .deck-root .marpit section pre { color: var(--shiki-dark); }
 .dark .deck-root .marpit section pre span { color: var(--shiki-dark); }
-/* 全屏放映：由 React 状态（data-fullscreen）驱动样式而非 :fullscreen 伪类
- * ——webview/预览环境里原生 Fullscreen API 常是「半残」的（DOM 状态进了、
- * 视图不展开、fullscreenchange 不派发），样式挂在状态上保证任何环境点按钮
- * 都有可见反应；伪全屏 = fixed 覆盖层，真全屏下同样适用。控制条留屏，
- * 安全区内收（DESIGN §18）。 */
+/* Fullscreen show: styles are driven by React state (data-fullscreen) instead
+ * of the :fullscreen pseudo-class — in webview/preview environments the
+ * native Fullscreen API is often half-broken (DOM state gets set, the view
+ * never expands, fullscreenchange never fires); hanging styles on state
+ * guarantees a visible reaction when the button is clicked in any
+ * environment. Pseudo-fullscreen = a fixed overlay; it applies equally under
+ * real fullscreen. The control bar stays on screen, inset within the safe
+ * area (DESIGN §18). */
 .deck-root[data-fullscreen] {
   position: fixed;
   inset: 0;
@@ -117,29 +137,36 @@ const HOST_CSS = `
   width: min(100%, calc((100dvh - 48px - 64px) * 16 / 9));
   margin-inline: auto;
 }
-/* 舞台上的横滑交给 JS 翻页，纵滑留给页面滚动 */
+/* On the stage, horizontal swipes go to JS paging; vertical stays with page
+   scrolling */
 .deck-stage {
   touch-action: pan-y;
 }
-/* 逐页模式的非当前页：Tailwind preflight 的 [hidden] 是 layered !important
- * （unlayered 规则按层反转规则必输），因此换页用自定义属性 + 自带规则 */
+/* Non-active pages in paged mode: Tailwind preflight's [hidden] is layered
+ * !important (unlayered rules always lose to layered ones in the cascade),
+ * so page swaps use a custom attribute + a rule of our own */
 .deck-canvas section[data-slide-hidden] {
   display: none !important;
 }
-/* ── 打印 / 预览纸面：**视口无关的等比缩放流**。桌面 Chrome/Edge 按
- * marpit 自带的 @page 1280×720（横屏）布局，缩放自然归一为 1，幻灯片
- * 一比一满页；iOS AirPrint 等**不支持 @page size** 的管线里，缩放跟随
- * 打印布局宽度（cqw 自适应），按用户所选纸张等比排出、一页一条不截断。
- * 因此不要写死 width: 1280px——布局宽度 ≠ 1280 的管线（iOS 打印即此）
- * 会横向截断并产生空白页。chrome 隐藏、隐藏页揭示、逐块防裂；
- * 嵌入形态同规则（zoom 的 cqw 基准本就是所在栏宽）。
- * @media print 与 html.print-preview（预览脸，见 lib/print.ts / print.css）
- * 两份列表保持同步。 ── */
+/* ── Print / preview paper: **a viewport-independent, uniformly scaled
+ * flow**. Desktop Chrome/Edge lays out with marpit's built-in @page 1280×720
+ * (landscape), so the scale naturally resolves to 1 and slides fill pages
+ * one-to-one; in pipelines that do **not support @page size** (iOS AirPrint
+ * and the like), the scale follows the print layout width (cqw adapts),
+ * laying out proportionally for the user-selected paper, one slide per page,
+ * uncut. So never hardcode width: 1280px — pipelines whose layout width
+ * ≠ 1280 (iOS printing is exactly this) would truncate horizontally and
+ * produce blank pages. Chrome hidden, hidden pages revealed, blocks kept
+ * unsplit; the embed form follows the same rules (zoom's cqw baseline is
+ * already the host column width).
+ * Keep the @media print and html.print-preview (preview face, see
+ * lib/print.ts / print.css) rule lists in sync. ── */
 @media print {
   .deck-root [data-deck-chrome] {
     display: none !important;
   }
-  /* 打印纸面永远浅色：代码高亮强制回 shiki light 变量 */
+  /* Print paper is always light: code highlighting is forced back to the
+     shiki light variables */
   .dark .deck-root .marpit section pre,
   .dark .deck-root .marpit section pre span {
     color: var(--shiki-light) !important;
@@ -151,7 +178,8 @@ const HOST_CSS = `
     border: none;
     box-shadow: none;
     border-radius: 0;
-    /* 缩放后不满纸宽时（非 @page 布局的管线）左右居中 */
+    /* Center when the scaled slide is narrower than the paper (non-@page
+       layout pipelines) */
     margin-inline: auto !important;
   }
   .deck-root .deck-canvas {
@@ -165,8 +193,10 @@ const HOST_CSS = `
   .deck-root .deck-canvas section {
     break-inside: avoid;
     page-break-inside: avoid;
-    /* 一页一 slide：section 定高 720px 与 @page 同框，显式 break 把边界
-       钉死（内容溢出一像素也不并页）；末节 auto 防尾页空白 */
+    /* One slide per page: the section's fixed 720px height shares the @page
+       frame, and an explicit break pins the boundary (overflow by even one
+       pixel will not merge pages); the last section's auto avoids a trailing
+       blank page */
     break-after: page;
   }
   .deck-root .deck-canvas section:last-child {
@@ -200,18 +230,22 @@ const HOST_CSS = `
 .print-preview .deck-root .deck-canvas section:last-child {
   break-after: auto;
 }
-/* 预览纸面永远浅色：代码高亮强制回 shiki light 变量 */
+/* Preview paper is always light: code highlighting is forced back to the
+   shiki light variables */
 .print-preview.dark .deck-root .marpit section pre,
 .print-preview.dark .deck-root .marpit section pre span {
   color: var(--shiki-light) !important;
 }
 `;
 
-/** 无 JS 兜底：默认逐页形态把后续页裁剪在 16:9 舞台外，这里在无 JS 时把
- *  画布展开为完整堆叠视图。由 tools/ssr.tsx 逐页条件注入 <head> 的
- *  <noscript><style>（JS 可用时 head 里的 noscript 内容不生效）。
- *  HOST_CSS 在 body 内晚于 head 生效，覆盖需要 !important；zoom 用布局缩放
- *  替代 transform（transform 不参与布局，展开后父级无法获得实际高度）。 */
+/** No-JS fallback: the default paged form clips later slides outside the
+ *  16:9 stage; without JS this expands the canvas into the full stacked view.
+ *  Injected into <head> as <noscript><style> conditionally per page by
+ *  tools/ssr.tsx (when JS is available, noscript content in head has no
+ *  effect). HOST_CSS lives in the body and applies after head, so overrides
+ *  need !important; zoom replaces transform with layout scaling (transform
+ *  does not participate in layout, so after expansion the parent cannot get
+ *  the real height). */
 export const DECK_NOSCRIPT_CSS = `
 .deck-root .deck-stage { aspect-ratio: auto !important; overflow: visible !important; }
 .deck-root .deck-canvas { position: static !important; transform: none !important; zoom: var(--deck-scale); }
@@ -221,17 +255,21 @@ export const DECK_NOSCRIPT_CSS = `
 
 export function DeckViewer({ html, css, embedded = false, needsKatex = false, titleBase }: DeckViewerProps) {
   const t = useT();
-  // 默认逐页形态：SSR 直接渲染 16:9 舞台（画布含全部幻灯片、overflow 裁剪
-  // 只露第一页），水合前后视觉零变化 → 零 CLS；无 JS 场景由 head 里的
-  // <noscript> 样式（DECK_NOSCRIPT_CSS，ssr.tsx 条件注入）揭示堆叠视图。
-  // 画布恒为全量 DOM：换页只逐节切换 hidden 属性（不重排 innerHTML），
-  // 打印/预览因此任何时刻都拿得到全部页面。
+  // Default paged form: SSR renders the 16:9 stage directly (the canvas holds
+  // all slides, overflow clipping reveals only the first page), so visuals
+  // are identical before/after hydration → zero CLS; without JS, the
+  // <noscript> styles in head (DECK_NOSCRIPT_CSS, conditionally injected by
+  // ssr.tsx) reveal the stacked view. The canvas is always the full DOM: a
+  // slide change only toggles hidden per section (no innerHTML rewrite), so
+  // print/preview can reach every page at any moment.
   const [mode, setMode] = useState<"paged" | "stacked">("paged");
   const [active, setActive] = useState(0);
   const [showNotes, setShowNotes] = useState(false);
-  // 全屏双轨：原生 Fullscreen API 在 webview/预览环境里可能半残（DOM 状态
-  // 进了但视图不展开、事件不派发），promise 拒绝或不可用时回落伪全屏
-  // （fixed 覆盖层，data-fullscreen 样式），保证按钮在任何环境都有可见反应
+  // Fullscreen dual track: the native Fullscreen API can be half-broken in
+  // webview/preview environments (DOM state gets set but the view never
+  // expands, events never fire); on promise rejection or unavailability we
+  // fall back to pseudo-fullscreen (a fixed overlay with the data-fullscreen
+  // styles), so the button gives a visible reaction in every environment
   const [nativeFs, setNativeFs] = useState(false);
   const [pseudoFs, setPseudoFs] = useState(false);
 
@@ -239,13 +277,15 @@ export function DeckViewer({ html, css, embedded = false, needsKatex = false, ti
   const stageRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
   const touchX = useRef<number | null>(null);
-  // 是否发生过用户翻页：hash 只在交互后写入，初始加载不往 URL 塞 #1
+  // Whether the user has changed slides: the hash is written only after
+  // interaction, so the initial load never stuffs #1 into the URL
   const interacted = useRef(false);
 
   const slides = useMemo(() => splitSlides(html), [html]);
   const total = slides.length;
 
-  // 函数式更新：快速连按/同帧多次事件也不会基于过期 active 计算
+  // Functional update: rapid taps or multiple events in one frame never
+  // compute from a stale active index
   const goTo = useCallback(
     (next: number | ((prev: number) => number)) => {
       interacted.current = true;
@@ -257,14 +297,16 @@ export function DeckViewer({ html, css, embedded = false, needsKatex = false, ti
     [total],
   );
 
-  // 幻灯片含 KaTeX 公式：SPA 换页补注 /katex.min.css（head 不随换页换，同 Prose）
+  // Slides contain KaTeX formulas: re-inject /katex.min.css on SPA navigation
+  // (the head is not swapped on SPA navigation — same as Prose)
   useEffect(() => {
     if (needsKatex) {
       ensureKatexStyles();
     }
   }, [needsKatex]);
 
-  // #N 深链消费（整篇模式）：舞台尺寸固定，换页内容不产生位移
+  // #N deep link consumption (full mode): the stage size is fixed, so slide
+  // changes never shift content
   useEffect(() => {
     if (total === 0 || embedded) {
       return;
@@ -275,11 +317,14 @@ export function DeckViewer({ html, css, embedded = false, needsKatex = false, ti
     }
   }, [embedded, total]);
 
-  // 换页 = 对全量 DOM 逐节切换 hidden（打印/预览需要全部页面常驻文档）；
-  // display:none ↔ block 会自动重放 CSS 换页动画。可见节就地补 aria 语义
-  // （画布是 dangerouslySetInnerHTML 的惰性 DOM，无法走 JSX 声明）。
-  // 切换后对新可见的页跑溢出适配（display:none 页量不出尺寸，翻到即量）。
-  // biome-ignore lint/correctness/useExhaustiveDependencies: 显式依赖 html——解锁/换页注入新 blob 后需重放 hidden 与 aria
+  // Slide change = toggling hidden per section on the full DOM (print/preview
+  // need every page permanently in the document); display:none ↔ block also
+  // replays the CSS slide-change animation automatically. Visible sections
+  // get aria semantics patched in place (the canvas is inert DOM from
+  // dangerouslySetInnerHTML and cannot be declared via JSX).
+  // After switching, run overflow fitting on the newly visible page
+  // (display:none pages cannot be measured; measure on arrival).
+  // biome-ignore lint/correctness/useExhaustiveDependencies: html is intentional — unlock/navigation injects a new blob and hidden/aria must be reapplied
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) {
@@ -301,8 +346,9 @@ export function DeckViewer({ html, css, embedded = false, needsKatex = false, ti
     fitVisibleSlides(canvas);
   }, [mode, active, html, total, t]);
 
-  // 迟到内容（mermaid svg 替换占位符、图片加载）触发的溢出重测——chart
-  // 渲染后原页可能从「装得下」变「装不下」
+  // Overflow re-fit triggered by late content (mermaid svg replacing the
+  // placeholder, image loads) — after a chart renders, its page may go from
+  // "fits" to "no longer fits"
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) {
@@ -311,11 +357,14 @@ export function DeckViewer({ html, css, embedded = false, needsKatex = false, ti
     return observeLateContent(canvas);
   }, []);
 
-  // mermaid 占位容器（tools/deck.ts 产出）：逐个挂 MermaidRenderer 惰性渲染
-  // ——渲染器自带 useInView（display:none 的隐藏页不会触发，翻到即渲染）与
-  // 打印浅色联动（print-mermaid-light/restore 事件），与文章内图表行为一致。
-  // html 变化（解锁/嵌入注入）后旧 root 随 innerHTML 失效，需整组重挂。
-  // biome-ignore lint/correctness/useExhaustiveDependencies: 显式依赖 html——同上
+  // mermaid placeholder containers (produced by tools/deck.ts): mount a
+  // MermaidRenderer on each for lazy rendering — the renderer brings its own
+  // useInView (display:none hidden pages never trigger; they render on
+  // arrival) and the print light-mode coordination (print-mermaid-light/
+  // restore events), matching the behavior of charts inside articles.
+  // When html changes (unlock/embed injection) the old roots die with
+  // innerHTML, so remount the whole set.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: html is intentional — same as above
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) {
@@ -334,8 +383,9 @@ export function DeckViewer({ html, css, embedded = false, needsKatex = false, ti
     };
   }, [html, total]);
 
-  // 翻页后同步 hash（整篇模式）：hash-only replaceState 不触发 router 的
-  // popstate 路由（已核实）；深链/hashchange 带来的 active 不回写
+  // Sync the hash after a slide change (full mode): a hash-only replaceState
+  // does not trigger the router's popstate routing (verified); active values
+  // arriving from deep links/hashchange are not written back
   useEffect(() => {
     if (!interacted.current || embedded) {
       return;
@@ -343,7 +393,8 @@ export function DeckViewer({ html, css, embedded = false, needsKatex = false, ti
     window.history.replaceState(null, "", `#${active + 1}`);
   }, [active, embedded]);
 
-  // 浏览器前进/后退或手动改 hash 时跟随（整篇模式；hash-only 变更 router 不接管）
+  // Follow browser back/forward or manual hash edits (full mode; the router
+  // does not take over hash-only changes)
   useEffect(() => {
     if (embedded) {
       return;
@@ -358,14 +409,16 @@ export function DeckViewer({ html, css, embedded = false, needsKatex = false, ti
     return () => window.removeEventListener("hashchange", onHashChange);
   }, [embedded, total]);
 
-  // 原生全屏状态同步（Esc / 系统手势退出也要落回按钮态）
+  // Sync native fullscreen state (Esc / system gesture exits must also settle
+  // the button state)
   useEffect(() => {
     const onFullscreenChange = () => setNativeFs(document.fullscreenElement === rootRef.current);
     document.addEventListener("fullscreenchange", onFullscreenChange);
     return () => document.removeEventListener("fullscreenchange", onFullscreenChange);
   }, []);
 
-  // 伪全屏退出：Esc（原生全屏的 Esc 由浏览器自己处理）
+  // Pseudo-fullscreen exit: Esc (native fullscreen Esc is handled by the
+  // browser itself)
   useEffect(() => {
     if (!pseudoFs) {
       return;
@@ -379,7 +432,8 @@ export function DeckViewer({ html, css, embedded = false, needsKatex = false, ti
     return () => window.removeEventListener("keydown", onEsc);
   }, [pseudoFs]);
 
-  // 连续模式：stage 高度 = 缩放后画布实际高度（transform 不参与布局）
+  // Stacked mode: stage height = the canvas's actual post-scale height
+  // (transform does not participate in layout)
   useEffect(() => {
     if (mode !== "stacked") {
       return;
@@ -433,7 +487,8 @@ export function DeckViewer({ html, css, embedded = false, needsKatex = false, ti
     [goTo, total],
   );
 
-  // 整篇模式：窗口级键盘翻页（嵌入模式走容器 onKeyDown，不劫持文章滚动）
+  // Full mode: window-level keyboard paging (embedded mode uses the container
+  // onKeyDown so article scrolling is not hijacked)
   useEffect(() => {
     if (embedded || mode !== "paged") {
       return;
@@ -445,7 +500,8 @@ export function DeckViewer({ html, css, embedded = false, needsKatex = false, ti
 
   const toggleFullscreen = () => {
     if (document.fullscreenElement) {
-      // 乐观置位：fullscreenchange 不派发的环境也要落回按钮态
+      // Optimistic set: environments where fullscreenchange never fires must
+      // still settle the button state
       setNativeFs(false);
       void document.exitFullscreen().catch(() => {});
       return;
@@ -475,7 +531,8 @@ export function DeckViewer({ html, css, embedded = false, needsKatex = false, ti
       data-embedded={embedded || undefined}
       data-fullscreen={fullscreen || undefined}
       data-mode={mode}
-      // 嵌入形态：容器可聚焦，键盘翻页不劫持文章滚动；整篇模式走窗口监听
+      // Embedded form: the container is focusable so keyboard paging does not
+      // hijack article scrolling; full mode uses the window listener
       onKeyDown={embedded ? (event) => onKey(event) : undefined}
       ref={rootRef}
       tabIndex={embedded ? 0 : undefined}
@@ -483,8 +540,9 @@ export function DeckViewer({ html, css, embedded = false, needsKatex = false, ti
       <style dangerouslySetInnerHTML={{ __html: HOST_CSS }} />
       {css && <style dangerouslySetInnerHTML={{ __html: css }} />}
 
-      {/* 幻灯片画布：恒为全量 DOM（SSR 同形；data-deck-content 供
-          pageData.ts 回填 contentHtml），换页由 effect 逐节 hidden */}
+      {/* Slide canvas: always the full DOM (SSR-identical; data-deck-content
+          lets pageData.ts backfill contentHtml); slide changes toggle hidden
+          per section via the effect */}
       <div
         className="deck-stage"
         onTouchEnd={(event) => {
@@ -503,7 +561,8 @@ export function DeckViewer({ html, css, embedded = false, needsKatex = false, ti
         }}
         ref={stageRef}
       >
-        {/* marpit 主题 CSS scoping 在 div.marpit > section 下，容器类必须挂 */}
+        {/* marpit theme CSS scopes under div.marpit > section, so this
+            container class is required */}
         <div
           className="deck-canvas marpit"
           dangerouslySetInnerHTML={{ __html: html }}
@@ -512,7 +571,8 @@ export function DeckViewer({ html, css, embedded = false, needsKatex = false, ti
         />
       </div>
 
-      {/* 演讲者备注面板：逐页模式下跟随当前页（构建期已转义） */}
+      {/* Speaker notes panel: follows the current slide in paged mode
+          (escaped at build time) */}
       {showNotes && mode === "paged" && (current?.notes ?? "") !== "" && (
         <div
           className="mt-3 rounded-xl border border-line bg-surface-2 px-4 py-3 text-sm leading-relaxed text-ink-2 [&_p]:m-0 [&_p+p]:mt-1.5"
@@ -521,9 +581,11 @@ export function DeckViewer({ html, css, embedded = false, needsKatex = false, ti
         />
       )}
 
-      {/* 控制条：始终渲染（挂载后插入会把下方内容顶下去，计入 CLS）。
-          堆叠模式只留模式切换与全屏；翻页控件随逐页模式出现/消失，
-          该位移发生在用户点击 500ms 内，不计入 CLS。 */}
+      {/* Control bar: always rendered (inserting it after mount would push
+          the content below down, counting as CLS). Stacked mode keeps only
+          the mode toggle and fullscreen; paging controls appear/disappear
+          with paged mode — that shift happens within 500ms of a user click
+          and does not count as CLS. */}
       {total > 0 && (
         <div className="mt-3 flex items-center gap-1.5" data-deck-chrome>
           {mode === "paged" && (
@@ -576,7 +638,8 @@ export function DeckViewer({ html, css, embedded = false, needsKatex = false, ti
             aria-label={t("deck.print")}
             className={ICON_BTN}
             onClick={() => {
-              // 打印走全量纸面（marpit @page 逐页 break 接管分页）
+              // Print uses the full paper flow (marpit @page per-slide breaks
+              // take over pagination)
               setMode("stacked");
               startPrintPreview({
                 closeLabel: t("print.close"),

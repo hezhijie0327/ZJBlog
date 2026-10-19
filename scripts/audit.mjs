@@ -1,15 +1,17 @@
 /**
- * 治杰 Online Lighthouse 门禁 — `pnpm audit`（仅开发时本地使用，无 CI）
+ * Zhijie Online Lighthouse gate — `pnpm audit` (local dev use only, no CI)
  *
- * 构建产物 dist/ 由内置零依赖静态服务器托管（trailingSlash 语义与
- * Cloudflare Workers Static Assets 一致：/blogs/foo/ → /blogs/foo/index.html），
- * 审计页面列表直接从 dist/sitemap.xml 解析 —— 有多少页面就审多少，
- * 每条路由都是预渲染完整 HTML，要求 Performance / Accessibility /
- * Best Practices / SEO / Agentic Browsing 全部 100 分。
+ * The built dist/ is served by a built-in zero-dependency static server
+ * (trailingSlash semantics identical to Cloudflare Workers Static Assets:
+ * /blogs/foo/ → /blogs/foo/index.html); the audited page list is parsed
+ * straight from dist/sitemap.xml — as many pages as exist get audited.
+ * Every route is fully prerendered HTML and must score 100 across
+ * Performance / Accessibility / Best Practices / SEO / Agentic Browsing.
  *
- * LHR 原始报告归档在 .lighthouse-archive/<run>/（含 scores.json），
- * 需要本机 Chromium：chrome-launcher 自动探测，或用 CHROME_PATH 指定。
- * LH_FORM_FACTOR=mobile 可切换到更严格的移动端 throttling 档位。
+ * Raw LHR reports are archived under .lighthouse-archive/<run>/ (with
+ * scores.json). Requires a local Chromium: auto-detected via chrome-launcher,
+ * or pointed at explicitly with CHROME_PATH. LH_FORM_FACTOR=mobile switches
+ * to the stricter mobile throttling profile.
  */
 
 import { existsSync, statSync as fsStatSync, readdirSync, readFileSync } from "node:fs";
@@ -28,7 +30,7 @@ const BASE = `http://127.0.0.1:${PORT}`;
 const ARCHIVE_ROOT = process.env.LH_ARCHIVE_DIR ?? join(ROOT, ".lighthouse-archive");
 const MOBILE = process.env.LH_FORM_FACTOR === "mobile";
 
-/** 门禁阈值：所有已审计页面、所有类别必须满分 */
+/** Quality gate thresholds: every audited page must score full marks in every category */
 const THRESHOLDS = {
   performance: 100,
   accessibility: 100,
@@ -57,39 +59,41 @@ const MIME = {
   ".md": "text/markdown; charset=utf-8",
 };
 
-/** 零依赖静态服务器：先按精确文件解析，再按 trailingSlash 目录解析 */
+/** Zero-dependency static server: resolve exact files first, then trailingSlash directory paths */
 /** @param {string} dir @param {number} port */
 function serveStatic(dir, port) {
   const server = createServer((req, res) => {
     const url = new URL(req.url ?? "/", BASE);
-    // 生产环境由 Cloudflare 边缘提供 /cdn-cgi/trace（页脚彩蛋用）；
-    // 审计环境镜像该行为，避免 404 控制台错误拉低 best-practices
+    // Production serves /cdn-cgi/trace from the Cloudflare edge (footer
+    // easter egg); the audit environment mirrors that behavior so a 404
+    // console error doesn't drag down best-practices
     if (url.pathname === "/cdn-cgi/trace") {
       res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
       res.end("ip=203.0.113.1\nkex=X25519MLKEM768\nwarp=on\nloc=CN\n");
       return;
     }
     const pathname = decodeURIComponent(url.pathname);
-    // 防目录穿越：精确文件 → trailingSlash 目录
+    // Path traversal guard: exact file → trailingSlash directory
     const candidates = [join(dir, pathname), join(dir, pathname, "index.html")];
     const safe = candidates.map((p) => resolve(p)).filter((p) => p.startsWith(resolve(dir)));
     const filePath = safe.find((p) => existsSync(p) && !fsStatSync(p).isDirectory());
     if (!filePath) {
-      // 与 Cloudflare Workers（not_found_handling = 404-page）行为一致的 404 页
+      // 404 page matching Cloudflare Workers behavior (not_found_handling = 404-page)
       const notFound = join(dir, "404.html");
       res.writeHead(404, { "Content-Type": MIME[".html"] });
       res.end(existsSync(notFound) ? readFileSync(notFound) : "Not Found");
       return;
     }
     const body = readFileSync(filePath);
-    // 与生产边缘一致的长缓存（哈希文件名的构建资产，immutable）
+    // Long cache identical to the production edge (hash-named build assets, immutable)
     const cacheControl = pathname.startsWith("/assets/")
       ? "public, max-age=31536000, immutable"
       : pathname === "/sw.js"
-        ? "no-cache" // 与 public/_headers 一致：worker 更新随下次加载生效
+        ? "no-cache" // Matches public/_headers: worker updates take effect on next load
         : "public, max-age=300";
     const type = MIME[extname(filePath)] ?? "application/octet-stream";
-    // 生产 CDN 会对文本类资源做压缩，审计环境保持一致（优先 brotli，回退 gzip）
+    // The production CDN compresses text-like assets; the audit environment stays
+    // consistent (brotli first, gzip fallback)
     const acceptEncoding = req.headers["accept-encoding"] ?? "";
     const compressible = /^(text\/|application\/(json|xml|javascript|manifest\+json))/.test(type) && body.length > 1024;
     const br = compressible && acceptEncoding.includes("br");
@@ -98,7 +102,7 @@ function serveStatic(dir, port) {
     res.writeHead(200, {
       "Content-Type": type,
       "Cache-Control": cacheControl,
-      // 与 public/_headers 一致：显式备案 worker 作用域根（PWA 门禁据此核验）
+      // Matches public/_headers: explicitly register the worker scope root (verified by the PWA gate)
       ...(pathname === "/sw.js" ? { "Service-Worker-Allowed": "/" } : {}),
       ...(br ? { "Content-Encoding": "br", Vary: "Accept-Encoding" } : {}),
       ...(gz ? { "Content-Encoding": "gzip", Vary: "Accept-Encoding" } : {}),
@@ -110,7 +114,7 @@ function serveStatic(dir, port) {
   });
 }
 
-/** 从 sitemap.xml 提取本站路径（忽略外站 URL） */
+/** Extract this site's paths from sitemap.xml (external URLs ignored) */
 function pagesFromSitemap() {
   const xml = readFileSync(join(OUT_DIR, "sitemap.xml"), "utf8");
   const locs = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]).filter((loc) => typeof loc === "string");
@@ -119,10 +123,10 @@ function pagesFromSitemap() {
     try {
       paths.push(new URL(loc).pathname);
     } catch {
-      // 非本站 URL，跳过
+      // Not a site URL, skip
     }
   }
-  if (paths.length === 0) throw new Error("sitemap.xml 中没有解析到任何页面");
+  if (paths.length === 0) throw new Error("no pages parsed from sitemap.xml");
   return paths;
 }
 
@@ -141,16 +145,18 @@ async function waitFor(url, timeoutMs = 30000) {
   throw new Error(`audit server did not come up at ${url}`);
 }
 
-// Lighthouse 内部偶发的未处理 rejection 不应打断整个门禁
+// Occasional unhandled rejections inside Lighthouse must not interrupt the whole gate
 process.on("unhandledRejection", (reason) => {
   const message = reason instanceof Error ? reason.message : String(reason);
   console.log(`  … ignored internal rejection: ${message.slice(0, 120)}`);
 });
 
-// chrome-launcher 找不到浏览器时，按 Edge → Playwright Chromium 的顺序回退
-// （Edge/Chromium 同源，Lighthouse 可直接驱动。Playwright 缓存是本机没有
-//  Chrome/Edge 时最常见的 Chromium 来源，取版本号最高的安装。
-//  也可用 CHROME_PATH 指向独立的 Chrome for Testing，避免与日常浏览器互相干扰）
+// When chrome-launcher cannot find a browser, fall back in the order Edge →
+// Playwright Chromium (Edge/Chromium share the same codebase; Lighthouse can
+// drive either directly. The Playwright cache is the most common Chromium
+// source on machines without Chrome/Edge; take the highest-version install.
+// CHROME_PATH can also point at a standalone Chrome for Testing to avoid
+// interfering with everyday browsers)
 function playwrightChromiumCandidates() {
   const base =
     process.platform === "win32"
@@ -159,7 +165,8 @@ function playwrightChromiumCandidates() {
         ? join(homedir(), "Library", "Caches", "ms-playwright")
         : join(homedir(), ".cache", "ms-playwright");
   if (!existsSync(base)) return [];
-  // 版本目录形如 chromium-1208；倒序取最新，兼容新旧两代目录布局
+  // Version directories look like chromium-1208; newest first, covering both
+  // the old and new directory layouts
   const versionDirs = readdirSync(base)
     .filter((d) => d.startsWith("chromium-"))
     .sort((a, b) => Number(b.split("-")[1] ?? 0) - Number(a.split("-")[1] ?? 0));
@@ -201,15 +208,15 @@ function resolveBrowserPath() {
 
 async function main() {
   if (!existsSync(join(OUT_DIR, "index.html"))) {
-    throw new Error("dist/ 不存在或未构建 —— 先运行 pnpm build");
+    throw new Error("dist/ missing or not built — run pnpm build first");
   }
   resolveBrowserPath();
 
-  // LH_ONLY="/blogs/,/support" 可只审计路径前缀匹配的页面（快速迭代用）
+  // LH_ONLY="/blogs/,/support" audits only pages whose path matches a prefix (fast iteration)
   const only = process.env.LH_ONLY;
   const allPaths = pagesFromSitemap();
   const paths = only ? allPaths.filter((p) => only.split(",").some((prefix) => p.startsWith(prefix.trim()))) : allPaths;
-  if (paths.length === 0) throw new Error(`LH_ONLY 过滤后没有页面: ${only}`);
+  if (paths.length === 0) throw new Error(`no pages left after LH_ONLY filtering: ${only}`);
 
   const server = await serveStatic(OUT_DIR, PORT);
   /** @type {import("chrome-launcher").LaunchedChrome | undefined} */
@@ -228,18 +235,21 @@ async function main() {
     const lighthouse = (await import("lighthouse")).default;
     const config = MOBILE ? undefined : (await import("lighthouse/core/config/desktop-config.js")).default;
 
-    // headless Chrome 连跑多个 trace 会累积不稳（本机实测 5 页左右崩实例），
-    // 每 RESTART_EVERY 页重启一次浏览器，代价是每轮约 1s 启动开销
+    // headless Chrome grows unstable across consecutive traces (crashes the
+    // instance after ~5 pages locally), so restart the browser every
+    // RESTART_EVERY pages, at the cost of ~1s startup overhead per round
     const RESTART_EVERY = 4;
     async function freshChrome() {
       if (chrome) {
-        // Windows 上 Edge 退出瞬间仍锁着临时目录，kill() 内部的 rmSync 会以
-        // EPERM **同步**抛出（不是 promise rejection，.catch 拦不住）——必须
-        // try/catch 吞掉：残留临时目录交给系统清理，实例已死即达到目的
+        // On Windows Edge still locks the temp directory at the moment of
+        // exit, so the rmSync inside kill() throws EPERM **synchronously**
+        // (not a promise rejection — .catch cannot intercept it): it must be
+        // swallowed with try/catch. Leftover temp dirs are left to OS cleanup;
+        // the instance being dead achieves the goal
         try {
           await Promise.resolve(chrome.kill()).catch(() => {});
         } catch {
-          // 清理失败不影响审计
+          // Cleanup failure does not affect the audit
         }
         chrome = undefined;
       }
@@ -249,9 +259,11 @@ async function main() {
     await freshChrome();
 
     /**
-     * 单页审计；headless Chrome 偶发 trace 中止时换新实例重试（至多 3 次）。
-     * 每次尝试现取 chrome?.port —— freshChrome() 换实例后调试端口会变，
-     * 旧端口上的重试必然失败（曾致全量跑在最重一页上必然 ERROR）。
+     * Single-page audit; on sporadic headless Chrome trace aborts, retry with
+     * a fresh instance (up to 3 attempts). Re-read chrome?.port on every
+     * attempt — the debug port changes once freshChrome() swaps the instance,
+     * and retries on the old port always fail (once made the full run ERROR
+     * deterministically on the heaviest page).
      */
     /** @param {string} url */
     async function runPage(url) {
@@ -283,8 +295,10 @@ async function main() {
     const perfOf = (lhr) => Math.round((lhr.categories.performance?.score ?? 0) * 100);
 
     /**
-     * 近失重试：本机负载会让 perf 偶发落在 98-99（干净环境实测稳定 100）。
-     * perf ∈ [98, 100) 时重跑一次取更优结果；< 98 视为真实回归，重试只会掩盖问题。
+     * Near-miss retry: local machine load makes perf occasionally land at
+     * 98-99 (a clean environment measures a stable 100). For perf ∈ [98, 100),
+     * rerun once and keep the better result; < 98 counts as a real regression
+     * — retrying would only mask the problem.
      */
     /** @param {string} url */
     async function runPageStable(url) {
@@ -329,7 +343,8 @@ async function main() {
       }
       scores.pages[path] = pageScores;
 
-      // 列出所有未满分的具体 audit，便于定位修复（informative 级 insights 不参与门禁）
+      // List every individual audit below full score to help locate fixes
+      // (informative-level insights are not part of the gate)
       for (const category of Object.values(lhr.categories)) {
         for (const ref of category.auditRefs) {
           const audit = lhr.audits[ref.id];
@@ -346,10 +361,11 @@ async function main() {
       }
     }
 
-    // PWA 安装性检查：Lighthouse v10+ 移除了 pwa 类别，安装层契约（DESIGN.md
-    // §18）直接对审计源站核验 —— manifest standalone + 声明的图标尺寸 +
-    // maskable + 作用域根的 worker + 图标全部可达；任一失败门禁不通过，
-    // 结果随 scores.json 归档。
+    // PWA installability checks: Lighthouse v10+ removed the pwa category, so
+    // the install-layer contract (DESIGN.md §18) is verified directly against
+    // the audited origin server — manifest standalone + declared icon sizes +
+    // maskable + worker at the scope root + every icon reachable; any failure
+    // fails the gate, with results archived alongside scores.json.
     /** @type {{ name: string, ok: boolean }[]} */
     const pwaChecks = [];
     /** @param {string} name */
@@ -399,7 +415,7 @@ async function main() {
       try {
         await chrome.kill();
       } catch {
-        // chrome-launcher 的清理异常不影响审计结果
+        // chrome-launcher cleanup errors do not affect the audit result
       }
     }
     server.close();

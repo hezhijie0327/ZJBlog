@@ -1,13 +1,15 @@
-// 进视口检测（Giscus / Mermaid / STL 懒挂载等共用）：IntersectionObserver
-// 封装。once 模式触发后即定格 true（重依赖只加载一次）；默认持续跟踪进出。
-// SSR 初值恒为 false —— 首帧不挂重依赖，与水合契约一致。
+// In-viewport detection (shared by Giscus / Mermaid / STL lazy mounting etc.): an
+// IntersectionObserver wrapper. once mode latches to true after the first trigger (heavy
+// dependencies load only once); by default it keeps tracking enter/leave.
+// The SSR initial value is always false — the first frame mounts no heavy dependency,
+// matching the hydration contract.
 
 import { useEffect, useRef, useState } from "react";
 
 interface UseInViewOptions {
-  /** 视口外扩缓冲（同 IntersectionObserver rootMargin） */
+  /** Viewport expansion buffer (same as IntersectionObserver rootMargin) */
   rootMargin?: string;
-  /** 首次进入后不再跟踪（懒挂载重依赖用） */
+  /** Stop tracking after the first entry (for lazily mounting heavy dependencies) */
   once?: boolean;
 }
 

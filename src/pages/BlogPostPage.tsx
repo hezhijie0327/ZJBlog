@@ -1,6 +1,7 @@
-// 文章详情页：头部元信息 + 摘要卡 + 构建期编译的正文 + 目录右栏（xl 宽屏）
-// + 上下篇导航 + 署名卡 + giscus 评论区。加密博文（post.locked 有值）以锁屏
-// 替代正文：正文/目录/摘要/评论都属加密内容，解锁前一律不渲染。
+// Blog post detail page: header meta + summary card + build-time-compiled body + TOC right rail
+// (xl+ screens) + prev/next navigation + author card + giscus comments. Encrypted posts
+// (post.locked set) replace the body with a lock screen: body/TOC/summary/comments are all
+// encrypted content, none rendered until unlocked.
 
 import { Clock } from "lucide-react";
 import { useState } from "react";
@@ -26,8 +27,9 @@ import type { BlogPostData } from "@/lib/types.ts";
 export function BlogPostPage({ data }: { data: BlogPostData }) {
   const t = useT();
   const { post } = data;
-  // 解锁态从会话缓存初始化：首载/刷新时缓存必空（与 SSR 渲染一致，水合
-  // 安全）；SPA 内从别页跳回时直接还原明文，不重复索要密码
+  // Initialize unlocked state from the session cache: on first load/refresh the cache is always
+  // empty (consistent with SSR rendering, hydration-safe); navigating back from another page
+  // within the SPA restores the plaintext directly without re-asking for the password
   const [unlocked, setUnlocked] = useState<UnlockedBundle | null>(() =>
     post.locked ? (getCachedUnlock(post.slug) ?? null) : null,
   );
@@ -35,21 +37,22 @@ export function BlogPostPage({ data }: { data: BlogPostData }) {
   const toc = unlocked?.toc ?? post.toc;
 
   return (
-    // deck-page：整篇幻灯片的打印标记（print.css 据此收页头/容器留白）——
-    // 不能用 .deck-root 判定：嵌入 marp fence 挂载后同样出现 .deck-root，
-    // 会把普通文章的页头也误杀（打印丢标题）
+    // deck-page: print marker for a full deck (print.css trims page-header/container padding
+    // based on it) — cannot key off .deck-root: embedded marp fences also produce .deck-root
+    // once mounted, which would wrongly strip regular posts' headers too (title lost in print)
     <div className={cn(SECTION_DETAIL, post.deck && "deck-page")}>
-      {/* 返回链接 */}
+      {/* Back link */}
       <BackLink href="/blogs/" label={t("blog.back")} />
 
-      {/* 文章头部：日期 · 阅读时长 · 分类一行，tags 与分类去重。
-          页头直接置于 SECTION_DETAIL 容器下：全站标题同一左缘（DESIGN.md §6） */}
+      {/* Post header: date · reading time · category on one line, tags deduped against category.
+          The header sits directly under the SECTION_DETAIL container: site-wide titles share one
+          left edge (DESIGN.md §6) */}
       <header className="mb-10 mt-8 border-b border-line pb-8">
         <div className="flex items-start justify-between gap-4">
           <h1 className="font-serif text-3xl font-black leading-tight tracking-tight text-ink sm:text-4xl">
             {post.title}
           </h1>
-          {/* 导出动作组（icon-only，DESIGN §5.3）；锁定文不提供任何导出 */}
+          {/* Export action group (icon-only, DESIGN §5.3); locked posts offer no exports */}
           {!post.locked && (
             <div className="flex shrink-0 items-center gap-1 pt-1 print-hide">
               <CopyMarkdownButton href={`/blogs/${encodeURIComponent(post.slug)}/index.md`} />
@@ -68,17 +71,20 @@ export function BlogPostPage({ data }: { data: BlogPostData }) {
         <TagList className="mt-4" exclude={post.category} linkTags tags={post.tags} />
       </header>
 
-      {/* deck 不设外壳上限：幻灯片按容器宽自适应缩放（打印时 @page 1280×720
-          下容器恰满宽，zoom=1 一比一满页——上限会把 slide 缩小、页底留空带） */}
+      {/* No shell max-width for decks: slides scale with the container width (in print, under
+          @page 1280×720 the container is exactly full-width and zoom=1 fills the page 1:1 —
+          a cap would shrink the slides and leave an empty band at the page bottom) */}
       <div className={cn("mx-auto flex justify-center gap-10", !post.deck && "max-w-6xl")}>
         <article className={cn("min-w-0 flex-1", !post.deck && "max-w-3xl")}>
           {post.locked && !unlocked ? (
-            /* 锁定文：锁屏即正文位。摘要/目录/评论同属内容，一并隐去 */
+            /* Locked post: the lock screen takes the body slot. Summary/TOC/comments are content
+               too and hidden along with it */
             <LockScreen locked={post.locked} onUnlock={setUnlocked} slug={post.slug} />
           ) : (
             <>
-              {/* 手写摘要卡（frontmatter.summary，可选）：文头便签语言（§7）——
-                  撕边纸 + 顶部单胶带 + 确定性微倾，纯阅读面不抢交互位 */}
+              {/* Handwritten summary card (frontmatter.summary, optional): header note styling
+                  (§7) — torn-edge paper + single top tape + deterministic slight tilt, purely
+                  for reading, never competing for interaction */}
               {post.summary && (
                 <div className="relative mb-8 rotate-[0.35deg]">
                   <Tape className="w-20 bg-accent-soft/80" seed={post.slug} />
@@ -89,24 +95,27 @@ export function BlogPostPage({ data }: { data: BlogPostData }) {
                 </div>
               )}
 
-              {/* 正文（加密文 = 解锁后的明文；普通文 = payload 注入）。
-                  整篇幻灯片（frontmatter deck: true）由播放器替代 Prose：
-                  首帧全量堆叠进 DOM（无 JS 可读），挂载后升级逐页播放 */}
+              {/* Body (encrypted post = plaintext after unlock; regular post = payload injection).
+                  Full decks (frontmatter deck: true) swap Prose for the player: the full slide
+                  stack renders into the DOM on the first frame (readable without JS), then
+                  upgrades to page-by-page playback once mounted */}
               {post.deck ? (
                 <DeckViewer css={post.deck.css} html={html} needsKatex={post.needsKatex} titleBase={post.title} />
               ) : (
                 <Prose html={html} needsKatex={post.needsKatex} />
               )}
 
-              {/* 署名卡（信件落款）在翻页导航之前：落款属于本文，PostNav 是
-                  走向下一篇的门（nav 自带 mt-12 + 分隔线承接节奏） */}
+              {/* Author card (letter signature) before the pager navigation: the signature belongs
+                  to this post, PostNav is the door to the next one (nav brings its own mt-12 +
+                  divider to carry the rhythm) */}
               <AuthorCard />
 
-              {/* 上一篇 / 下一篇 */}
+              {/* Previous / next post */}
               <PostNav next={post.next} prev={post.prev} />
 
-              {/* giscus 评论（GitHub Discussions，按路径映射）；锁定文解锁后再挂载。
-                  deck 打印不收评论：打印物 = 幻灯片本身，尾流会多出一张空白页 */}
+              {/* giscus comments (GitHub Discussions, mapped by path); locked posts mount after
+                  unlock. Deck print excludes comments: the printout is the slides themselves —
+                  a trailing section would add a blank page */}
               <div className={cn(post.deck && "print-hide")}>
                 <GiscusComments />
               </div>
@@ -114,8 +123,9 @@ export function BlogPostPage({ data }: { data: BlogPostData }) {
           )}
         </article>
 
-        {/* 目录右栏：宽屏 sticky 跟随；锁定文目录随正文解密后才可用。
-            整篇幻灯片无目录（toc 恒空），不渲染右栏 */}
+        {/* TOC right rail: sticky on wide screens; a locked post's TOC becomes available only
+            when the body is decrypted. Full decks have no TOC (always empty), so the rail is
+            not rendered */}
         {(unlocked || !post.locked) && !post.deck && (
           <aside className="hidden w-60 shrink-0 xl:block">
             <TableOfContents items={toc} />

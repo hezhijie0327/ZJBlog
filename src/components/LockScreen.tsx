@@ -1,9 +1,12 @@
-// 锁屏：上了锁的信（DESIGN.md §7 纸感语言）——撕边信笺 .paper-note 微
-// 倾斜，胶带两角对压（必须是 clip-path 元素的兄弟节点），右下角一枚
-// 「SEALED」圆邮戳。口令表单在 Argon2id 派生（约百毫秒级）期间转 pending
-// 态；GCM 认证失败 = 口令错误，就地提示不清空已输入内容。
-// 博文与旅行详情页共用；unlockKey 是解锁缓存的命名空间键（blogs 与
-// travels 的 slug 可能同名）。
+// Lock screen: a sealed letter (DESIGN.md §7 paper-craft language) -- the
+// torn-edge letterhead .paper-note sits at a slight tilt, tape pressed on two
+// corners (must be a sibling of the clip-path element), and a round "SEALED"
+// postmark in the bottom-right. The password form goes pending while Argon2id
+// derives (roughly the hundred-millisecond scale); a GCM authentication
+// failure = wrong password, so the error shows in place and the typed input
+// is kept.
+// Shared by blog posts and travel detail pages; unlockKey is the namespace
+// key of the unlock cache (blogs and travels can share the same slug).
 
 import { Lock } from "lucide-react";
 import { type FormEvent, useEffect, useRef, useState } from "react";
@@ -23,7 +26,7 @@ export function LockScreen({
   locked: LockedContent;
   onUnlock: (bundle: UnlockedBundle) => void;
   slug: string;
-  /** 解锁缓存命名空间键（如 travel:<slug>）；缺省用 slug */
+  /** Unlock cache namespace key (e.g. travel:<slug>); falls back to slug */
   unlockKey?: string;
 }) {
   const t = useT();
@@ -32,8 +35,9 @@ export function LockScreen({
   const [failed, setFailed] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // 锁屏页的主操作就是输口令：挂载后聚焦输入框（与 CommandPalette 打开
-  // 时聚焦同一模式；不使用 autoFocus 属性，过 a11y noAutofocus 门禁）
+  // The lock screen's primary action is typing the password: focus the input
+  // on mount (same pattern as CommandPalette focusing on open; the autoFocus
+  // attribute is avoided to pass the a11y noAutofocus gate)
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
@@ -47,8 +51,9 @@ export function LockScreen({
     setFailed(false);
     let bundle: UnlockedBundle;
     try {
-      // 缓存键带命名空间（unlockKey），资产名永远用裸 slug —— 两者混用会让
-      // .bin 请求 404（见 unlockPost 注释）
+      // The cache key carries the namespace (unlockKey); the asset name is
+      // always the bare slug -- mixing the two makes .bin requests 404
+      // (see the unlockPost comment)
       bundle = await unlockPost(unlockKey ?? slug, locked, password, slug);
     } catch (error) {
       if (!(error instanceof UnlockError)) {
@@ -63,18 +68,23 @@ export function LockScreen({
 
   return (
     <div className="relative mx-auto mt-2 max-w-lg rotate-[0.45deg]">
-      {/* 胶带两角对压，压在撕边纸沿上（§7：胶带是被裁元素的兄弟节点） */}
+      {/* Tape pressed on two corners, over the torn paper edge (§7: the tape
+          is a sibling of the clipped element) */}
       <Tape className="w-24 bg-accent-soft/80" corner="start" seed={`${slug}-a`} />
       <Tape className="w-20 bg-accent-soft/60" corner="end" seed={`${slug}-b`} />
 
-      {/* 圆形邮戳（DESIGN.md §7 .paper-postmark 共享原语，配方两侧同步）：
-          右下角盖在信纸上，窄屏收起避让文字。锁屏戳是纯装饰，aria-hidden。 */}
+      {/* Round postmark (DESIGN.md §7 .paper-postmark shared primitive; keep
+          the recipe in sync on both sides): stamped on the letter in the
+          bottom-right, hidden on narrow screens to stay clear of the text.
+          The lock-screen postmark is pure decoration, aria-hidden. */}
       <div
         aria-hidden="true"
         className="paper-postmark pointer-events-none absolute bottom-6 right-6 z-10 hidden size-20 rotate-12 text-ink-3 sm:grid"
       >
         <Lock className="size-4" />
-        {/* 负右距抵消末字母后的 tracking 尾隙，戳文才在圆环里光学居中 */}
+        {/* Negative right margin cancels the trailing tracking gap after the
+            last letter so the postmark text sits optically centered in the
+            ring */}
         <span className="-mr-[0.22em] font-mono text-[8px] leading-none tracking-[0.22em]">SEALED</span>
       </div>
 

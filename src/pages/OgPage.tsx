@@ -1,13 +1,15 @@
-// OG 分享卡页（/og/，noindex 工具页）：1200×630 固定画布，Shell 对本路由
-// 隐藏导航/页脚（见 Shell.tsx 的 bare 分支）。配色与字体全部走设计 token，
-// 与站点主题同源 —— 主题调整后重新截图即可同步。
+// OG share card page (/og/, noindex utility page): fixed 1200×630 canvas; Shell hides the
+// navigation/footer for this route (see the bare branch in Shell.tsx). Colors and fonts all go
+// through design tokens, sourced from the same place as the site theme — re-screenshot after a
+// theme tweak to stay in sync.
 //
-// 截图生成 public/og-default.png（构建后任选一种静态服务）：
+// Screenshot to produce public/og-default.png (any static server after building):
 //   pnpm build && pnpm exec vite preview --port 4173
 //   msedge --headless=new --window-size=1200,630 --disable-gpu --hide-scrollbars \
 //     --screenshot=public/og-default.png http://127.0.0.1:4173/og/
 //
-// 文案固定中文基线：这是截图目标，语言必须稳定，不随 UI 语言切换。
+// Copy is pinned to the Chinese baseline: this is the screenshot target, the language must stay
+// stable and must not follow the UI language.
 
 import { useEffect } from "react";
 import { siteConfig } from "@/config/site.ts";
@@ -15,11 +17,12 @@ import { translateFor } from "@/lib/i18n.ts";
 import { applyThemeStyle, readThemeStyle } from "@/lib/theme.ts";
 
 export function OgPage() {
-  // 文案锁定中文基线（translateFor 直取 zh 词库，不经 UI 语言状态）
+  // Copy locked to the Chinese baseline (translateFor reads the zh wordbook directly, bypassing
+  // the UI language state)
   const t = translateFor("zh-CN");
 
-  // OG 卡固定浅色基准：挂载期间压掉 html.dark（分享卡不做暗色变体），
-  // 离开页面时按站点主题偏好恢复
+  // OG card is pinned to the light baseline: suppress html.dark while mounted (the share card
+  // has no dark variant); restore per the site theme preference when leaving the page
   useEffect(() => {
     const root = document.documentElement;
     const force = () => root.classList.remove("dark");

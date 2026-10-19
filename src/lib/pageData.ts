@@ -1,15 +1,17 @@
-// 页面 payload 管道：构建期把整页状态以 JSON 嵌进
-// `<script id="page-data" type="application/json">`；客户端导航 fetch 同一
-// URL 并从 HTML 响应中提取 payload。
+// Page payload pipeline: at build time the whole page state is embedded as JSON in
+// `<script id="page-data" type="application/json">`; client-side navigation fetches the
+// same URL and extracts the payload from the HTML response.
 //
-// 大体积字段（正文 contentHtml / 旅行地图 mapSvg）是例外：若同时进 DOM 和
-// page-data 会让文档体积翻倍，因此 page-data 里不含它们 —— 单份存于 DOM，
-// 首帧从当前文档读回、SPA 换页时从 fetch 到的文档解析（见 attachProseHtml）。
+// Large fields (body contentHtml / travel map mapSvg) are the exception: having them in
+// both the DOM and page-data would double the document size, so page-data excludes them —
+// a single copy lives in the DOM, read back from the current document on the first frame
+// and parsed from the fetched document on SPA navigation (see attachProseHtml).
 
 import { type AnyPageData, isBlogPostData, isProjectData, isTravelData, isTravelsData } from "@/lib/types.ts";
 
-/** 单份存于 DOM 的字段就地注回 payload。加密博文/旅行跳过：锁屏页没有
- *  正文 DOM，锁定 payload 永远不该被回填。 */
+/** Inject DOM-stored single-copy fields back into the payload in place. Encrypted
+ *  posts/travels are skipped: the lock screen has no body DOM, and a locked payload must
+ *  never be backfilled. */
 function attachProseHtml(doc: Document, data: AnyPageData): AnyPageData {
   if (
     isBlogPostData(data) &&
@@ -17,7 +19,7 @@ function attachProseHtml(doc: Document, data: AnyPageData): AnyPageData {
     data.post.contentHtml === undefined &&
     data.post.locked === undefined
   ) {
-    // 整篇幻灯片：DeckViewer 的标记槽（.prose 是普通文章的选择器，二者互斥）
+    // Full deck: DeckViewer's marker slot (.prose is the regular-post selector; the two are mutually exclusive)
     const html = doc.querySelector("[data-deck-content]")?.innerHTML;
     if (html !== undefined) {
       return { ...data, post: { ...data.post, contentHtml: html } };

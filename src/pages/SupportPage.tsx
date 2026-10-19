@@ -1,5 +1,6 @@
-// 支持页：微信 / 支付宝二维码。入口是导航右上角的心形图标，页面保持精简。
-// 结构对齐全站列表页：SectionHeading 页题 + 左对齐内容列（DESIGN.md §6）。
+// Support page: WeChat / Alipay QR codes. Entry is the heart icon at the top right of the nav;
+// the page stays minimal. Structure aligns with the site's list pages: SectionHeading page title
+// + left-aligned content column (DESIGN.md §6).
 
 import { Heart } from "lucide-react";
 import { SectionHeading } from "@/components/SectionHeading.tsx";
@@ -36,8 +37,9 @@ export function SupportPage() {
         <div className="mt-10 grid max-w-xl grid-cols-1 gap-4 sm:grid-cols-2">
           {channels.map((item) => (
             <div className={cn("flex flex-col items-center", CARD, "p-6")} key={item.name}>
-              {/* 固定白底是有意的（DESIGN.md §3 登记豁免）：收款码需要真实白底
-                  保证扫码器对比度，暗色下也不能跟 token 翻黑 */}
+              {/* The fixed white background is intentional (registered exemption in DESIGN.md §3):
+                  payment QR codes need a true white backing for scanner contrast, and must not
+                  flip dark with the tokens in dark mode */}
               <div className="mb-5 size-48 rounded-xl border border-line bg-white p-3">
                 <img
                   alt={item.image.alt}

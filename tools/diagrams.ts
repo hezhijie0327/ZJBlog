@@ -1,17 +1,22 @@
-// 图表/图示扩展层：Typora 专属 fence 的构建期兼容（sequence/flow/geojson/
-// topojson/plantuml/stl）。除 stl 需要客户端 three.js 惰性渲染外，其余全部
-// 在构建期产出静态产物 —— mermaid 源码复用既有惰性渲染器、GeoJSON 直接
-// 投影成 SVG（运行时零 JS）、PlantUML 走公共渲染服务的 lazy <img>。
+// Diagram/chart extension layer: build-time compatibility for Typora-specific
+// fences (sequence/flow/geojson/topojson/plantuml/stl). Except stl, which
+// needs lazy client-side rendering with three.js, everything else produces
+// static output at build time — mermaid source reuses the existing lazy
+// renderer, GeoJSON is projected straight to SVG (zero runtime JS), PlantUML
+// goes through the public rendering service as a lazy <img>.
 
 import encoder from "plantuml-encoder";
 import { feature as topoFeature } from "topojson-client";
+import { BASELINE_GEO_MAP_LABEL } from "../src/lib/i18n/baseline.ts";
 
 type Json = Record<string, unknown>;
 type Coord = [number, number];
 
-/** js-sequence-diagrams 语法 → mermaid sequenceDiagram。
- *  Note/participant 两种语法与 mermaid 完全一致直接透传；Title 大小写归一；
- *  箭头换算：-> 变 ->>（实线实心），--> 变 -->>（虚线实心），-->> 原样。 */
+/** js-sequence-diagrams syntax → mermaid sequenceDiagram.
+ *  Note/participant syntax matches mermaid exactly and passes through
+ *  unchanged; Title case is normalized; arrow conversion: -> becomes ->>
+ *  (solid line, filled head), --> becomes -->> (dashed line, filled head),
+ *  -->> stays as is. */
 export function translateSequenceToMermaid(code: string): string {
   const lines = code
     .split("\n")
@@ -37,7 +42,8 @@ export function translateSequenceToMermaid(code: string): string {
   return ["sequenceDiagram", ...lines].join("\n");
 }
 
-// flowchart.js 节点类型 → mermaid 节点形状包裹符（标签统一加引号防特殊字符）
+// flowchart.js node types → mermaid node shape wrappers (labels uniformly
+// quoted to guard special characters)
 const FLOW_SHAPES: Record<string, [string, string]> = {
   start: ["([", "])"],
   end: ["([", "])"],
@@ -47,10 +53,12 @@ const FLOW_SHAPES: Record<string, [string, string]> = {
   inputoutput: ["[/", "/]"],
 };
 
-/** flowchart.js 语法 → mermaid flowchart。
- *  定义行 tag=>type: label 逐个转成带引号标签的节点；连接行 a->b->c 转成
- *  mermaid 链式边，condition 分支的 (yes)/(no) 变边标签，(right) 提示整体
- *  切换为横向布局（mermaid 无法表达单条边的方向提示，此处有意舍弃）。 */
+/** flowchart.js syntax → mermaid flowchart.
+ *  Definition lines tag=>type: label become quoted-label nodes one by one;
+ *  connection lines a->b->c become mermaid chained edges, (yes)/(no) hints on
+ *  condition branches become edge labels, and (right) hints switch the whole
+ *  chart to a horizontal layout (mermaid cannot express a per-edge direction
+ *  hint; intentionally dropped here). */
 export function translateFlowToMermaid(code: string): string {
   const defs = new Map<string, { type: string; label: string }>();
   const edges: { from: string; label?: string; to: string }[] = [];
@@ -66,7 +74,7 @@ export function translateFlowToMermaid(code: string): string {
       if (def) {
         const tag = def[1] ?? "";
         const type = (def[2] ?? "operation").toLowerCase();
-        // 尾部 :>url 链接注记在静态图中无对应能力，剥离
+        // Trailing :>url link annotations have no static equivalent; strip them
         const label = (def[3] ?? "").replace(/\s*:>\s*\S+$/, "").trim();
         defs.set(tag, { type, label });
       }
@@ -103,13 +111,14 @@ export function translateFlowToMermaid(code: string): string {
   return [`flowchart ${horizontal ? "LR" : "TD"}`, ...defLines, ...edgeLines].join("\n");
 }
 
-// ---- GeoJSON / TopoJSON → 静态 SVG ----
+// ---- GeoJSON / TopoJSON → static SVG ----
 
 const GEO_W = 640;
 const GEO_H = 360;
 const GEO_PAD = 28;
 
-/** 按 Geometry 类型记录坐标数组的嵌套深度（坐标 = 数组里直接是数字） */
+/** Nesting depth of the coordinate array per Geometry type (a coordinate =
+ *  an array whose elements are numbers directly) */
 const GEO_DEPTH: Record<string, number> = {
   Point: 0,
   MultiPoint: 1,
@@ -131,8 +140,9 @@ function collectGeometries(
   } else if (node.type === "Feature") {
     const geometry = node.geometry as Json | null;
     const props = node.properties as Record<string, unknown> | null;
-    // name 只决定是否生成点位标注，几何体无论如何都要收集 ——
-    // 否则无 name 的 Feature（如 {ID: 0}）会让整幅地图坐标为空而抛错
+    // name only decides whether a point label is generated; the geometry is
+    // collected regardless — otherwise a nameless Feature (e.g. {ID: 0})
+    // would leave the whole map with no coordinates and throw
     if (geometry?.type === "Point" && typeof props?.name === "string") {
       labels.push({
         coords: geometry.coordinates as Coord,
@@ -201,8 +211,9 @@ function ringToPath(ring: unknown, depth: number, project: (c: Coord) => Coord, 
   return close ? `${d.join(" ")}Z` : d.join(" ");
 }
 
-/** GeoJSON → 等比投影的静态 SVG（等距圆柱投影 + 自适应包围盒，token 配色；
- *  Point 型 Feature 的 properties.name 会渲染为点位标注） */
+/** GeoJSON → uniformly scaled static SVG (equirectangular projection +
+ *  self-fitting bounding box, token colors; properties.name of a Point
+ *  Feature renders as a point label) */
 export function renderGeoSvg(geo: Json): string {
   const geometries: Json[] = [];
   const labels: { coords: Coord; name: string; dx: number; dy: number }[] = [];
@@ -243,7 +254,7 @@ export function renderGeoSvg(geo: Json): string {
         parts.push(`<circle class="geo-point" cx="${x}" cy="${y}" r="4"/>`);
       }
     } else if (type === "LineString") {
-      // LineString 坐标与环同构（[[x,y],...]），深度必须为 1
+      // LineString coordinates are ring-shaped ([[x,y],...]); depth must be 1
       parts.push(`<path class="geo-line" d="${ringToPath(coordsValue, 1, project, false)}"/>`);
     } else if (type === "MultiLineString") {
       for (const line of (coordsValue as unknown[]) ?? []) {
@@ -268,10 +279,11 @@ export function renderGeoSvg(geo: Json): string {
       return `<text class="geo-label" x="${x}" y="${y}">${text}</text>`;
     })
     .join("");
-  return `<svg class="geo-map" viewBox="0 0 ${GEO_W} ${GEO_H}" role="img" aria-label="GeoJSON 地图示意"><rect class="geo-map-bg" width="${GEO_W}" height="${GEO_H}"/>${parts.join("")}${labelEls}</svg>`;
+  return `<svg class="geo-map" viewBox="0 0 ${GEO_W} ${GEO_H}" role="img" aria-label="${BASELINE_GEO_MAP_LABEL}"><rect class="geo-map-bg" width="${GEO_W}" height="${GEO_H}"/>${parts.join("")}${labelEls}</svg>`;
 }
 
-/** TopoJSON → GeoJSON（多 objects 合并为单个 FeatureCollection） */
+/** TopoJSON → GeoJSON (multiple objects merged into a single
+ *  FeatureCollection) */
 export function topoToGeo(topo: Json): Json {
   const objects = (topo.objects ?? {}) as Record<string, unknown>;
   const features: Json[] = [];
@@ -286,7 +298,8 @@ export function topoToGeo(topo: Json): Json {
   return { type: "FeatureCollection", features };
 }
 
-/** PlantUML → 公共渲染服务的 lazy <img>（deflate+base64 编码，非加密） */
+/** PlantUML → lazy <img> via the public rendering service (deflate+base64
+ *  encoding, not encrypted) */
 export function plantumlFigure(code: string): string {
   const body = code
     .trim()
@@ -294,8 +307,9 @@ export function plantumlFigure(code: string): string {
     .replace(/@enduml\s*$/i, "")
     .trim();
   const src = `https://www.plantuml.com/plantuml/svg/${encoder.encode(body || code.trim())}`;
-  // width/height 是占位比例（真实尺寸由服务端 SVG 自带，CSS width:100% +
-  // height:auto 收口）：无尺寸的 lazy <img> 过不了 Lighthouse unsized-images，
-  // 且加载前完全不预留版面。
+  // width/height are placeholder ratios (the server-side SVG carries the real
+  // size; CSS width:100% + height:auto finalize it): an unsized lazy <img>
+  // fails the Lighthouse unsized-images audit and reserves no layout space at
+  // all before loading.
   return `<img alt="PlantUML diagram" class="plantuml-img" decoding="async" height="720" loading="lazy" src="${src}" width="1280"/>`;
 }

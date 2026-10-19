@@ -1,7 +1,9 @@
-// 项目卡片：首页精选与项目列表页共用（标题层级随调用方传入，保证各自
-// 页面的标题层级不断档）。
-// 设计对标参考站的 SELECTED WORK 卡：胶带 + 封面 + 编号/域名 + 标题 +
-// 描述 + 外链箭头。封面优先用 frontmatter.image，缺省渲染品牌化纸面封面。
+// Project card: shared by the home page's featured section and the projects
+// list page (the heading level is passed in by the caller so each page's
+// heading hierarchy stays unbroken).
+// Design modeled on the reference site's SELECTED WORK card: tape + cover +
+// index/domain + title + description + external-link arrow. The cover prefers
+// frontmatter.image; without one a branded paper cover is rendered.
 
 import { ArrowUpRight } from "lucide-react";
 import { Link } from "@/components/Shell.tsx";
@@ -13,13 +15,13 @@ import type { ProjectListItem } from "@/lib/types.ts";
 
 interface ProjectCardProps {
   project: ProjectListItem;
-  /** 卡片序号（等宽装饰编号，从 0 计） */
+  /** Card index (mono decorative number, counted from 0) */
   index: number;
-  /** 卡片标题的标签层级：列表页 h2，首页章节内 h3 */
+  /** Heading tag for the card title: h2 on the list page, h3 inside a home page section */
   heading: "h2" | "h3";
 }
 
-/** 卡片上的域名行：GitHub 链接显示 owner/repo，其余取主机名。 */
+/** Domain line on the card: GitHub links show owner/repo, everything else uses the hostname. */
 function domainOf(project: ProjectListItem): string {
   if (project.link) {
     try {
@@ -35,7 +37,7 @@ function domainOf(project: ProjectListItem): string {
       }
       return url.hostname.replace(/^www\./, "");
     } catch {
-      /* 非法链接退回 slug */
+      /* Invalid link falls back to the slug */
     }
   }
   return project.slug;
@@ -43,16 +45,20 @@ function domainOf(project: ProjectListItem): string {
 
 export function ProjectCard({ project, index, heading: Heading }: ProjectCardProps) {
   const domain = domainOf(project);
-  // 封面上的短名：取「 - 」前的主名，避免长标题在封面里换行
+  // Short name for the cover: take the main name before " - " so long titles
+  // do not wrap on the cover
   const shortName = project.title.split(/\s+[-—]\s+/)[0] ?? project.title;
-  // 物理感：钉在板上的卡片各有微小歪斜，胶带位置角度随内容确定性变化
-  // （seed 物理——不能用随机数，SSR 与客户端水合必须一致）。
+  // Physical feel: pinned cards each carry a slight tilt, and tape position
+  // and angle vary deterministically with content (seed physics -- no random
+  // numbers allowed; SSR and client hydration must match).
   const tilt = index % 2 === 0 ? "-rotate-[0.35deg]" : "rotate-[0.45deg]";
   return (
     <Link className={cn(CARD_HOVER, "group relative flex flex-col pt-5", tilt)} href={`/projects/${project.slug}/`}>
-      {/* 胶带（纯装饰）：压在卡片上缘，位置角度随标题 seed 变化 */}
+      {/* Tape (purely decorative): pressed on the card's top edge, position
+          and angle vary with the title seed */}
       <Tape className="w-24 bg-accent-soft/80" seed={project.title} />
-      {/* 封面：frontmatter.image 优先，缺省为品牌化纸面封面（首字母 + 域名） */}
+      {/* Cover: frontmatter.image first; default is the branded paper cover
+          (initial letter + domain) */}
       <div className="relative overflow-hidden border-b border-line">
         {project.image ? (
           <img

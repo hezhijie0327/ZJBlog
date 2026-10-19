@@ -1,20 +1,24 @@
-// 标题块：编号（等宽金棕，可选）+ 中文衬线标题 + 英文小标签（可选）+ 右侧补充。
-// level=1 为页面页题（h1，大号黑体）；level=2（默认）为章节标题（h2）。
-// 编号在独立列表页上没有语义，故 index 可选；调用方负责让其与内容列同宽对齐。
+// Heading block: index number (mono, gold-brown, optional) + serif title +
+// small English eyebrow label (optional) + right-side hint.
+// level=1 is the page title (h1, large black weight); level=2 (default) is a
+// section heading (h2).
+// The number has no meaning on standalone list pages, hence index is optional;
+// the caller keeps it width-aligned with the content column.
 
 import { cn } from "@/lib/cn.ts";
 import { EYEBROW } from "@/lib/styles.ts";
 
 interface SectionHeadingProps {
-  /** 标题层级：1 = 页面页题（h1），2 = 章节标题（h2，默认） */
+  /** Heading level: 1 = page title (h1), 2 = section heading (h2, default) */
   level?: 1 | 2;
-  /** 章节编号，如 "01" */
+  /** Section index, e.g. "01" */
   index?: string;
-  /** 中文标题 */
+  /** Title text (localized) */
   title: string;
-  /** 小标签（等宽字体；中文界面作英文点缀，英文界面与标题重复，传空隐藏） */
+  /** Small eyebrow label (mono font; an English accent in the zh UI,
+      duplicates the title in the en UI -- pass empty to hide) */
   en?: string;
-  /** 右侧补充说明（如数量） */
+  /** Right-side hint (e.g. a count) */
   hint?: string;
   className?: string;
 }

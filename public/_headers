@@ -1,13 +1,17 @@
-# Cloudflare Workers Static Assets 响应头（构建时位于 dist/ 根，随 Vite 从
-# public/ 拷入）。giscus iframe 以 <link crossorigin="anonymous"> 加载自托管
-# 主题 CSS，跨域（giscus.app）必须回 ACAO，否则主题被浏览器拦截，评论区
-# 渲染退化为无主题样式。dev 侧由 vite.config server.cors 提供同一头。
-# 文件内容是公开色板，通配放行即可。
+# Response headers for Cloudflare Workers Static Assets (lands at the dist/
+# root at build time, copied from public/ by Vite). The giscus iframe loads
+# the self-hosted theme CSS via <link crossorigin="anonymous"> from another
+# origin (giscus.app), so ACAO must be served back or the browser blocks the
+# stylesheet and the comment section degrades to unstyled. The dev side serves
+# the same header via vite.config server.cors. The file content is a public
+# color palette — a wildcard allow is fine.
 #
-# 纯文本端点必须显式 charset=utf-8：Workers 静态资产对 .txt 只发
-# text/plain，无 charset 时 Chrome 按系统区域编码猜（中文系统猜 GBK），
-# llms.txt 中文全部乱码。_headers 的头会覆盖默认值；llms*.txt 无文件内
-# 声明编码的手段（不像 XML 有 encoding=），robots.txt 一并显式声明。
+# Plain-text endpoints need an explicit charset=utf-8: Workers static assets
+# serve .txt as bare text/plain, and without a charset Chrome guesses the
+# encoding from the system locale (GBK on Chinese systems), turning every
+# non-ASCII character in llms.txt into mojibake. _headers values override the
+# defaults; llms*.txt has no in-file way to declare an encoding (unlike XML's
+# encoding=), and robots.txt declares it explicitly for the same reason.
 
 /giscus-light.css
   Access-Control-Allow-Origin: *
@@ -24,9 +28,10 @@
 /robots.txt
   Content-Type: text/plain; charset=utf-8
 
-# 导出的原始 Markdown（详情页「复制为 Markdown」数据源 + agent 直取直链）：
-# 同上无文件内编码声明，显式 charset 防中文直开乱码。splat 覆盖三种详情页
-# 的 /<kind>/<slug>/index.md。
+# Exported original Markdown (the source of the post page's "copy as
+# Markdown" button + direct links for agents): same as above, no in-file
+# encoding declaration, so an explicit charset prevents mojibake on direct
+# opens. One splat covers /<kind>/<slug>/index.md for all three detail pages.
 /blogs/*/index.md
   Content-Type: text/markdown; charset=utf-8
 
@@ -36,9 +41,10 @@
 /projects/*/index.md
   Content-Type: text/markdown; charset=utf-8
 
-# PWA 安装层（DESIGN.md §18）：worker 本体禁缓存 —— 更新随下次加载生效，
-# 不 Ride CDN 长缓存；声明作用域根（/sw.js 的默认 max scope 已是 /，
-# 此头是显式备案，审计门禁据此核验）。
+# PWA install layer (DESIGN.md §18): the worker itself must not be cached —
+# updates then take effect on the next load instead of riding the CDN's long
+# cache; declares the scope root (the default max scope for /sw.js is already
+# /, this header is the explicit record; the audit gate verifies against it).
 /sw.js
   Cache-Control: no-cache
   Service-Worker-Allowed: /

@@ -1,7 +1,8 @@
 // Description: Using Cloudflare Workers to map and mirror hezhijie0327's repos.
-// ES Modules 语法（Workers 当前默认；service-worker 的 addEventListener("fetch")
-// 语法已被 Cloudflare 废弃）。行为与旧版完全一致，单独 wrangler 部署，不属
-// 博客构建链。
+// ES Modules syntax (the current Workers default; the service-worker
+// addEventListener("fetch") syntax has been deprecated by Cloudflare).
+// Behavior is identical to the old version; deployed separately with wrangler,
+// not part of the blog build chain.
 
 /** @param {Request} request */
 async function handleRequest(request) {

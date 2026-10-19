@@ -1,4 +1,5 @@
-// plantuml-encoder 无内置类型；经 tsconfig paths 重定向（仅类型层）。
+// plantuml-encoder has no built-in types; redirected via tsconfig paths
+// (types only).
 declare module "plantuml-encoder" {
   const encoder: {
     encode: (plain: string) => string;

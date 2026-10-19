@@ -1,10 +1,13 @@
-// Mermaid 图表渲染器：库体积大（约 2.7MB），滚动到图表附近才动态加载。
-// 构建期 Markdown 编译已把 mermaid 代码块替换为 .mermaid-placeholder 占位
-// 容器（data-chart 存原文），由 Prose 挂载本组件逐个渲染。
+// Mermaid chart renderer: the library is large (~2.7MB), so it is loaded
+// dynamically only when scrolling nears a chart. Build-time Markdown
+// compilation has already replaced mermaid code blocks with
+// .mermaid-placeholder containers (data-chart holds the source); Prose mounts
+// this component to render each one.
 //
-// mermaid.initialize 是配置合并（很轻），随每次渲染执行以携带当前主题；
-// 主题切换（html.dark 翻转）后已出图的图表会重渲染；beforeprint 时未渲染
-// 的图表立即触发渲染（尽力而为）。
+// mermaid.initialize is a config merge (very cheap) and runs on every render
+// to carry the current theme; after a theme switch (html.dark flip), charts
+// that already rendered re-render; at beforeprint, charts not yet rendered
+// trigger rendering immediately (best effort).
 
 import type { Mermaid } from "mermaid";
 import { useEffect, useState } from "react";
@@ -15,16 +18,18 @@ import { useInView } from "@/lib/useInView.ts";
 
 interface MermaidRendererProps {
   chart: string;
-  /** 整卡可点进全文灯箱（Prose 正文用）；deck 嵌入片自管翻页语义，不带 */
+  /** Whole card clickable into the article-wide lightbox (Prose body use);
+   *  deck embeds manage their own paging semantics and omit it */
   lightbox?: boolean;
 }
 
 let mermaidPromise: Promise<Mermaid> | null = null;
 
-/** 渲染 id 序列（模块级递增，禁随机 —— DESIGN.md §7 确定性要求）。 */
+/** Render id sequence (module-level increment, no randomness — DESIGN.md §7
+ *  determinism requirement). */
 let mermaidSeq = 0;
 
-/** 懒加载 mermaid（模块级缓存，全站只加载一次）。 */
+/** Lazy-load mermaid (module-level cache; loaded once site-wide). */
 function loadMermaid(): Promise<Mermaid> {
   mermaidPromise ??= import("mermaid").then((mermaid) => mermaid.default);
   return mermaidPromise;
@@ -32,21 +37,25 @@ function loadMermaid(): Promise<Mermaid> {
 
 export function MermaidRenderer({ chart, lightbox = false }: MermaidRendererProps) {
   const t = useT();
-  // 进入视口（含 300px 缓冲）才触发加载；beforeprint 时强制渲染兜底
+  // Load only on entering the viewport (with a 300px buffer); beforeprint
+  // forces rendering as a fallback
   const { ref: containerRef, inView: scrolled } = useInView<HTMLDivElement>({ once: true });
   const [printed, setPrinted] = useState(false);
   const visible = scrolled || printed;
   const [theme, setTheme] = useState(() => document.documentElement.classList.contains("dark"));
-  // 打印/预览的纸面是浅色（styles/print.css 家族契约）：lib/print.ts 广播
-  // 事件驱动就地重渲染，关闭时按当前主题恢复
+  // Print/preview paper is light (styles/print.css family contract):
+  // lib/print.ts broadcast events drive in-place re-rendering, restored to
+  // the current theme on close
   const [printLight, setPrintLight] = useState(false);
   const [svg, setSvg] = useState("");
   const [error, setError] = useState("");
 
-  // 主题翻转后重渲染（theme 变化触发下面的渲染 effect）
+  // Re-render after a theme flip (the theme change triggers the render effect
+  // below)
   useEffect(() => watchThemeDark(setTheme), []);
 
-  // 打印时未滚动到的图表是空占位——尽力触发一次渲染
+  // Charts never scrolled to are empty placeholders at print time — force one
+  // render, best effort
   useEffect(() => {
     const onBeforePrint = () => {
       setPrinted(true);
@@ -104,7 +113,8 @@ export function MermaidRenderer({ chart, lightbox = false }: MermaidRendererProp
   }, [visible, chart, theme, printLight]);
 
   if (error) {
-    // 危险文案用 ink/ink-2 保持 AA 对比度，danger 只承担边框语义
+    // Danger copy uses ink/ink-2 to keep AA contrast; danger only carries the
+    // border semantics
     return (
       <div className="my-4 rounded-lg border border-danger/60 bg-danger/10 p-4 text-sm" role="alert">
         <p className="font-semibold text-ink">{t("mermaid.failed")}</p>
@@ -114,8 +124,9 @@ export function MermaidRenderer({ chart, lightbox = false }: MermaidRendererProp
   }
 
   return (
-    // data-mermaid-figure 是 Prose 灯箱委托的入口标记（deck 内不带），整卡
-    // 命中（含边框留白）比只命中 svg 好点
+    // data-mermaid-figure is the entry marker for Prose's lightbox delegation
+    // (omitted inside decks); hitting the whole card (border padding
+    // included) beats hitting only the svg
     <div
       className={cn(
         "my-6 overflow-x-auto rounded-xl border border-line bg-surface p-4 shadow-card",
@@ -125,8 +136,9 @@ export function MermaidRenderer({ chart, lightbox = false }: MermaidRendererProp
       ref={containerRef}
     >
       {svg ? (
-        // mermaid.render 输出受 securityLevel: "strict" 约束的受信 SVG；
-        // role="img" + aria-label 让读屏器把整图作为一张图语义呈现
+        // mermaid.render output is trusted SVG constrained by
+        // securityLevel: "strict"; role="img" + aria-label make screen
+        // readers present the whole figure as a single image
         <div aria-label={t("mermaid.figure")} dangerouslySetInnerHTML={{ __html: svg }} role="img" />
       ) : (
         <p className="py-8 text-center text-sm text-ink-3">{t("mermaid.loading")}</p>

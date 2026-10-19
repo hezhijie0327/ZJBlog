@@ -1,7 +1,8 @@
-// 旅行：真实世界地图（构建期 SVG，#travel-map 单份存 DOM，同 contentHtml
-// 契约由 pageData 管道回填）+ 足迹逐站点亮动画（纯 CSS，--seq 编排，重放按钮
-// 重启动画）+ 明信片墙（确定性歪斜 + 胶带 + 封面灯箱）。锁定旅行：明信片保留
-// 针脚/地名/日期（纪念层），封面与摘要不出站，标题进详情锁屏。
+// Travels: real-world map (build-time SVG, single DOM copy at #travel-map, backfilled through
+// the pageData pipeline under the same contract as contentHtml) + per-stop footprint lighting
+// animation (pure CSS, --seq choreography, replay button restarts it) + postcard wall
+// (deterministic tilt + tape + cover lightbox). Locked trips: postcards keep pins/place/dates
+// (the commemorative layer), cover and summary never ship, titles lead to the detail lock screen.
 
 import { Heart, Lock, Maximize, Play, User, ZoomIn, ZoomOut } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -21,12 +22,13 @@ const MAP_H = TRAVEL_MAP_SIZE.h;
 const ZOOM_MIN = 1;
 const ZOOM_MAX = 660;
 
-/** 地图缩放/平移控制器：滚轮/双指捏合缩放（以指针为中心）、拖拽平移、
- *  双击放大；读写构建期嵌进 SVG 的初始 transform（针脚自适应视野）。
- *  缩放倍率同步到根上的 --map-zoom，针脚/标签经 calc(1/var) 反缩放保持
- *  屏幕恒定大小；线条用 non-scaling-stroke。 */
+/** Map zoom/pan controller: wheel/two-finger pinch zoom (pointer-centered), drag to pan,
+ *  double-click to zoom in; reads/writes the initial transform baked into the SVG at build
+ *  time (pins auto-fitted to the viewport). The zoom factor is synced to --map-zoom on the
+ *  root; pins/labels counter-scale via calc(1/var) to keep a constant on-screen size; lines
+ *  use non-scaling-stroke. */
 function useMapZoom(rootRef: React.RefObject<HTMLDivElement | null>) {
-  // 每张地图（主图 + 城市特写）各自一份视野状态；按钮按容器寻址
+  // Each map (main + city close-up) keeps its own viewport state; buttons address by container
   const apiMapRef = useRef(new Map<HTMLDivElement, MapApi>());
 
   useEffect(() => {
@@ -66,13 +68,13 @@ function useMapZoom(rootRef: React.RefObject<HTMLDivElement | null>) {
 interface MapApi {
   zoomBy: (factor: number) => void;
   resetWorld: () => void;
-  /** 镜头飞行到指定视野（ease-in-out；respects reduced-motion → 瞬时） */
+  /** Camera flies to the given viewport (ease-in-out; respects reduced-motion → instantaneous) */
   flyTo: (view: [number, number, number], durationMs: number) => Promise<void>;
-  /** 点亮 data-play = idx 的元素（重放编排用） */
+  /** Lights up elements with data-play = idx (used by the replay choreography) */
   light: (idx: number) => void;
 }
 
-/** 给单张地图容器挂手势与按钮 API（独立视野状态）。 */
+/** Attaches gestures and the button API to a single map container (independent viewport state). */
 function attachMapController(container: HTMLDivElement, apiMap: Map<HTMLDivElement, MapApi>): () => void {
   {
     const svg = container.querySelector("svg");
@@ -80,7 +82,8 @@ function attachMapController(container: HTMLDivElement, apiMap: Map<HTMLDivEleme
     if (!svg || !(world instanceof SVGGElement)) {
       return () => {};
     }
-    // 市内视角元素：倍率 ≥ data-threshold 时淡入（组合针脚反向隐藏）
+    // City-level elements: fade in once the zoom factor ≥ data-threshold (cluster pins hide
+    // in reverse)
     const cityEls = [...container.querySelectorAll<SVGElement>("[data-threshold]")].map((el) => ({
       el,
       threshold: Number(el.getAttribute("data-threshold")),
@@ -92,7 +95,7 @@ function attachMapController(container: HTMLDivElement, apiMap: Map<HTMLDivEleme
         city.el.classList.toggle(city.hideWhenOpen ? "off" : "on", open);
       }
     };
-    // 从构建期 transform 采纳初始视野（不跳变）
+    // Adopt the initial viewport from the build-time transform (no jump)
     const match = /translate\(([-\d.]+)[ ,]([-\d.]+)\)\s*scale\(([-\d.]+)\)/.exec(
       world.getAttribute("transform") ?? "",
     );
@@ -134,7 +137,7 @@ function attachMapController(container: HTMLDivElement, apiMap: Map<HTMLDivEleme
 
     const pointers = new Map<number, [number, number]>();
     let drag: { id: number; lastX: number; lastY: number } | null = null;
-    let moved = false; // 拖拽后抑制锚点 click（误触针脚跳转）
+    let moved = false; // suppress the anchor click after a drag (accidental pin jumps)
     let pinchDist: number | null = null;
 
     const onPointerDown = (event: PointerEvent) => {
@@ -196,8 +199,9 @@ function attachMapController(container: HTMLDivElement, apiMap: Map<HTMLDivEleme
         pinchDist = null;
       }
     };
-    // 镜头飞行（ease-in-out；reduced-motion 瞬时到达）。
-    // 用 setTimeout 而非 rAF 驱动：后台标签页 rAF 会被暂停，动画会卡死。
+    // Camera fly-through (ease-in-out; instantaneous under reduced-motion).
+    // Driven by setTimeout instead of rAF: rAF is paused in background tabs and the
+    // animation would stall.
     const flyTo = (view: [number, number, number], durationMs: number): Promise<void> =>
       new Promise((resolve) => {
         const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -220,8 +224,9 @@ function attachMapController(container: HTMLDivElement, apiMap: Map<HTMLDivEleme
         window.setTimeout(frame, 16);
       });
 
-    // 拖拽/捏合结束时吃掉紧跟的 click，避免误触针脚锚点；
-    // 点击「城市 ×N」组合针脚 → 镜头推进到市内视角（细节与成员淡入）
+    // Swallow the click immediately following a drag/pinch so pin anchors are not hit by
+    // accident; clicking a "city ×N" cluster pin → camera pushes into the city view
+    // (details and members fade in)
     const onClickCapture = (event: MouseEvent) => {
       if (moved) {
         event.preventDefault();
@@ -256,7 +261,8 @@ function attachMapController(container: HTMLDivElement, apiMap: Map<HTMLDivEleme
     container.addEventListener("click", onClickCapture, true);
     container.addEventListener("dblclick", onDoubleClick);
 
-    // 按钮入口：以视野中心缩放 / 回到整图视野（与手势共用同一份状态）
+    // Button entries: zoom around the viewport center / reset to the whole-map view (shares
+    // one state with the gestures)
     const api: MapApi = {
       zoomBy: (factor) => {
         zoomAt(MAP_W / 2, MAP_H / 2, state.k * factor);
@@ -296,19 +302,21 @@ export function TravelsPage({ data }: { data: TravelsData }) {
   const { resetWorld, zoomBy, flyTo, light } = useMapZoom(mapsRootRef);
   const couples = data.trips.filter((trip) => trip.companion === "couple").length;
 
-  // 构建期 SVG 的 aria-label 是中文基准（与复制按钮同一模式），水合后按
-  // 当前 UI 语言就地校正；语言切换跟随 t 重跑
+  // The build-time SVG aria-label is Chinese-baseline (same pattern as the copy button);
+  // corrected in place to the current UI language after hydration; re-runs with t on
+  // language switches
   useEffect(() => {
     mapRef.current?.querySelector("svg")?.setAttribute("aria-label", t("travel.mapLabel"));
   }, [t]);
-  // 灯箱素材 = 有封面的明信片（按展示顺序）
+  // Lightbox items = postcards that have covers (in display order)
   const covers: LightboxItem[] = data.trips
     .filter((trip) => trip.cover !== undefined)
     .map((trip) => ({ alt: trip.title, kind: "img", src: trip.cover as string }));
 
-  // 重放我们的步伐：镜头跟拍编排 —— 复位到世界视野，随后逐站飞行
-  // （ flyTo ），到站点亮针脚与轨迹；城市聚合站推进到市/区视角逐个点亮
-  // 再继续。婚礼场景 = F11 全屏 + 点重放。
+  // Replay our footsteps: a camera fly-through — reset to the world viewport, then fly stop
+  // by stop (flyTo), lighting pins and tracks on arrival; city cluster stops push into the
+  // city/district view, light their members one by one, then continue.
+  // Wedding scene = F11 fullscreen + hit replay.
   const [playing, setPlaying] = useState(false);
   async function replay() {
     const map = mapRef.current;
@@ -354,12 +362,13 @@ export function TravelsPage({ data }: { data: TravelsData }) {
           <EmptyState desc={t("travel.empty")} />
         ) : (
           <div ref={mapsRootRef}>
-            {/* 地图卡：构建期真实地理 SVG + 逐站点亮（重放见 replay） */}
+            {/* Map card: build-time real-geography SVG + per-stop lighting (replay: see replay) */}
             <div className={cn(CARD, "p-3 sm:p-5")}>
               <div className="flex flex-wrap items-center justify-between gap-3 px-2 pb-3 pt-1">
                 <p className={EYEBROW}>{t("travel.eyebrow")}</p>
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-                  {/* 图例仅 ≥sm 显示：小屏腾出空间让控制钮一行排布（配色语义由针脚形状自携带） */}
+                  {/* Legend shows only at ≥sm: frees small-screen space so the controls fit on
+                      one row (the color semantics are carried by the pin shapes themselves) */}
                   <span className="hidden items-center gap-1.5 font-mono text-xs text-ink-2 sm:inline-flex">
                     <Heart aria-hidden="true" className="size-3 fill-accent-strong text-accent-strong" />
                     {t("travel.couple")}
@@ -416,7 +425,7 @@ export function TravelsPage({ data }: { data: TravelsData }) {
               />
             </div>
 
-            {/* 明信片墙 */}
+            {/* Postcard wall */}
             <div className="mt-16 grid gap-x-8 gap-y-10 sm:grid-cols-2 sm:gap-y-14">
               {data.trips.map((trip, index) => (
                 <Postcard
@@ -441,9 +450,10 @@ export function TravelsPage({ data }: { data: TravelsData }) {
   );
 }
 
-/** 明信片卡：确定性歪斜；有封面 = 拍立得（图钉挂绳钉向地图卡方向，参考
- *  实体旅行照片墙），无封面 = 胶带便签（明信片背面粉条）。封面点击进灯箱，
- *  标题进详情（锁定旅行 = 锁屏），link 指向相关游记。 */
+/** Postcard card: deterministic tilt; with cover = polaroid (thumbtack + string pinned toward
+ *  the map card, after physical travel photo walls), without cover = taped note (postcard-back
+ *  ruled strip). Cover click opens the lightbox, title goes to the detail page (locked trip =
+ *  lock screen), link points to the related story. */
 function Postcard({ index, onPreview, trip }: { index: number; onPreview: () => void; trip: TravelListItem }) {
   const t = useT();
   const tilt = index % 2 === 0 ? "-rotate-[0.35deg]" : "rotate-[0.45deg]";
@@ -452,8 +462,9 @@ function Postcard({ index, onPreview, trip }: { index: number; onPreview: () => 
     <article className="group relative scroll-mt-24" id={trip.slug}>
       <div className={cn("relative", tilt)}>
         {trip.cover ? (
-          // 图钉挂绳：钉头 + 棉线升向墙的上方（首行指向地图卡，后续行钉在
-          // 墙面上）；纯装饰 aria-hidden，升入行间 gap 不占布局
+          // Thumbtack string: pin head + thread rising above the wall (first row points at the
+          // map card, later rows pin onto the wall); purely decorative aria-hidden, rises into
+          // the row gap without taking layout space
           <div
             aria-hidden="true"
             className="pointer-events-none absolute -top-10 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center"
@@ -466,7 +477,8 @@ function Postcard({ index, onPreview, trip }: { index: number; onPreview: () => 
         )}
         <div className={cn(CARD_HOVER, "overflow-hidden")}>
           {trip.cover ? (
-            // 拍立得白框：图面内收留边（卡体即相纸厚边）
+            // Polaroid white frame: image inset with a margin (the card body is the thick
+            // photo-paper edge)
             <button
               aria-label={trip.title}
               className="block w-full cursor-zoom-in p-2 pb-0"
@@ -483,8 +495,9 @@ function Postcard({ index, onPreview, trip }: { index: number; onPreview: () => 
               />
             </button>
           ) : (
-            // 无封面是常态：占位只保留一条明信片背面粉条（横线纸纹 + 虚线角票），
-            // 不再撑整个 2:1 画位
+            // No cover is the norm: the placeholder keeps only a single postcard-back ruled
+            // strip (ruled paper texture + dashed corner stamp), no longer filling the whole
+            // 2:1 slot
             <div aria-hidden="true" className="project-cover relative h-12 w-full sm:h-14">
               <span className="absolute right-4 top-1/2 size-7 -translate-y-1/2 rotate-3 rounded-[4px] border border-dashed border-line bg-surface/70" />
             </div>
@@ -517,13 +530,15 @@ function Postcard({ index, onPreview, trip }: { index: number; onPreview: () => 
                 )}
               </span>
             </div>
-            {/* h2：明信片是 h1 之后的顶层小节（heading-order 门禁要求逐级下降） */}
+            {/* h2: postcards are top-level sections after the h1 (the heading-order gate
+                requires stepwise descent) */}
             <h2 className="mt-2 font-serif text-xl font-semibold tracking-tight text-ink transition-colors group-hover:text-accent">
               <Link className="block" href={`/travels/${trip.slug}/`}>
                 {trip.title}
               </Link>
             </h2>
-            {/* 摘要移动端裁 3 行：行程类长摘要会把明信片撑过一屏（桌面双列保持全文） */}
+            {/* Summary clamped to 3 lines on mobile: itinerary-length summaries would push a
+                postcard past one screen (desktop two-column keeps the full text) */}
             {trip.summary && (
               <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-ink-2 sm:line-clamp-none">{trip.summary}</p>
             )}

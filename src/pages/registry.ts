@@ -1,7 +1,8 @@
-// 页面注册表：每条路由（含首页）一个 chunk，入口 bundle 只留 Shell。
-// pageLoaders 是唯一的 chunk 加载来源：首帧水合前预取（main.tsx）、站内换页
-// 预取（router onPageData）与 React.lazy 分发（app.tsx）共用，保证每块只取一次；
-// Suspense 骨架只在 chunk 未就绪时兜底。
+// Page registry: one chunk per route (home included); the entry bundle keeps only the Shell.
+// pageLoaders is the single source of chunk loading: shared by the pre-hydration first-frame
+// prefetch (main.tsx), in-app navigation prefetch (router onPageData), and the React.lazy
+// dispatch (app.tsx), guaranteeing each chunk is fetched exactly once; the Suspense skeleton
+// only covers chunks that are not yet ready.
 
 import { lazy } from "react";
 import type { AnyPageData } from "@/lib/types.ts";
@@ -22,7 +23,8 @@ export const pageLoaders = {
 
 type LoadablePage = keyof typeof pageLoaders;
 
-/** payload 到手即预取对应 chunk（渲染前），让骨架尽量不出现。 */
+/** Prefetches the matching chunk as soon as the payload arrives (before render), keeping the
+ *  skeleton from showing as much as possible. */
 export function preloadPage(data: AnyPageData): void {
   const { page } = data.globals;
   if (page !== "not-found") {
@@ -30,7 +32,8 @@ export function preloadPage(data: AnyPageData): void {
   }
 }
 
-/** URL → 页面 chunk（路由模式表；顺序敏感，具体路径先于列表路径匹配）。 */
+/** URL → page chunk (route pattern table; order-sensitive, specific paths match before
+ *  listing paths). */
 const ROUTE_PATTERNS: ReadonlyArray<readonly [RegExp, LoadablePage]> = [
   [/^\/blogs\/tags\/[^/]+\/$/, "blog-tag"],
   [/^\/blogs\/[^/]+\/$/, "blog-post"],
@@ -45,7 +48,8 @@ const ROUTE_PATTERNS: ReadonlyArray<readonly [RegExp, LoadablePage]> = [
   [/^\/$/, "home"],
 ];
 
-/** hover/focus 预取：站内链接悬停即热身目标 chunk（pageLoaders 天然去重）。 */
+/** hover/focus prefetch: hovering an in-site link warms up the target chunk (pageLoaders
+ *  dedupes naturally). */
 export function prefetchHref(href: string): void {
   if (typeof window === "undefined") {
     return;

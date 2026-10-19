@@ -1,5 +1,7 @@
-// 返回顶部：下滑超过阈值后出现的右下角悬浮按钮。
-// 常驻 DOM 用透明度过渡显隐——条件卸载会让按钮"闪没"，没有退场动画。
+// Back to top: floating button in the bottom-right corner that appears after
+// scrolling past a threshold. Stays in the DOM permanently and toggles via
+// opacity transition -- conditional unmount would make the button "blink away"
+// with no exit animation.
 
 import { ArrowUp } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -15,7 +17,8 @@ export function BackToTop() {
     const onScroll = () => {
       setVisible(window.scrollY > SHOW_AFTER);
     };
-    // Shell 跨页面持久，SPA 换页保留滚动位置，挂载时先同步一次
+    // Shell persists across pages and SPA navigation keeps the scroll
+    // position, so sync once on mount
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => {

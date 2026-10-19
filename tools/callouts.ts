@@ -1,9 +1,12 @@
-// Obsidian 风格 Callouts（超集覆盖 GitHub alerts 的五种类型）：
-//   > [!note] 自定义标题（同行文字即标题，可省略，缺省用类型名）
-//   > [!success]- 默认折叠 / > [!tip]+ 默认展开（折叠语法）
-// 已识别的别名归一到十个配色类别，未识别的 [!x] 保持原引用块不动。
-// 输出：div.callout.callout-<category>（fold 时为 details/summary），
-// 配色由 prose.css 按 category 类映射到站点 token。
+// Obsidian-style Callouts (a superset covering the five GitHub alerts types):
+//   > [!note] Custom title (text on the same line is the title; optional,
+//   defaults to the type name)
+//   > [!success]- collapsed by default / > [!tip]+ expanded by default (fold
+//   syntax)
+// Recognized aliases normalize into ten color categories; an unrecognized
+// [!x] leaves the quote block untouched.
+// Output: div.callout.callout-<category> (details/summary when folded);
+// colors are mapped to site tokens by prose.css per category class.
 
 import type { Blockquote } from "mdast";
 import type { Node } from "unist";
@@ -11,7 +14,7 @@ import { visit } from "unist-util-visit";
 
 type Json = Record<string, unknown>;
 
-/** Obsidian 全部内置别名 → 配色类别 */
+/** All built-in Obsidian aliases → color category */
 const CALLOUT_CATEGORY: Record<string, string> = {
   note: "note",
   info: "info",
@@ -62,7 +65,7 @@ export function remarkCallouts() {
       if (!category) {
         return;
       }
-      const fold = match[2]; // '-' 默认收起，'+' 默认展开，无则不可折叠
+      const fold = match[2]; // '-' collapsed by default, '+' expanded, none = not foldable
       const customTitle = (match[3] ?? "").trim();
       const title = customTitle || alias.charAt(0).toUpperCase() + alias.slice(1);
 
@@ -75,7 +78,8 @@ export function remarkCallouts() {
         children: [{ type: "text", value: title }],
       };
 
-      // 标记被剥掉后，首段若还残留内联子节点（罕见），保留为正文段
+      // After the marker is stripped, if the first paragraph still has inline
+      // children left (rare), keep them as a body paragraph
       const body: Json[] = [];
       if (first.children && (first.children as Json[]).length > 1) {
         body.push({ type: "paragraph", children: (first.children as Json[]).slice(1) });

@@ -1,4 +1,4 @@
-// 归档页：按年份分组的全部文章。
+// Archives page: all blog posts grouped by year.
 
 import { Lock, Presentation } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState.tsx";
@@ -15,7 +15,8 @@ export function ArchivesPage({ data }: { data: ArchivesData }) {
 
   const byYear = new Map<string, ArchivesData["blogs"]>();
   for (const blog of data.blogs) {
-    // frontmatter 日期无时区语义，直接取日历字段（Date UTC 解析会偏移年份）
+    // Frontmatter dates carry no timezone semantics; read the calendar fields directly
+    // (Date's UTC parsing would shift the year)
     const year = blog.date ? formatDateISO(blog.date).slice(0, 4) : t("archives.unknownYear");
     const list = byYear.get(year) ?? [];
     list.push(blog);
@@ -36,7 +37,8 @@ export function ArchivesPage({ data }: { data: ArchivesData }) {
           {years.length > 0 ? (
             years.map(([year, posts]) => (
               <section className="relative overflow-x-clip" key={year}>
-                {/* 空心年份水印（装饰）：与 PostList 幽灵日期同一片段，仅定位微调 */}
+                {/* Hollow year watermark (decorative): same fragment as the PostList ghost
+                    dates, only minor positioning tweaks */}
                 <span aria-hidden="true" className={cn(GHOST_DATE, "-top-7")}>
                   {year}
                 </span>
@@ -62,13 +64,13 @@ export function ArchivesPage({ data }: { data: ArchivesData }) {
                         </span>
                         {blog.locked && (
                           <>
-                            <span className="sr-only">（{t("post.locked")}）</span>
+                            <span className="sr-only">({t("post.locked")})</span>
                             <Lock aria-hidden="true" className="size-3.5 shrink-0 text-accent-strong" />
                           </>
                         )}
                         {blog.deck && (
                           <>
-                            <span className="sr-only">（{t("blog.deck")}）</span>
+                            <span className="sr-only">({t("blog.deck")})</span>
                             <Presentation aria-hidden="true" className="size-3.5 shrink-0 text-accent-strong" />
                           </>
                         )}

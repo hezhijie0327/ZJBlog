@@ -1,5 +1,6 @@
-// 文章列表（BlogsPage 与标签筛选页共用）：幽灵日期水印 + 衬线标题 +
-// 元信息 + 摘要 + 标签行。水印为纯装饰（aria-hidden，横向裁切防溢出）。
+// Post list (shared by BlogsPage and tag filter pages): ghost date watermark +
+// serif title + meta info + excerpt + tag row. The watermark is purely
+// decorative (aria-hidden, clipped horizontally to prevent overflow).
 
 import { ArrowUpRight, Lock, Presentation } from "lucide-react";
 import { Link } from "@/components/Shell.tsx";
@@ -16,7 +17,8 @@ export function PostList({ blogs }: { blogs: BlogListItem[] }) {
     <div className={DIVIDE_LIST}>
       {blogs.map((blog) => (
         <article className="group relative overflow-x-clip py-8 first:pt-0" key={blog.slug}>
-          {/* 幽灵日期水印（装饰）：空心描边压在标题后方，横向裁切防小屏溢出 */}
+          {/* Ghost date watermark (decorative): outlined text behind the
+              title, clipped horizontally to prevent overflow on small screens */}
           {blog.date && (
             <span aria-hidden="true" className={GHOST_DATE}>
               {formatDateISO(blog.date)}
@@ -27,17 +29,18 @@ export function PostList({ blogs }: { blogs: BlogListItem[] }) {
               <div className="flex items-baseline justify-between gap-4">
                 <h2 className="font-serif text-xl font-semibold leading-snug text-ink transition-colors group-hover:text-accent sm:text-2xl">
                   {blog.title}
-                  {/* 加密博文：锁标 + 读屏文案；description 在构建期已剥除 */}
+                  {/* Locked post: lock icon + screen-reader copy; description
+                      is stripped at build time */}
                   {blog.locked && (
                     <>
-                      <span className="sr-only">（{t("post.locked")}）</span>
+                      <span className="sr-only">({t("post.locked")})</span>
                       <Lock aria-hidden="true" className="ml-1.5 inline size-4 align-baseline text-accent-strong" />
                     </>
                   )}
-                  {/* 整篇幻灯片角标 */}
+                  {/* Full-deck badge */}
                   {blog.deck && (
                     <>
-                      <span className="sr-only">（{t("blog.deck")}）</span>
+                      <span className="sr-only">({t("blog.deck")})</span>
                       <Presentation
                         aria-hidden="true"
                         className="ml-1.5 inline size-4 align-baseline text-accent-strong"

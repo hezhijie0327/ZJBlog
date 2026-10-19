@@ -1,67 +1,73 @@
 /**
- * 设计语言类片段单一来源。
+ * Single source of truth for design-language class fragments.
  *
- * 重复出现的 Tailwind 组合一律收拢到这里，用 className={FRAGMENT} 消费；
- * 需要覆盖时用 cn(FRAGMENT, "覆盖类")，让 tailwind-merge 处理冲突。
- * 新 UI 先找这里，没有再新增片段，不要在组件里裸写长串。
+ * Recurring Tailwind combinations must be gathered here and consumed via
+ * className={FRAGMENT}; when overriding, use cn(FRAGMENT, "override classes") and let
+ * tailwind-merge resolve conflicts. Look here first for new UI and only add a fragment
+ * when missing — never hand-write long class strings inside components.
  */
 
-/** 圆形图标按钮（导航栏 / 页脚 / 操作区通用） */
+/** Round icon button (shared by navigation bar / footer / action areas) */
 export const ICON_BTN =
   "grid size-9 place-items-center rounded-full text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink";
 
-/** 卡片容器：细边框 + 表面底 + 暖色浅阴影 */
+/** Card container: hairline border + surface background + soft warm shadow */
 export const CARD = "rounded-2xl border border-line bg-surface shadow-card";
 
-/** 卡片容器 + 悬停加深阴影 */
+/** Card container + deepened shadow on hover */
 export const CARD_HOVER = `${CARD} transition-shadow hover:shadow-pop`;
 
-/** 分隔行式列表（无边框壳；卡片壳由调用方拼 CARD + DIVIDE_LIST） */
+/** Divider-row list (no bordered shell; callers compose CARD + DIVIDE_LIST for a card shell) */
 export const DIVIDE_LIST = "divide-y divide-line/70";
 
-/** 紧凑列表行（首页项目行与文章行共用同一节奏；卡片壳由调用方拼 CARD + DIVIDE_LIST） */
+/** Compact list row (home project rows and post rows share the same rhythm; callers compose CARD + DIVIDE_LIST for a card shell) */
 export const LIST_ROW =
   "group flex items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-surface-2 sm:gap-6 sm:px-6";
 
-/** 主操作按钮（金黄底胶囊） */
+/** Primary action button (gold pill) */
 export const BTN_PRIMARY =
   "inline-flex h-10 items-center gap-2 rounded-full bg-accent-strong px-5 text-sm font-semibold text-accent-contrast shadow-card transition-all hover:bg-accent-strong-hover hover:shadow-pop";
 
-/** 次操作按钮（描边胶囊） */
+/** Secondary action button (outlined pill) */
 export const BTN_OUTLINE =
   "inline-flex h-10 items-center gap-2 rounded-full border border-line bg-surface px-5 text-sm font-medium text-ink transition-colors hover:bg-surface-2";
 
-/** 撕边纸条按钮（借鉴 justin3go 的纸条入口；配合全局 .paper-strip 的撕边底）：
- * 纸色经 [--strip:…] 注入，轻微歪斜，悬停抬起回正。 */
+/** Torn-edge paper strip button (borrowed from justin3go's paper-strip entry; pairs with
+ * the global .paper-strip torn-edge background): the paper color is injected via
+ * [--strip:…], slightly tilted, lifted straight on hover. */
 export const PAPER_STRIP =
   "paper-strip inline-flex h-10 items-center gap-2 px-5 text-sm font-medium text-ink transition-all hover:-translate-y-0.5 hover:rotate-0 active:translate-y-0";
 
-/** 标签胶囊 */
+/** Tag chip */
 export const CHIP = "inline-flex items-center rounded-full border border-line px-2.5 py-0.5 text-xs text-ink-2";
 
-/** 等宽小号标签胶囊（键盘提示 / 类型标记） */
+/** Small mono tag chip (keyboard hints / type markers) */
 export const MONO_CHIP = `${CHIP} font-mono text-xs`;
 
-/** 等宽元信息文字（日期 / 计数 / 键盘提示） */
+/** Mono metadata text (dates / counts / keyboard hints) */
 export const META = "font-mono text-xs text-ink-3";
 
-/** 眉标（eyebrow）：等宽小号全大写间距标签，用于标题旁的英文点缀与分组小标题。
- *  信息文本字号地板 = 12px（DESIGN.md §4）：eyebrow 虽是点缀但也承载章节名。 */
+/** Eyebrow: small mono uppercase spaced label used for English accents next to headings
+ *  and for group sub-headings. Informational text has a 12px font-size floor (DESIGN.md
+ *  §4): eyebrows are decorative but also carry section names. */
 export const EYEBROW = "font-mono text-xs uppercase tracking-[0.2em] text-ink-3";
 
-/** 幽灵日期水印（Archives 年份行与 PostList 文章行共用，§7 同语言）：
- *  空心描边等宽大字（hollow-text），纯装饰必须 aria-hidden；定位微调由
- *  消费方 cn 覆盖（父容器需 overflow-x-clip 防小屏溢出）。 */
+/** Ghost date watermark (shared by the Archives year rows and PostList post rows, same
+ *  language as §7): hollow-outlined large mono digits (hollow-text), purely decorative so
+ *  it must be aria-hidden; positional tweaks are applied by the consumer via cn (the
+ *  parent needs overflow-x-clip to prevent small-screen overflow). */
 export const GHOST_DATE =
   "hollow-text pointer-events-none absolute -top-5 right-0 select-none whitespace-nowrap font-mono text-[4.5rem] font-bold leading-none sm:-top-6 sm:text-[5.5rem]";
 
-/** 胶带（DESIGN.md §7 纸感装饰）：半透明金底矩形压在纸边之上；
- *  定位 / 旋转 / 透明度由调用方给（构图按纸宽分档：宽纸单条顶中、
- *  中等纸面双角对压、窄便签单条角压——被叠压的角不上胶带） */
+/** Tape (DESIGN.md §7 paper-feel decoration): a translucent gold rectangle pressed over
+ *  the paper edge; positioning / rotation / opacity come from the caller (composition is
+ *  tiered by paper width: wide paper gets a single strip top-center, medium sheets get
+ *  two corners pressed from opposite sides, narrow notes get a single corner strip — the
+ *  corner being overlapped gets no tape) */
 export const TAPE = "pointer-events-none absolute z-10 h-6 bg-accent-soft";
 
-/** 页面级 section 外壳（容器 + 统一纵向节奏） */
+/** Page-level section shell (container + uniform vertical rhythm) */
 export const SECTION = "container mx-auto px-4 py-14 sm:py-20";
 
-/** 详情页 section 外壳（正文页节奏更紧凑） */
+/** Detail-page section shell (tighter rhythm for body pages) */
 export const SECTION_DETAIL = "container mx-auto px-4 py-12 sm:py-16";

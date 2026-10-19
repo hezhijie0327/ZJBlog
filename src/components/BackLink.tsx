@@ -1,4 +1,4 @@
-// 详情页返回链接：文章页与项目页共用同一节奏。
+// Back link on detail pages: shared by blog posts and projects for the same rhythm.
 
 import { ArrowLeft } from "lucide-react";
 import { Link } from "@/components/Shell.tsx";

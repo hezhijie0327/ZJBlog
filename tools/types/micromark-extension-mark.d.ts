@@ -1,6 +1,7 @@
-// micromark-extension-mark@1.0.2 无类型声明（纯 js），同上经 tsconfig paths
-// 重定向。pandocMark 是工厂函数，返回 micromark Extension（此处按 unknown
-// 消费：注入 data.micromarkExtensions 后由 micromark 自行组合）。
+// micromark-extension-mark@1.0.2 has no type declarations (plain js);
+// redirected via tsconfig paths as above. pandocMark is a factory returning a
+// micromark Extension (consumed as unknown here: injected into
+// data.micromarkExtensions and composed by micromark itself).
 declare function pandocMark(options?: unknown): unknown;
 
 export { pandocMark };

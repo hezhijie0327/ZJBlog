@@ -1,7 +1,8 @@
-// 404 页：预渲染为 /404.html（wrangler not_found_handling），客户端兜底同样渲染。
-// 告示纸形态（DESIGN.md §7，ZJSearch 线程未找到同款语言）：撕边便签 + 两角
-// 胶带 + 撕边纸条动作（PAPER_STRIP 家族契约——空状态唯一动作）；内容构成仍走
-// EmptyState（§9「404 与空状态同构」），bare 变体落在 paper-note 纸面上。
+// 404 page: prerendered as /404.html (wrangler not_found_handling); the client-side fallback
+// renders the same. Notice-paper form (DESIGN.md §7, same language as ZJSearch's thread-not-found):
+// torn-edge note + tape on two corners + torn-strip action (PAPER_STRIP family contract — the sole
+// action of an empty state); content composition still goes through EmptyState (§9 "404 and empty
+// states share one shape"), with the bare variant laid on the paper-note sheet.
 
 import { Compass } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState.tsx";
@@ -15,8 +16,9 @@ export function NotFoundPage() {
   const t = useT();
   return (
     <div className="mx-auto flex w-full flex-1 flex-col items-center justify-center px-4 pb-24 pt-24 animate-fade-up">
-      {/* 微倾斜钉在墙上；胶带挂在不倾斜的外层（§7：胶带必须是被裁剪元素的
-          兄弟节点，放进 paper-note 内会被撕边裁掉角） */}
+      {/* Pinned to the wall with a slight tilt; tape hangs on the untilted outer layer (§7: tape
+          must be a sibling of the clipped element — inside paper-note the torn edge would clip
+          its corners) */}
       <div className="relative w-full max-w-xl rotate-[0.6deg]">
         <Tape className="-top-3 left-10 w-24 -rotate-3 bg-accent-soft/80" />
         <Tape className="-top-3 right-10 w-20 rotate-[4deg] bg-accent-soft/60" />

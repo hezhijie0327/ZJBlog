@@ -1,9 +1,11 @@
-// HTML 字符串小工具（构建期共用叶子模块，零依赖——content.ts 与 deck.ts
-// 都要用，放这里避免循环导入）。
+// Small HTML string utilities (a shared build-time leaf module, zero deps —
+// both content.ts and deck.ts need it; placed here to avoid circular
+// imports).
 
-/** 解码 rehype-stringify / markdown-it 输出的字符引用（喂给 shiki / TOC 文本
- *  前必须还原原文）。顺序敏感：先解命名/数字实体，最后解 &amp; —— 否则
- *  "&amp;lt;" 会被二次解码成 "<"。 */
+/** Decode character references emitted by rehype-stringify / markdown-it
+ *  (the original text must be restored before feeding shiki / TOC text).
+ *  Order-sensitive: resolve named/numeric entities first and &amp; last —
+ *  otherwise "&amp;lt;" would be double-decoded into "<". */
 export function decodeEntities(text: string): string {
   return text
     .replaceAll("&lt;", "<")

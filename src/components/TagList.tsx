@@ -1,16 +1,18 @@
-// 标签行：#tag 列表，文章/项目头部与列表页共用。exclude 用于与分类去重；
-// linkTags 时每个标签渲染为标签筛选页链接（博客文章页用；项目标签无页）。
+// Tag row: a list of #tags, shared by post/project headers and list pages.
+// exclude dedupes against the category; with linkTags each tag renders as a
+// link to its tag filter page (used on blog post pages; project tags have no
+// pages).
 
 import { Link } from "@/components/Shell.tsx";
 import { cn } from "@/lib/cn.ts";
 
 interface TagListProps {
   tags: string[];
-  /** 与该值相同的标签不渲染（通常传分类名） */
+  /** Tags equal to this value are not rendered (usually the category name) */
   exclude?: string;
-  /** 列表页卡片内启用随卡片悬停变色 */
+  /** Inside list-page cards, enables color change along with the card hover */
   hoverable?: boolean;
-  /** 标签渲染为指向标签筛选页的链接 */
+  /** Tags render as links to their tag filter pages */
   linkTags?: boolean;
   className?: string;
 }

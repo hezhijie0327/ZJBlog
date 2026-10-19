@@ -1,4 +1,4 @@
-// 品牌图标（lucide 无品牌图标，此处内联官方 SVG）。
+// Brand icons (lucide has no brand icons; official SVGs are inlined here).
 
 import { cn } from "@/lib/cn.ts";
 
@@ -6,7 +6,7 @@ interface IconProps {
   className?: string;
 }
 
-/** GitHub 品牌图标 */
+/** GitHub brand icon */
 export function GithubIcon({ className }: IconProps) {
   return (
     <svg aria-hidden="true" className={cn("size-4", className)} fill="currentColor" viewBox="0 0 24 24">

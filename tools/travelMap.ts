@@ -1,33 +1,42 @@
-// 真实世界地图 SVG 生成器（构建期，Node 侧）：world-atlas（Natural Earth
-// 数据，公有领域）→ topoToGeo → 等距圆柱投影 → token 配色的内联 SVG。
+// Real-world map SVG generator (build time, Node side): world-atlas (Natural
+// Earth data, public domain) → topoToGeo → equirectangular projection →
+// token-colored inline SVG.
 //
-// 主图固定世界范围（城际尺度）。市内旅行（彼此 ≤0.7°）聚合为一枚
-// 「城市 ×N」组合针脚；点击后客户端镜头推进到市内视角 —— 10m 高精度
-// 海岸线细节层与成员针脚随视角按需淡入（构建期按 bbox 裁选烘进主图，
-// 体积仅数 KB）。「重放」的镜头编排（每站相机视野 + 逐元素点亮序号）
-// 经 data-stops 下发，由 TravelsPage 的控制器执行：有缩放、有聚焦。
+// The main map keeps a fixed world extent (inter-city scale). In-city trips
+// (within 0.7° of each other) aggregate into one "City ×N" composite pin; on
+// click the client camera pushes into the city view — the 10m high-accuracy
+// coastline detail layer and member pins fade in with the view on demand
+// (cropped by bbox and baked into the main map at build time, only a few KB).
+// The "replay" camera choreography (per-stop camera view + per-element
+// light-up index) is delivered via data-stops and executed by the controller
+// in TravelsPage: zoom and focus included.
 //
-// 体积控制：去南极洲、投影后整数坐标、微小环剔除、细节层按 bbox 裁选，
-// 产物单份存 DOM（不进 page-data）。
+// Size control: Antarctica dropped, integer coordinates after projection,
+// tiny-ring culling, detail layer cropped by bbox; the artifact is stored
+// once in the DOM (never in page-data).
 
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
+import { BASELINE_TRAVEL_MAP_LABEL, baselineClusterPinTitle } from "../src/lib/i18n/baseline.ts";
 import { TRAVEL_MAP_SIZE, type TravelListItem } from "../src/lib/types.ts";
 import { topoToGeo } from "./diagrams.ts";
 
-/** 地图画布与经纬范围（收极地防变形，去南极洲）。
- *  H = 136° × (W/360°)：经纬像素密度一致，地图无拉伸。 */
+/** Map canvas and lat/lon extent (poles trimmed to avoid distortion,
+ *  Antarctica dropped). H = 136° × (W/360°): equal pixel density for lon and
+ *  lat, so the map is not stretched. */
 const W = TRAVEL_MAP_SIZE.w;
 const H = TRAVEL_MAP_SIZE.h;
 const WORLD_EXTENT = { lonMin: -180, lonMax: 180, latMin: -58, latMax: 78 };
 
-/** 城市聚合半径（度）；市内视角最大倍率（10m 数据的表达极限）。 */
+/** City cluster radius (degrees); max city-view zoom (expressive limit of
+ *  the 10m data). */
 
 function escapeXml(value: string): string {
   return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
 }
 
-/** 投影器：等距圆柱、经纬像素密度一致（extent 决定视野）。 */
+/** Projector: equirectangular, equal pixel density for lon and lat (extent
+ *  determines the viewport). */
 interface Projector {
   (lon: number, lat: number): [number, number];
   extent: { lonMin: number; lonMax: number; latMin: number; latMax: number };
@@ -46,8 +55,8 @@ function makeProjector(extent: { lonMin: number; lonMax: number; latMin: number;
 
 const worldProject = makeProjector(WORLD_EXTENT);
 
-/** 取 geometry 的全部多边形（Polygon/MultiPolygon；其余忽略）：
- *  返回 [多边形][环][点]。 */
+/** All polygons of a geometry (Polygon/MultiPolygon; others ignored):
+ *  returns [polygon][ring][point]. */
 function ringsOf(geometry: unknown): [number, number][][][] {
   if (!geometry || typeof geometry !== "object") {
     return [];
@@ -62,8 +71,9 @@ function ringsOf(geometry: unknown): [number, number][][][] {
   return [];
 }
 
-/** 底图只在构建期读取（createRequire 直连 node_modules，不进 bundle）。
- *  110m 画世界，10m 画市内细节（海岸线）；转换结果按精度缓存。 */
+/** Basemap is read only at build time (createRequire hits node_modules
+ *  directly, never enters the bundle). 110m draws the world, 10m draws city
+ *  detail (coastlines); conversion results are cached per resolution. */
 const geoCache = new Map<110 | 10, Array<{ properties?: { name?: string }; geometry?: unknown }>>();
 
 function countriesGeo(detail: 110 | 10): Array<{ properties?: { name?: string }; geometry?: unknown }> {
@@ -80,7 +90,7 @@ function countriesGeo(detail: 110 | 10): Array<{ properties?: { name?: string };
   return features;
 }
 
-/** 环的经纬 bbox（市内细节按此裁选要素） */
+/** Lat/lon bbox of a ring (city-detail features are cropped against it) */
 function ringExtentDeg(ring: [number, number][]): { lonMin: number; lonMax: number; latMin: number; latMax: number } {
   let lonMin = 180;
   let lonMax = -180;
@@ -102,8 +112,9 @@ function intersects(
   return a.lonMin <= b.lonMax && a.lonMax >= b.lonMin && a.latMin <= b.latMax && a.latMax >= b.latMin;
 }
 
-/** 底图国家路径：projector 决定视野与投影；minAreaPx 剔除不可见微小环；
- *  extent 给定时只保留与之相交的环（市内细节的裁选）。 */
+/** Basemap country paths: the projector decides viewport and projection;
+ *  minAreaPx culls rings too small to see; when extent is given only rings
+ *  intersecting it are kept (the city-detail crop). */
 function countryPathData(
   detail: 110 | 10,
   project: Projector,
@@ -112,7 +123,7 @@ function countryPathData(
 ): string[] {
   const paths: string[] = [];
   for (const feature of countriesGeo(detail)) {
-    // 南极洲在主图纬度带以下，直接剔除
+    // Antarctica sits below the main map's latitude band; drop it outright
     if (feature.properties?.name === "Antarctica") {
       continue;
     }
@@ -123,7 +134,8 @@ function countryPathData(
           continue;
         }
         const projected = ring.map(([lon, lat]) => project(lon, lat));
-        // 微小环剔除：投影后面积 < minAreaPx 的岛屿/洞在当前尺度不可见
+        // Tiny-ring culling: islands/holes with projected area < minAreaPx
+        // are invisible at the current scale
         let area2 = 0;
         for (let i = 0; i < projected.length - 1; i += 1) {
           const [x1, y1] = projected[i] as [number, number];
@@ -143,7 +155,7 @@ function countryPathData(
   return paths;
 }
 
-/** 经纬网（每 30°，主图海报质感） */
+/** Graticule (every 30°, poster feel for the main map) */
 function graticule(project: Projector): string {
   let d = "";
   for (let lon = -150; lon <= 180; lon += 30) {
@@ -157,7 +169,7 @@ function graticule(project: Projector): string {
   return `<path class="map-graticule" vector-effect="non-scaling-stroke" d="${d}"/>`;
 }
 
-/** 按日期升序（点亮序）。 */
+/** Ascending by date (light-up order). */
 function orderedTrips(trips: TravelListItem[]): TravelListItem[] {
   return [...trips].sort((a, b) => {
     if (a.date && b.date) {
@@ -169,16 +181,18 @@ function orderedTrips(trips: TravelListItem[]): TravelListItem[] {
 
 function pinShape(companion: TravelListItem["companion"]): string {
   if (companion === "solo") {
-    // 独行：空心圆环
+    // Solo: hollow ring
     return '<circle class="trip-pin-ring" r="5.5" fill="none" stroke-width="3"/>';
   }
-  // 情侣：心形（琥珀填充）
+  // Couple: heart shape (amber fill)
   return '<path class="trip-pin-heart" d="M0 4.3C-5.7 -1.1 -5.9 -5.9 -2.4 -6.6C-1.1 -6.9 0 -5.8 0 -4.7C0 -5.8 1.1 -6.9 2.4 -6.6C5.9 -5.9 5.7 -1.1 0 4.3Z" stroke-width="1.3"/>';
 }
 
-/** 针脚锚点（data-play = 重放点亮的序号；缺省不参与重放编排）。
- *  点亮 .on 挂在 <a> 上，内部针脚 pop、标签浮现。命中盘 r=24（随
- *  --map-zoom 反缩放后手机上约 12px 半径）—— 纯透明触达补偿。 */
+/** Pin anchor (data-play = the light-up index in replay; absent means the pin
+ *  is not part of the replay choreography). The .on light-up class lands on
+ *  the <a>: the inner pin pops and the label surfaces. Hit disc r=24 (about a
+ *  12px radius on phones after the --map-zoom counter-scaling) — pure
+ *  transparent touch-target compensation. */
 function anchorMarkup(item: {
   x: number;
   y: number;
@@ -187,7 +201,7 @@ function anchorMarkup(item: {
   href: string;
   title: string;
   play: number;
-  /** 点亮序（.lit 初始编排的动画 delay 依据） */
+  /** Light-up index (drives the animation delays of the .lit initial choreography) */
   seq: number;
   labelDy: number;
   extraClass?: string;
@@ -204,8 +218,10 @@ function anchorMarkup(item: {
   );
 }
 
-/** 市内细节路径（点级裁选）：只保留落在视野（外扩 5%）内的坐标点 ——
- *  10m 大环（整条大陆海岸）按环引入会把页面撑到 MB 级，按点裁选后仅数 KB。 */
+/** City detail paths (point-level crop): keep only coordinate points falling
+ *  inside the viewport (padded 5%) — taking whole 10m rings (an entire
+ *  continental coastline) would bloat the page to MBs; point-level cropping
+ *  keeps it to a few KB. */
 function clippedDetailPaths(
   project: Projector,
   extent: { lonMin: number; lonMax: number; latMin: number; latMax: number },
@@ -258,24 +274,27 @@ function clippedDetailPaths(
   return paths;
 }
 
-/** 城市聚合成物：市内视角（相机 fly 目标）、开启阈值、细节层与成员针脚。 */
+/** City cluster artifact: city view (camera fly target), reveal threshold,
+ *  detail layer and member pins. */
 interface CityCluster {
   id: string;
   place: string;
   view: [number, number, number];
   threshold: number;
-  /** 10m 细节层（世界坐标路径，市内视角淡入） */
+  /** 10m detail layer (world-coordinate paths, fades in at city view) */
   detailPaths: string[];
-  /** 成员针脚标记（市内视角淡入；data-play 占位待分配） */
+  /** Member pin markup (fades in at city view; data-play placeholders
+   *  assigned later) */
   memberAnchors: string[];
 }
 
 const CLUSTER_RADIUS_DEG = 0.7;
-/** 市内视角最大倍率（10m 数据的表达极限）。 */
+/** Max city-view zoom (expressive limit of the 10m data). */
 const CITY_K_MAX = 640;
 
-/** 聚类标签：成员 place 以「·」分段后的公共首段（如「上海」），
- *  无公共段则退化为首条 place。 */
+/** Cluster label: the common first segment after splitting each member place
+ *  on "·" (e.g. "Shanghai"); falls back to the first member's place when no
+ *  common segment exists. */
 function clusterLabel(members: TravelListItem[]): string {
   const first = members[0];
   if (!first) {
@@ -289,7 +308,8 @@ function clusterLabel(members: TravelListItem[]): string {
   return `${common} ×${members.length}`;
 }
 
-/** 贪心聚类（按日期序）：与既有聚合质心 ≤ CLUSTER_RADIUS_DEG 即归并。 */
+/** Greedy clustering (in date order): merge into an existing cluster when
+ *  within CLUSTER_RADIUS_DEG of its centroid. */
 function buildClusters(ordered: TravelListItem[]): Array<{ trips: TravelListItem[]; centroid: [number, number] }> {
   const clusters: Array<{ trips: TravelListItem[]; centroid: [number, number] }> = [];
   for (const trip of ordered) {
@@ -314,7 +334,8 @@ function buildClusters(ordered: TravelListItem[]): Array<{ trips: TravelListItem
   return clusters;
 }
 
-/** 城市视角：适配成员针脚包围盒（留白约 1/5 画布），倍率上限 CITY_K_MAX。 */
+/** City view: fit the member-pin bounding box (about 1/5 canvas padding),
+ *  zoom capped at CITY_K_MAX. */
 function cityView(members: TravelListItem[]): [number, number, number] {
   const points = members.map((m) => worldProject(m.coords[0], m.coords[1]));
   const xs = points.map(([x]) => x);
@@ -333,12 +354,14 @@ function cityView(members: TravelListItem[]): [number, number, number] {
   return [Number(tx.toFixed(1)), Number(ty.toFixed(1)), Number(k.toFixed(1))];
 }
 
-/** 城市聚合成物：10m 细节层（世界坐标，市内视角淡入）+ 成员针脚
- *  （data-play 占位 __PLAY_i__，由主图构建分配全局序号）。 */
+/** City cluster artifact: 10m detail layer (world coordinates, fades in at
+ *  city view) + member pins (data-play placeholders __PLAY_i__, assigned
+ *  global light-up indices by the main-map build). */
 function buildCityCluster(id: string, members: TravelListItem[]): CityCluster {
   const view = cityView(members);
   const k = view[2];
-  // 成员包围盒（度）外扩约 35% 画布，作为 10m 细节的裁选范围
+  // Expand the member bounding box (degrees) by ~35% of the canvas; that is
+  // the crop range for the 10m detail
   const lons = members.map((m) => m.coords[0]);
   const lats = members.map((m) => m.coords[1]);
   const marginLon = (W * 0.35) / k / (W / 360);
@@ -371,12 +394,13 @@ function buildCityCluster(id: string, members: TravelListItem[]): CityCluster {
   return { id, place: clusterLabel(members), view, threshold: Math.round(k), detailPaths, memberAnchors };
 }
 
-/** 主图：固定世界范围（城际尺度）+ 城市聚合针脚 + 内嵌市内细节层。 */
+/** Main map: fixed world extent (inter-city scale) + city cluster pins +
+ *  embedded city detail layers. */
 export function renderWorldMap(trips: TravelListItem[]): { mapSvg: string } {
   const ordered = orderedTrips(trips);
   const grouped = buildClusters(ordered);
 
-  /** 主图针脚（独立旅行 / 聚合组合针脚） */
+  /** Main-map pins (standalone trips / cluster composite pins) */
   interface MainPin {
     x: number;
     y: number;
@@ -384,10 +408,11 @@ export function renderWorldMap(trips: TravelListItem[]): { mapSvg: string } {
     companion: TravelListItem["companion"];
     href: string;
     title: string;
-    /** 独立针脚：重放序号（锚点 / 入站线各占一位） */
+    /** Standalone pin: replay indices (the anchor / inbound line each take
+     *  one slot) */
     playAnchor?: number;
     playLine?: number;
-    /** 聚合：市内视角、阈值、细节层、成员标记 */
+    /** Cluster: city view, threshold, detail layer, member markup */
     city?: {
       id: string;
       view: [number, number, number];
@@ -399,7 +424,8 @@ export function renderWorldMap(trips: TravelListItem[]): { mapSvg: string } {
 
   const mainPins: MainPin[] = [];
   const cityLayers: string[] = [];
-  /** 重放镜头编排：id 仅城市站携带（成员针脚按 id 回查本站的点亮序号） */
+  /** Replay camera choreography: only city stops carry an id (member pins
+   *  look up their light-up index in this stop by id) */
   const stops: Array<{ id?: string; v: [number, number, number]; p: number[] }> = [];
   let play = 0;
 
@@ -411,12 +437,14 @@ export function renderWorldMap(trips: TravelListItem[]): { mapSvg: string } {
     }
     const [x, y] = worldProject(group.centroid[0], group.centroid[1]);
     if (members.length === 1) {
-      // 独立旅行：本站点亮 = 针脚锚点 + 入站轨迹线（各占一个 play 序号）
+      // Standalone trip: this stop lights up = pin anchor + inbound track
+      // line (one play index each)
       const playAnchor = play;
       const playLine = play + 1;
       stops.push({
         v: (() => {
-          // 单站相机：以针脚为中心的适中倍率（城市视角上限对单站过深）
+          // Single-stop camera: a moderate zoom centered on the pin (the
+          // city-view cap is too deep for a single stop)
           const k = 6.5;
           const tx = Math.max(W * (1 - k), Math.min(0, W / 2 - k * x));
           const ty = Math.max(H * (1 - k), Math.min(0, H / 2 - k * y));
@@ -437,7 +465,8 @@ export function renderWorldMap(trips: TravelListItem[]): { mapSvg: string } {
       play += 2;
       continue;
     }
-    // 城市聚合：组合针脚（点击推进市内视角）+ 进城线描画 + 成员逐个点亮
+    // City cluster: composite pin (click pushes into the city view) + the
+    // inbound line drawing + members lighting up one by one
     const id = `cluster-${cityLayers.length + 1}`;
     const city = buildCityCluster(id, members);
     const playLine = play;
@@ -449,7 +478,7 @@ export function renderWorldMap(trips: TravelListItem[]): { mapSvg: string } {
       label: city.place,
       companion: members.filter((m) => m.companion === "couple").length >= members.length / 2 ? "couple" : "solo",
       href: `#${first.slug}`,
-      title: `${city.place} · ${members.length} 站（点击放大）`,
+      title: baselineClusterPinTitle(city.place, members.length),
       playLine,
       city: {
         id,
@@ -462,7 +491,8 @@ export function renderWorldMap(trips: TravelListItem[]): { mapSvg: string } {
     play += 1 + members.length;
   }
 
-  // 主图针脚标记（聚合针脚带 data-cluster/threshold；独立针脚带 data-play）
+  // Main-map pin markup (cluster pins carry data-cluster/threshold;
+  // standalone pins carry data-play)
   const pinMarkupList = mainPins.map((item, i) =>
     anchorMarkup({
       x: item.x,
@@ -479,7 +509,8 @@ export function renderWorldMap(trips: TravelListItem[]): { mapSvg: string } {
     }),
   );
 
-  // 轨迹段：相邻主图针脚相连；线点亮序号 = 到达站的 playLine
+  // Track segments: adjacent main-map pins joined; a line's light-up index =
+  // the playLine of the arrival stop
   const segments = mainPins
     .map((item, i) => {
       const prev = mainPins[i - 1];
@@ -490,7 +521,8 @@ export function renderWorldMap(trips: TravelListItem[]): { mapSvg: string } {
     })
     .join("");
 
-  // 城市细节层与成员针脚（__PLAY_i__ → 该站成员的全局点亮序号）
+  // City detail layers and member pins (__PLAY_i__ → the global light-up
+  // index of that stop's member)
   const cityPins = mainPins.filter(
     (item): item is MainPin & { city: NonNullable<MainPin["city"]> } => item.city !== undefined,
   );
@@ -516,12 +548,12 @@ export function renderWorldMap(trips: TravelListItem[]): { mapSvg: string } {
     })
     .join("");
 
-  // 初始视野：主图针脚自适应
+  // Initial view: fit the main-map pins
   const view = initialView(mainPins.map((item) => [item.x, item.y]));
 
   return {
     mapSvg:
-      `<svg class="travel-map-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="我们的旅行足迹地图" style="--map-zoom:${view.k}"` +
+      `<svg class="travel-map-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${BASELINE_TRAVEL_MAP_LABEL}" style="--map-zoom:${view.k}"` +
       ` data-stops="${escapeXml(JSON.stringify(stops))}">` +
       `<g class="map-world"${view.transform ? ` transform="${view.transform}"` : ""}>` +
       `<rect class="map-ocean" width="${W}" height="${H}"/>` +
