@@ -69,7 +69,7 @@ async function toWebp(p, relTo, urlBase, maxWidth) {
 // reach of reference rewriting, so converting to webp and deleting the
 // originals would 404 the shared images after the locked post is unlocked.
 const PROTECTED_LIST = join(dist, ".locked-shared-images.json");
-/** @type {Set<string>} dist-relative paths (e.g. "images/markdown-test/favicon.png") */
+/** @type {Set<string>} dist-relative paths (e.g. "images/deck-demo.jpg") */
 const protectedFiles = new Set();
 try {
   const list = JSON.parse(readFileSync(PROTECTED_LIST, "utf8"));

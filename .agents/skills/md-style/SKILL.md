@@ -5,7 +5,7 @@ description: Use when writing or editing any article in this blog (content/blogs
 
 # 博客 Markdown 编写规范（md-style）
 
-全量语法的活样例：`content/blogs/markdown-render-test.md`（写法有疑义以它渲染结果为准）。本规范的核心不是罗列语法，而是**按阅读体验选择渲染能力**——让读者扫读时抓住重点，而不是被格式淹没。
+全量语法的活样例：`content/blogs/markdown-demo.md`（写法有疑义以它渲染结果为准）。本规范的核心不是罗列语法，而是**按阅读体验选择渲染能力**——让读者扫读时抓住重点，而不是被格式淹没。
 
 ## 支持能力速查
 
@@ -44,6 +44,7 @@ deck 是 markdown-it 系独立管线，站内扩展经桥接已支持大半：**
 ## 按阅读体验选能力（核心）
 
 - **读者 10 秒要抓住的重点** → 文首放"速览卡"表格（TL;DR）；过程性信息（数据口径、订票记录）沉到文末或折叠
+- **数据对比** → mermaid `xychart-beta`（`bar` / `line`，两者写在一起即叠加同图）；**x-axis 数组里的中文必须加引号**（`["周一", "周二"]`），裸 CJK 词法报错
 - **流程、路线、决策分支** → mermaid `flowchart LR`
 - **时间安排**（一天日程、里程碑）→ mermaid `gantt`（`dateFormat HH:mm` + 起止时刻写法）
 - **地点与地理动线** → geojson 点 + LineString（坐标示意精度即可，注明"坐标为示意"）

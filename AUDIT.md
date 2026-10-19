@@ -59,7 +59,7 @@ pnpm update <pkgs>   # 只动 in-range；锁版本包用 pnpm add -D pkg@<pin>
 |---|---|---|
 | 首页 | `/` | Hero 100svh、分镜条 sticky 跟随 + 高亮当前 section、三区块 + 胶带装饰 |
 | 列表页 | `/blogs/` `/projects/` `/archives/` | 页题 `SectionHeading level=1`、幽灵日期水印、标签云 |
-| 文章页 | `/blogs/markdown-render-test/` | §5 渲染矩阵全绿；复制按钮水合后即当前语言 |
+| 文章页 | `/blogs/markdown-demo/` | §5 渲染矩阵全绿；复制按钮水合后即当前语言 |
 | 标签页 | `/blogs/tags/<tag>/` | 标签过滤列表 + 空状态 |
 | 支持页 | `/support/` | 收款码**固定白底**（DESIGN.md §3 登记豁免，勿"修"） |
 | 404 | 任意未知路径 | 与空状态同构（EmptyState bare 变体）：图标圆盘 + 404 + 胶囊动作 |
@@ -78,7 +78,7 @@ pnpm update <pkgs>   # 只动 in-range；锁版本包用 pnpm add -D pkg@<pin>
 1. **夹具四件套**（本地临时，审计结束删除；`.env` 已 gitignore）：
    - `content/blogs/<slug>.md`：frontmatter 带 `secret: <name>` + 正文含
      h2/h3（TOC）+ KaTeX + 代码块（复制按钮）+ **独占图**（只有本文引用）+
-     **共享图**（markdown-render-test 也引用的 `/images/markdown-test/favicon.png`）；
+     **共享图**（markdown-demo 与 marp-deck-demo 都引用的 `/images/deck-demo.jpg`）；
    - `content/travels/<slug>.md`：同 secret 名 + frontmatter `cover`（旅行封面
      也进信封）+ 正文独占图 —— **blogs 与 travels 必须各测一篇**（缓存键
      `travel:` 命名空间是真实差异点）；
@@ -119,7 +119,7 @@ pnpm update <pkgs>   # 只动 in-range；锁版本包用 pnpm add -D pkg@<pin>
   查询补偿 + 图例 `<sm` 隐藏已做，slice 裁切方案留设计专项）。
 - 灯箱移动端截图需用**正文图片**触发（明信片封面当前内容缺省，按钮不存在）。
 
-## 5. Markdown 渲染矩阵（`/blogs/markdown-render-test/` 逐条验证）
+## 5. Markdown 渲染矩阵（`/blogs/markdown-demo/` 逐条验证）
 
 页面级探针（控制台一次性断言，数字为 2026-09 基线）：
 
