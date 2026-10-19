@@ -397,7 +397,9 @@ export async function prerenderAll(): Promise<void> {
   // unlocked content each writes one verbatim copy, 100% faithful; locked
   // posts are never written to disk (fail-closed; the page does not render
   // the button either). Deck posts export as standard Marp documents.
-  const markdownTargets: Array<readonly ["blogs" | "projects" | "travels", { slug: string; locked?: unknown }]> = [
+  const markdownTargets: Array<
+    readonly ["blogs" | "projects" | "travels", { slug: string; sourceRelPath: string; locked?: unknown }]
+  > = [
     ...loadContent().blogs.map((entry) => ["blogs", entry] as const),
     ...loadContent().projects.map((entry) => ["projects", entry] as const),
     ...loadContent().travels.map((entry) => ["travels", entry] as const),
@@ -407,7 +409,7 @@ export async function prerenderAll(): Promise<void> {
     if (entry.locked !== undefined) {
       continue;
     }
-    const sourcePath = path.join(process.cwd(), "content", kind, `${entry.slug}.md`);
+    const sourcePath = path.join(process.cwd(), "content", kind, entry.sourceRelPath);
     const filePath = path.join(DIST_DIR, kind, decodeURIComponent(entry.slug), "index.md");
     mkdirSync(path.dirname(filePath), { recursive: true });
     writeFileSync(filePath, readFileSync(sourcePath, "utf8"));

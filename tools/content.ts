@@ -256,6 +256,8 @@ function compileMarkdown(markdown: string): { html: string; toc: TocItem[] } {
 
 export interface BlogEntry {
   slug: string;
+  /** Source .md path relative to content/<kind>/ (subfolders are organizational; the URL slug stays the bare filename) */
+  sourceRelPath: string;
   title: string;
   date?: string;
   description?: string;
@@ -285,6 +287,8 @@ export interface BlogEntry {
 
 export interface ProjectEntry {
   slug: string;
+  /** Source .md path relative to content/<kind>/ (subfolders are organizational; the URL slug stays the bare filename) */
+  sourceRelPath: string;
   title: string;
   date?: string;
   description?: string;
@@ -302,6 +306,8 @@ export interface ProjectEntry {
 
 type RawEntry = {
   slug: string;
+  /** Source .md path relative to content/<kind>/ (mirrored on the public entries for the markdown export) */
+  sourceRelPath: string;
   title: string;
   date?: string;
   description?: string;
@@ -332,6 +338,8 @@ type RawEntry = {
 /** Travel entry: data source for the /travels/ postcard wall and map pins. */
 export interface TravelEntry {
   slug: string;
+  /** Source .md path relative to content/<kind>/ (subfolders are organizational; the URL slug stays the bare filename) */
+  sourceRelPath: string;
   title: string;
   /** Short label for the map pin */
   place: string;
@@ -433,18 +441,41 @@ function parseDate(type: string, slug: string, value: unknown): string | undefin
   return value;
 }
 
-function readEntries(type: "blogs" | "projects" | "travels"): RawEntry[] {
+/** Recursive .md listing under content/<type>/: subfolders are a pure
+ *  file-tree organizing device — the slug stays the bare filename, so
+ *  routes and URLs never change. Duplicate filenames across folders collide
+ *  on the slug that routes, .bin assets and anchors all key on: hard error,
+ *  not a silent overwrite. Listing is sorted for deterministic iteration. */
+function markdownFiles(type: "blogs" | "projects" | "travels"): { relPath: string; slug: string }[] {
   const dirPath = path.join(contentDirectory, type);
   if (!existsSync(dirPath)) {
     return [];
   }
-  const entries: RawEntry[] = [];
-  for (const file of readdirSync(dirPath)) {
-    if (!file.endsWith(".md")) {
+  const bySlug = new Map<string, string>();
+  const files: { relPath: string; slug: string }[] = [];
+  // utf8 encoding (the default) always yields strings at runtime; the union in
+  // the @types/node recursive overload only materializes with encoding:"buffer"
+  for (const relPath of (readdirSync(dirPath, { recursive: true }) as string[]).sort()) {
+    if (!relPath.endsWith(".md")) {
       continue;
     }
-    const slug = file.replace(/\.md$/, "");
-    const { data, content } = matter(readFileSync(path.join(dirPath, file), "utf8"));
+    const slug = path.basename(relPath).replace(/\.md$/, "");
+    const prior = bySlug.get(slug);
+    if (prior !== undefined) {
+      throw new Error(
+        `[content] ${type}: duplicate slug "${slug}" (${prior} vs ${type}/${relPath}) — subfolders are organizational only; keep .md filenames unique across ${type}/`,
+      );
+    }
+    bySlug.set(slug, `${type}/${relPath}`);
+    files.push({ relPath, slug });
+  }
+  return files;
+}
+
+function readEntries(type: "blogs" | "projects" | "travels"): RawEntry[] {
+  const entries: RawEntry[] = [];
+  for (const { relPath, slug } of markdownFiles(type)) {
+    const { data, content } = matter(readFileSync(path.join(contentDirectory, type, relPath), "utf8"));
     validateFrontmatter(type, slug, data);
     // draft: true entries are removed wholesale at build time; they never reach routes / lists / RSS
     if (data.draft === true) {
@@ -509,6 +540,7 @@ function readEntries(type: "blogs" | "projects" | "travels"): RawEntry[] {
     }
     entries.push({
       slug,
+      sourceRelPath: relPath,
       title: data.title || slug,
       date: parseDate(type, slug, data.date),
       description: data.description,
@@ -547,22 +579,15 @@ function readEntries(type: "blogs" | "projects" | "travels"): RawEntry[] {
 function collectSecretRefs(): SecretRef[] {
   const refs: SecretRef[] = [];
   for (const kind of ["blogs", "travels"] as const) {
-    const dirPath = path.join(contentDirectory, kind);
-    if (!existsSync(dirPath)) {
-      continue;
-    }
-    for (const file of readdirSync(dirPath)) {
-      if (!file.endsWith(".md")) {
-        continue;
-      }
-      const { data } = matter(readFileSync(path.join(dirPath, file), "utf8"));
+    for (const { relPath, slug } of markdownFiles(kind)) {
+      const { data } = matter(readFileSync(path.join(contentDirectory, kind, relPath), "utf8"));
       if (data.draft === true) {
         continue;
       }
       if (typeof data.secret === "string" && data.secret !== "") {
         refs.push({
-          key: `${kind}:${file.replace(/\.md$/, "")}`,
-          context: `${kind}/${file}`,
+          key: `${kind}:${slug}`,
+          context: `${kind}/${relPath}`,
           secretName: data.secret,
         });
       }
@@ -636,6 +661,7 @@ export function loadContent(): ContentIndex {
 
     const toBlog = (entry: RawEntry): BlogEntry => ({
       slug: entry.slug,
+      sourceRelPath: entry.sourceRelPath,
       title: entry.title,
       date: entry.date,
       description: entry.description,
@@ -652,6 +678,7 @@ export function loadContent(): ContentIndex {
     });
     const toProject = (entry: RawEntry): ProjectEntry => ({
       slug: entry.slug,
+      sourceRelPath: entry.sourceRelPath,
       title: entry.title,
       date: entry.date,
       description: entry.description,
@@ -665,6 +692,7 @@ export function loadContent(): ContentIndex {
     });
     const toTravel = (entry: RawEntry): TravelEntry => ({
       slug: entry.slug,
+      sourceRelPath: entry.sourceRelPath,
       title: entry.title,
       place: entry.place ?? entry.title,
       coords: entry.coords ?? [0, 0],

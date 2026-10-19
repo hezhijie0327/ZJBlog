@@ -76,6 +76,7 @@ scripts/
 ## Content
 
 - `content/blogs/*.md` frontmatter：`title/description/date/category/tags/summary/draft`；`content/projects/*.md` 另有 `type: personal|starred`、`link`、`image`（封面图，缺省时列表/详情不渲染封面位）。
+- **子文件夹**：`content/<type>/**` 递归发现（`content.ts` 的 `markdownFiles`），子文件夹只做文件收纳、**不进 URL**——slug 恒为文件名；跨文件夹同名 slug 构建期直接报错（路由 / `.bin` 资产 / 锚点都键于 slug，绝不静默覆盖）。条目带 `sourceRelPath`（相对 `content/<type>/`），下游反查源文件（如 index.md 导出）一律用它，禁止按 `<slug>.md` 反推。
 - **frontmatter 日期**：建议 ISO 字符串（`date: "2024-12-21"`）；无引号日期（`date: 2024-12-21`）会被 gray-matter 解析成 `Date` 实例，`parseDate` 已兼容两者 —— 修改解析逻辑时不得破坏此行为（曾致日期被静默丢弃）。
 - Markdown 在**构建期**编译为 HTML：shiki 双主题高亮代码卡、KaTeX、mermaid/sequence/flow 占位容器（客户端进视口渲染）、geojson/topojson 构建期 SVG、plantuml lazy img、Callouts、表格滚动容器、任务清单 aria-hidden、`rehypeLocalImageSize` 为站内图片注入固有尺寸（防 CLS）。
 - 完整语法支持矩阵见 README。
