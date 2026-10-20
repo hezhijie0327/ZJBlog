@@ -1,11 +1,11 @@
 ---
 name: md-style
-description: Use when writing or editing any article in this blog (content/blogs/*.md) — defines the blog's full Markdown rendering capability (callouts, tables, task lists, footnotes, mermaid flowchart/gantt, geojson maps, stl, KaTeX, details folding, HTML subset) and when to use each for reader experience. Referenced by other skills (e.g. travel-guide); overrides generic Markdown habits with this site's conventions.
+description: Use when writing or editing any article in this blog (content/blogs/**/*.md) — defines the blog's full Markdown rendering capability (callouts, tables, task lists, footnotes, mermaid flowchart/gantt, geojson maps, stl, KaTeX, details folding, HTML subset) and when to use each for reader experience. Referenced by other skills (e.g. travel-guide); overrides generic Markdown habits with this site's conventions.
 ---
 
 # 博客 Markdown 编写规范（md-style）
 
-全量语法的活样例：`content/blogs/markdown-demo.md`（写法有疑义以它渲染结果为准）。本规范的核心不是罗列语法，而是**按阅读体验选择渲染能力**——让读者扫读时抓住重点，而不是被格式淹没。
+全量语法的活样例：`content/blogs/demos/markdown-demo.md`（写法有疑义以它渲染结果为准）。本规范的核心不是罗列语法，而是**按阅读体验选择渲染能力**——让读者扫读时抓住重点，而不是被格式淹没。
 
 ## 支持能力速查
 
