@@ -172,8 +172,8 @@
 | 高亮 | `==文本==` | `micromark-extension-mark` → `<mark>`（token 配色） |
 | Callouts | `> [!type] 标题`（`-` 默认折叠 / `+` 默认展开；别名归一十类别，正典见 ZJBlog `tools/callouts.ts`） | remark 插件家族共享；类别 → 语义 token（ok/warning/danger/accent/中性） |
 | 定义列表 / emoji 短代码 | `remark-deflist` / `remark-emoji` | 同 |
-| 数学 | `$...$` / `$$...$$`（LaTeX once-only） | `remark-math` + `rehype-katex` |
-| 图表 | ```mermaid fence（**含 xychart 柱状/折线图** —— mermaid ≥12 的注册名，旧 `xychart-beta` 已移除），含标点的节点标签加引号 | mermaid 12 惰性渲染 |
+| 数学 | `$...$` / `$$...$$` / ` ```math ` fence（LaTeX once-only） | `remark-math` + `rehype-katex` |
+| 图表 | ```mermaid fence —— v12 全部图型（渲染器不挑图型；`xychart` 为 v12 注册名、detector 兼容 `xychart-beta`，`radar-beta` 必须带 `-beta`，zenuml 未随 v12 内置）。词法纪律：含标点/括号/中文的标签加引号；xychart 轴数组中文条目必须加引号；sankey-beta 节点与 radar-beta/quadrantChart 轴/点名为 ASCII 裸标识符（中文只进引号内字符串）；treemap 节点必须双引号（引号内可 CJK） | mermaid 12 惰性渲染 |
 
 **有意不共享**：`rehype-raw`（博客内容作者所有、可透传原生 HTML；AI 生成内容一律**禁止 raw HTML** —— 信任模型差异）、PlantUML（外部渲染服务，mermaid 已覆盖）、Shiki 代码高亮（zjsearch 体积预算；代码块纯 mono 呈现）。
 
@@ -195,7 +195,7 @@ deck 文（frontmatter `deck: true` 或正文 marp fence）的视觉契约：构
 | 行内标签与图片 | `<mark>`（`--highlight-bg`）/`<kbd>`/`<u>`（accent 下划线）/`<del>`（ink-3）/上下标有主题样式（样式归主题，标签是原生 HTML）；图片修饰符 `w:`/`h:`/`bg fit` 可用，图片 `max-height: 480px` 防顶出画布 |
 | 无 JS | `<noscript>` 样式（`DECK_NOSCRIPT_CSS`）展开全页堆叠，`zoom` 布局缩放（transform 不参与布局，父级拿不到实际高度） |
 
-**deck 管线家族契约（ZJSearch 运行时同架构，§17）**：ZJSearch 的 deck 编译是本站 `tools/deck.ts` 的孪生（`client/zjsearch/src/lib/deck/compile.ts`，内核 marp-core 版本对钉），`DeckView.tsx` 是 DeckViewer 的孪生、`deckFit.ts` 是本站溢出适配的孪生——机制改动两侧同步。三个**站点缝**把同一份管线分开：`html`（本站 `true` 可信作者直通；zjsearch `false`——模型内容 raw HTML 转义为可见文本，注入的标签不执行，即信任模型）、`highlight`（本站传 shiki 双主题 pass；zjsearch 缺省走 markdown-it 转义代码块）、`imageSizes` / `demoteHeadings`（本站开，zjsearch 独立 deck 关）。内核把 mathjax-full 与 highlight.js 全语言注册表静态 require 在模块顶层，而钉死的配置（`math: "katex"` + `highlight: () => ""`）永不执行这两条路径——bundler alias 把它们指到一个 Proxy 替身（zjsearch `tools/deck-stubs/empty-dep.cjs`），**升级内核时替身与 alias 清单要跟着核对**。
+**deck 管线家族契约（ZJSearch 运行时同架构，§17）**：ZJSearch 的 deck 编译是本站 `tools/deck.ts` 的孪生（`client/zjsearch/src/lib/deck/compile.ts`，内核 marp-core 版本对钉），`DeckView.tsx` 是 DeckViewer 的孪生、`deckFit.ts` 是本站溢出适配的孪生——机制改动两侧同步。三个**站点缝**把同一份管线分开：`html`（本站 `true` 可信作者直通；zjsearch `false`——模型内容 raw HTML 转义为可见文本，注入的标签不执行，即信任模型）、`highlight`（本站传 shiki 双主题 pass；zjsearch 缺省走 markdown-it 转义代码块）、`imageSizes` / `demoteHeadings`（本站开，zjsearch 独立 deck 关）；deck 均无脚注管线（marpit 系不含脚注插件，两侧 prompt 一致禁教）。内核把 mathjax-full 与 highlight.js 全语言注册表静态 require 在模块顶层，而钉死的配置（`math: "katex"` + `highlight: () => ""`）永不执行这两条路径——bundler alias 把它们指到一个 Proxy 替身（zjsearch `tools/deck-stubs/empty-dep.cjs`），**升级内核时替身与 alias 清单要跟着核对**。
 
 **溢出自动适配（两侧孪生 `deckFit.ts`）**：compile 期把每页正文包进 `.deck-body`；播放器对可见页测量溢出并对 wrapper 施加 `transform: scale(s)` + 宽度补偿（`width: 100/s%`——排版先放宽再缩回，有效行宽不变、整页等比缩小落进画布），缩放下限 0.5（之下宁可裁切——无限缩小等于不可读）。两个载荷级陷阱：**量 wrapper 自身的 scrollHeight**（`section.scrollHeight` 被钳到 clientHeight 且计入 padding-bottom，会把干净页误报成恰好超一个 padding）；**钉 `transform-origin: top left`**（默认 center 会把缩放后的页向中心漂）。`display:none` 的页量不出尺寸——逐页模式翻到即量；mermaid/图片迟到渲染由防抖 MutationObserver 重测（fit 只写 style/attribute，不在 childList 观察范围，无回环）。打印前先切连续/揭示全量再量，克隆纸面携带每页的 inline 缩放。
 
