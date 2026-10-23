@@ -101,6 +101,7 @@
 - **固定暗色媒体 chrome 豁免**：图片灯箱、缩略图角标（`TILE_BADGE`）与媒体浮层在**所有调色板下都渲染在同一暗色底上**，主题 token 不适用 —— 允许固定色值（灯箱的 zinc 系文字、`bg-black/70` 角标 scrim）；灯箱背板已收编为 `--scrim` token（明暗同值），不再豁免。canvas 画布内的 JS 颜色字面量同豁免（CSS 变量到不了 canvas）。豁免面仅限媒体浮层/角标/画布，页面 UI 一律走 token。
 - **扫码容器固定白底**（ZJBlog 支持页收款码）：二维码需要真实白底保证扫码器对比度，暗色下不能跟 token 翻黑 —— `bg-white` 固定值合法。
 - **theme-color meta 镜像常量**（ZJBlog `lib/theme.ts` 的 `THEME_COLOR_LIGHT/DARK`）：SSR 头部与 `applyThemeStyle` 需要字符串字面量直写 meta（CSS 变量到不了 `<meta content>`），值必须与 `--bg` 两档逐一相同 —— 改 token 时两处同步，注册于此即非「裸 hex」。
+- **浏览器实况标注色板**（ZJSearch browser 镜像）：agent 操作可视化的元素标注画进截图 JPEG（canvas 豁免类，固定色值不随主题翻转），取家族语义色浅色初始值 —— 链接 `--ok` 绿 `#15803d`、按钮 `--danger` 红 `#dc2626`、输入框/文本域 品牌金 `#e09f0a`（§2.2 金渐变深端，最常标的类型穿品牌色）、下拉与其余交互 `--ink-2` 灰 `#6b675c`；虚线 2px 框 + 元素上方 ref 徽章。语义映射：绿=通往别处、红=可触发、金=可输入、灰=其余；徽章文字随底色取黑（金底 `#241d0e`）或白，浅底深字、深底白字。
 
 **依赖样式按需加载**：大而少用的样式资产（如 KaTeX，25KB raw）不做全站 render-blocking —— 构建期标记需要的页面，仅对这些页注入对应样式（含字体资产），客户端 SPA 换页再幂等补注。
 
