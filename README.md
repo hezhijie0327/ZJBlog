@@ -70,7 +70,7 @@ image: "/images/cover.jpg" # 封面图，站点根路径；缺省不渲染封面
 | 代码高亮 | ✅ | shiki 双主题（亮/暗 AA 对比），复制按钮，语言标签 |
 | KaTeX 数学（`$…$` / `$$…$$` / ```math） | ✅ | 构建期渲染；KaTeX 样式按页按需加载 |
 | Mermaid / sequence / flow | ✅ | 客户端进视口惰性渲染；Typora 语法构建期翻译 |
-| GeoJSON / TopoJSON | ✅ | 构建期直接投影为静态 SVG（零运行时 JS） |
+| GeoJSON / TopoJSON | ✅ | 构建期直接投影为静态 SVG（零运行时 JS）；`geojson-nobasemap` / `topojson-nobasemap` 跳过底图，可作纯矢量示意图 |
 | ASCII STL | ✅ | three.js 惰性渲染，滚出视口自动停帧省 CPU |
 | PlantUML | ✅ | 公共渲染服务 lazy img |
 | Obsidian Callouts（`> [!note]-` 折叠） | ✅ | 全类别配色映射站点 token |

@@ -16,7 +16,7 @@ description: Use when writing or editing any article in this blog (content/blogs
 | 表格 | GFM 表格，支持对齐、行内格式 | 自动滚动容器；单元格内放短句 |
 | 任务清单 | `- [ ]` / `- [x]` | 出发前清单、检查项 |
 | Mermaid | ```mermaid | v12 全部图型（flowchart / sequence / gantt / pie / mindmap / sankey / xychart …全量演示见 markdown-demo），进视口惰性渲染；中文标签多数可用，词法坑：xychart 数组与 sankey/packet/radar/quadrant/treemap 的裸标识符不含 CJK、treemap 节点必须双引号（引号内可 CJK）、sankey 是 CSV 三段式 `a,b,80`、radar curve 用花括号映射、architecture 边为两横线且右端点方向前置 `B:id`、requirement 关系用 `->`、zenuml 未内置 |
-| 地图 | ```geojson / ```topojson | 构建期静态 SVG，坐标为真实经纬时叠加 world-atlas 底图；Point 的 `properties.name` 渲染为点位标注，`label-dx` / `label-dy`（数字，默认 7 / -7）可调偏移避让，贴右缘自动换侧 |
+| 地图 | ```geojson / ```topojson | 构建期静态 SVG，坐标为真实经纬时叠加 world-atlas 底图；Point 的 `properties.name` 渲染为点位标注，`label-dx` / `label-dy`（数字，默认 7 / -7）可调偏移避让，贴右缘自动换侧。`geojson-nobasemap` / `topojson-nobasemap` 无条件不渲染底图——坐标当 x/y 用的纯矢量示意图模式 |
 | 3D | ```stl | 进视口惰性加载 three.js |
 | 数学 | `$…$`、`$$…$$`、```math | KaTeX 按需注入该页 |
 | 脚注 | `[^1]` | 自动聚到文末 |
@@ -48,6 +48,7 @@ deck 是 markdown-it 系独立管线，站内扩展经桥接已支持大半：**
 - **流程、路线、决策分支** → mermaid `flowchart LR`
 - **时间安排**（一天日程、里程碑）→ mermaid `gantt`（`dateFormat HH:mm` + 起止时刻写法）
 - **地点与地理动线** → geojson 点 + LineString（坐标示意精度即可，注明"坐标为示意"）
+- **几何示意图 / 纯矢量草图** → geojson-nobasemap（Polygon 画形状、Point 标顶点，坐标当 x/y 用，无地图底图）
 - **提示 / 避坑 / 硬约束** → Callout（`[!tip]` / `[!warning]` / `[!important]`）；**每节 ≤ 1-2 个**，多了等于没有
 - **备选方案、来源列表、长尾细节** → `<details>` 折叠，正文只留主线
 - **可勾选的清单** → 任务清单

@@ -161,10 +161,15 @@ function renderDiagram(lang: string, code: string): string | undefined {
         return `<div class="mermaid-placeholder" data-chart="${escapeAttr(chart)}"></div>`;
       }
       case "geojson":
-      case "topojson": {
+      case "topojson":
+      case "geojson-nobasemap":
+      case "topojson-nobasemap": {
         const json = JSON.parse(code) as Record<string, unknown>;
-        const geo = lang === "topojson" ? topoToGeo(json) : json;
-        return diagramFigure(lang, renderGeoSvg(geo));
+        const geo = lang.startsWith("topojson") ? topoToGeo(json) : json;
+        // "-nobasemap" variant: pure vector figure (geometry schematics,
+        // abstract diagrams) — skips the world-atlas underlay even when
+        // every coordinate looks like lng/lat
+        return diagramFigure(lang, renderGeoSvg(geo, { basemap: !lang.endsWith("-nobasemap") }));
       }
       case "plantuml":
         return diagramFigure(lang, plantumlFigure(code));

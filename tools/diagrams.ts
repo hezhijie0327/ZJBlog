@@ -216,8 +216,10 @@ function ringToPath(ring: unknown, depth: number, project: (c: Coord) => Coord, 
 
 /** GeoJSON → uniformly scaled static SVG (equirectangular projection +
  *  self-fitting bounding box, token colors; properties.name of a Point
- *  Feature renders as a point label) */
-export function renderGeoSvg(geo: Json): string {
+ *  Feature renders as a point label). opts.basemap: false skips the
+ *  world-atlas underlay (geojson-nobasemap fence) for pure vector
+ *  figures. */
+export function renderGeoSvg(geo: Json, opts?: { basemap?: boolean }): string {
   const geometries: Json[] = [];
   const labels: { coords: Coord; name: string; dx: number; dy: number }[] = [];
   collectGeometries(geo, geometries, labels);
@@ -292,12 +294,13 @@ export function renderGeoSvg(geo: Json): string {
       return `<text class="geo-label"${anchor} x="${Math.round(x * 10) / 10}" y="${y}">${text}</text>`;
     })
     .join("");
-  // Real basemap (world-atlas) only when every coordinate is actual
+  // Real basemap (world-atlas) only when opted in and every coordinate is actual
   // lng/lat — abstract numeric data must not get a world under it. Extent is
   // the data bbox grown to at least 0.5° per axis (at that scale 110m
   // coastlines resolve into visible polylines while the data keeps ~15% of
   // the canvas width) and clamped to the world.
-  const geographic = coords.every((c) => c[0] >= -180 && c[0] <= 180 && c[1] >= -85 && c[1] <= 85);
+  const geographic =
+    opts?.basemap !== false && coords.every((c) => c[0] >= -180 && c[0] <= 180 && c[1] >= -85 && c[1] <= 85);
   let basemap = "";
   if (geographic) {
     const grow = (min: number, max: number, lo: number, hi: number): [number, number] => {

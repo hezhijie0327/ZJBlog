@@ -31,7 +31,7 @@ tags:
 | 数学 | `$…$` `$$…$$` | KaTeX 样式按需注入本页 |
 | Mermaid | ` ```mermaid ` | v12 全部图型逐一演示，进视口渲染 |
 | sequence / flow | ` ```sequence ` / ` ```flow ` | 构建期翻译为 Mermaid |
-| 地图 | ` ```geojson ` / ` ```topojson ` | 构建期投影为内联 SVG，真实世界底图 |
+| 地图 | ` ```geojson ` / ` ```topojson ` | 构建期投影为内联 SVG，真实世界底图；geojson-nobasemap 纯矢量模式 |
 | 3D 模型 | ` ```stl ` | three.js 进视口惰性加载 |
 | PlantUML | ` ```plantuml ` | 公共渲染服务惰性出图 |
 | HTML 子集 | `<kbd>` `<mark>` `<u>` `<sub>` `<sup>` | 裸色值与外站 iframe 禁止 |
@@ -542,6 +542,20 @@ treemap
     }
   },
   "arcs": [[[62, 44], [35, -9], [15, 1]]]
+}
+```
+
+围栏写 `geojson-nobasemap`（或 `topojson-nobasemap`）时**无条件不渲染世界底图**——坐标退化为普通的 x/y，进入纯矢量示意图模式：Polygon 画形状、Point 标顶点，适合几何图形、抽象草图这类“不是地图”的图：
+
+```geojson-nobasemap
+{
+  "type": "FeatureCollection",
+  "features": [
+    { "type": "Feature", "properties": { "name": "A" }, "geometry": { "type": "Point", "coordinates": [0, 3] } },
+    { "type": "Feature", "properties": { "name": "B" }, "geometry": { "type": "Point", "coordinates": [0, 0] } },
+    { "type": "Feature", "properties": { "name": "C" }, "geometry": { "type": "Point", "coordinates": [4, 0] } },
+    { "type": "Feature", "properties": { "name": "三角形 ABC" }, "geometry": { "type": "Polygon", "coordinates": [[[0, 3], [4, 0], [0, 0], [0, 3]]] } }
+  ]
 }
 ```
 
