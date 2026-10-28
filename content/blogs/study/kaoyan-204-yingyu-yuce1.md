@@ -48,6 +48,30 @@ A time-honored classic, rewards always manage to motivate. While cash may stir u
 
 Unhealthy competition in the workplace can be __18__ as a divisive element that pulls individuals in the opposite direction instead of __19__ them to work towards growing the company, __20__ teamwork.
 
+
+**选项**：
+
+1. [A] Therefore　[B] However　[C] Moreover　[D] Consequently
+2. [A] conclusion　[B] debate　[C] trick　[D] reason
+3. [A] collecting　[B] discouraging　[C] tolerating　[D] advocating
+4. [A] arguably　[B] supposedly　[C] rightfully　[D] fortunately
+5. [A] possible　[B] unnecessary　[C] rare　[D] costly
+6. [A] deceives　[B] prevents　[C] motivates　[D] forces
+7. [A] equal　[B] limited　[C] special　[D] random
+8. [A] Nevertheless　[B] Instead　[C] Otherwise　[D] Therefore
+9. [A] comment　[B] thought　[C] expense　[D] core
+10. [A] elected　[B] branded　[C] praised　[D] promoted
+11. [A] by training　[B] by nature　[C] by accident　[D] by choice
+12. [A] boosting　[B] suppressing　[C] limiting　[D] criticizing
+13. [A] stressful　[B] painful　[C] cheerful　[D] fearful
+14. [A] option　[B] progress　[C] interest　[D] belief
+15. [A] damaging　[B] recalling　[C] defining　[D] building
+16. [A] as　[B] except　[C] besides　[D] like
+17. [A] reject　[B] receive　[C] demand　[D] purchase
+18. [A] accused　[B] rewarded　[C] described　[D] classified
+19. [A] ordering　[B] confusing　[C] depressing　[D] uniting
+20. [A] destroying　[B] evaluating　[C] strengthening　[D] highlighting
+
 <details>
 <summary>完形 1–20 答案与考点速览</summary>
 
@@ -576,19 +600,32 @@ It also reflects enforcement limits. Regulators cannot deal with every irritatin
 
 备选标题：[A] Ask for financial counseling　[B] Be honest in your fundraiser story　[C] Be prepared for financial difficulty　[D] Make your goal clear　[E] Make yourself available　[F] Explain your generosity　[G] Express your gratitude
 
-**41.** 段落要点：Even though it can be difficult to **share your financial details**…this is exactly what will compel others to support you…clearly explain what has led you to your current position.
+How to ask for financial assistance online in 5 steps
+
+You might feel like asking for help is hard, and you're not alone in that feeling. However, being able to express vulnerability and ask for assistance takes courage and strength.
+
+If you aren't sure exactly how to get help, crowdfunding is one of the simplest and most effective ways to reach a lot of people at once and share your needs. By starting an online fundraiser, you can give people who care about you the opportunity to lend a hand and make a real difference in your life.
+
+Follow these five steps to learn how to ask for financial help.
+
+**41.** Even though it can be difficult to share your financial details in your fundraiser story with loved ones and strangers alike, this is exactly what will compel others to support you. If they can understand why you desperately need help with money, they'll be more willing to go above and beyond to donate to your cause, or even share your fundraiser with others.
+
+In your message asking for financial assistance, clearly explain what has led you to your current position. For example, if you're on a low income and are facing sudden, unexpected medical expenses, add that detail into your story.
 → **B**（复现：share details / clearly explain = 讲真话）
 
-**42.** 段落要点：setting a reasonable and attainable fundraising **goal**…explain what donations will be going toward…set an initial fundraising goal of $3,000.
+**42.** Tap into the psychology of giving by setting a reasonable and attainable fundraising goal. Research has shown a link between tangibility and generosity, meaning that people are more willing to give to a cause if they know their donation will make a noticeable difference. Be sure to explain what donations will be going toward in as much detail as you feel comfortable sharing. For this reason, it's wise to set a reasonable and attainable fundraising goal when asking for donations. If your total debt is $10,000, it might be a better idea to set an initial fundraising goal of $3,000. People will be much more willing to help when they feel like their donation can make a big impact in the short term.
 → **D**（goal 原词复现）
 
-**43.** 段落要点：offer to **meet in person** with anyone…your willingness to be open and **set aside time** for them.
+**43.** There may be some friends or family members who have questions about your financial needs or would like to give you emotional support. At the end of your fundraiser story, offer to meet in person with anyone who would like more information on your situation. Your willingness to be open and set aside time for them will go a long way.
 → **E**（愿意腾时间见面 = 随时找得到你）
 
-**44.** 段落要点：willing to accept **financial advice**…expressing an interest in **financial literacy**.
+**44.** Among your network of friends and family members, you're sure to have at least a few individuals who are financially savvy and who are willing to offer you their expertise free of charge. In your fundraiser story, let your supporters know that you're willing to accept financial advice instead of monetary support, or in addition to monetary support.
+
+By expressing an interest in financial literacy and the desire to learn and grow, your network of friends and family members will see that you're serious about taking charge of your future.
 → **A**（要的是理财建议而非捐款）
 
-**45.** 段落要点：telling your donors how **thankful** you are…You can **say thank you** in many different ways.
+**45.** One of the most important aspects of fundraising is telling your donors how thankful you are for their support. When people feel appreciated, they'll be more willing to donate again or even tell others about your cause. You can say thank you to donors in many different and creative ways, from a fundraiser update posted to social media, a handwritten fundraising letter, or even a phone call.
+
 → **G**（thank 原词复现）
 
 ---
