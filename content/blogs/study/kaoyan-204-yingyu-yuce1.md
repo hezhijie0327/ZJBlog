@@ -109,7 +109,9 @@ If we look at these studies and what they seem to be telling us, loneliness is n
 - [D] improve emotional regulation
 
 <details>
-<summary>21 答案 B · 细节因果 · 同义替换链</summary>
+<summary>21 · 细节因果 · 同义替换链</summary>
+
+**答案：B**
 
 **定位**：P1——"the feeling of loneliness so unpleasant often **motivates** us to **reconnect** with others"。
 
@@ -128,7 +130,9 @@ If we look at these studies and what they seem to be telling us, loneliness is n
 - [D] Larger brain regions for emotion control.
 
 <details>
-<summary>22 答案 C · 细节对比 · 张冠李戴识别</summary>
+<summary>22 · 细节对比 · 张冠李戴识别</summary>
+
+**答案：C**
 
 **定位**：P2——"In lonely **young** adults, areas of the brain related to social cognition and empathy have **less dense white matter**"。
 
@@ -147,7 +151,9 @@ If we look at these studies and what they seem to be telling us, loneliness is n
 - [D] show no empathy for others
 
 <details>
-<summary>23 答案 A · 细节 · 反向表达改写</summary>
+<summary>23 · 细节 · 反向表达改写</summary>
+
+**答案：A**
 
 **定位**：P3——"lonely people showed brain activity that was **dissimilar** to each other and to the non-lonely participants"。
 
@@ -166,7 +172,9 @@ If we look at these studies and what they seem to be telling us, loneliness is n
 - [D] show weaker brain activity
 
 <details>
-<summary>24 答案 A · 细节 · 模糊边界 = 混淆</summary>
+<summary>24 · 细节 · 模糊边界 = 混淆</summary>
+
+**答案：A**
 
 **定位**：P4——"the boundary was **blurred** for lonelier people…thinking of fictional characters in a way **similar to real-world friends**"。
 
@@ -185,7 +193,9 @@ If we look at these studies and what they seem to be telling us, loneliness is n
 - [D] reflects a craving for relationships
 
 <details>
-<summary>25 答案 D · 观点态度 · 末段总结句</summary>
+<summary>25 · 观点态度 · 末段总结句</summary>
+
+**答案：D**
 
 **定位**：末段第一句——"loneliness is **not only** the perceived absence of others, **but also a desire for connection**"。
 
@@ -223,7 +233,9 @@ e on free school lunches more urgent?
 - [D] Improved economic equity nationwide.
 
 <details>
-<summary>26 答案 A · 细节因果 · as 引导原因</summary>
+<summary>26 · 细节因果 · as 引导原因</summary>
+
+**答案：A**
 
 **定位**：P1——"has gained **urgency as** families struggle with **inflation**, **childhood obesity** rates climb to 21%"。
 
@@ -242,7 +254,9 @@ e on free school lunches more urgent?
 - [D] Eliminating all forms of child poverty.
 
 <details>
-<summary>27 答案 C · 观点题 · 主张句优先</summary>
+<summary>27 · 观点题 · 主张句优先</summary>
+
+**答案：C**
 
 **定位**：P2——"isn't just morally right — it's a smart **investment in public health**, educational outcomes, and **economic equity**"。
 
@@ -261,7 +275,9 @@ e on free school lunches more urgent?
 - [D] gain excessive body weight
 
 <details>
-<summary>28 答案 B · 细节 · 方向词对照</summary>
+<summary>28 · 细节 · 方向词对照</summary>
+
+**答案：B**
 
 **定位**：P4——"**higher intakes** of milk, fruits, and vegetables alongside **lower** consumption of snacks and desserts"。
 
@@ -280,7 +296,9 @@ e on free school lunches more urgent?
 - [D] excludes low-income families
 
 <details>
-<summary>29 答案 B · 细节 · 评价词定位</summary>
+<summary>29 · 细节 · 评价词定位</summary>
+
+**答案：B**
 
 **定位**：倒数 P2——"face **stigma**…emotional and psychological **burdens**, potential **bullying**, and **reluctance** to participate"。
 
@@ -299,7 +317,9 @@ e on free school lunches more urgent?
 - [D] serving all students equally
 
 <details>
-<summary>30 答案 D · 细节 · 方式状语</summary>
+<summary>30 · 细节 · 方式状语</summary>
+
+**答案：D**
 
 **定位**：末段——"making meals available to **all** students **regardless of family income**, ensuring **no child is identified** as receiving assistance"。
 
@@ -332,7 +352,9 @@ The United States, which holds the highest national debt in the world at nearly 
 - [D] Insufficient government funding.
 
 <details>
-<summary>31 答案 D · 细节 · 无中生有排除</summary>
+<summary>31 · 细节 · 无中生有排除</summary>
+
+**答案：D**
 
 **定位**：P2——"Museums in the United States simply **lack adequate government funding**"。
 
@@ -351,7 +373,9 @@ The United States, which holds the highest national debt in the world at nearly 
 - [D] they have fewer active museums
 
 <details>
-<summary>32 答案 B · 对比细节 · 数字归位</summary>
+<summary>32 · 对比细节 · 数字归位</summary>
+
+**答案：B**
 
 **定位**：P3–4——欧洲"许多国家拨 **1%** 政府支出给博物馆"、"补贴高达 **95%**"；美国拨款持续缩水。
 
@@ -370,7 +394,9 @@ The United States, which holds the highest national debt in the world at nearly 
 - [D] Europe views art as entertainment
 
 <details>
-<summary>33 答案 C · 推理 · 段落结论句</summary>
+<summary>33 · 推理 · 段落结论句</summary>
+
+**答案：C**
 
 **定位**：P4 末——"This major difference…shows that the U.S. government clearly **falls short of keeping museums a priority**"。
 
@@ -389,7 +415,9 @@ The United States, which holds the highest national debt in the world at nearly 
 - [D] cultural values shape funding priorities
 
 <details>
-<summary>34 答案 D · 推理 · 本质概括项</summary>
+<summary>34 · 推理 · 本质概括项</summary>
+
+**答案：D**
 
 **定位**：P5——美国把艺术当**娱乐附属品** → 私有化、政府撒手；欧洲把艺术当**教育必需品** → 政府重金扶持。
 
@@ -408,7 +436,9 @@ The United States, which holds the highest national debt in the world at nearly 
 - [D] the deficit was finally eliminated
 
 <details>
-<summary>35 答案 A · 句意推理 · 转折后重音</summary>
+<summary>35 · 句意推理 · 转折后重音</summary>
+
+**答案：A**
 
 **定位**：末句——"These budget cuts have barely influenced the administration's financial goals, **but for museums, it's the opposite**."
 
@@ -443,7 +473,9 @@ It also reflects enforcement limits. Regulators cannot deal with every irritatin
 - [D] the harm of frequent pop-ups
 
 <details>
-<summary>36 答案 B · 例证题 · 看例子后那句话</summary>
+<summary>36 · 例证题 · 看例子后那句话</summary>
+
+**答案：B**
 
 **定位**：开篇付费弹窗的例子 → 紧接着 "We even have a name for them, **'dark patterns'**" → 下文全是围绕这个词的定义展开。
 
@@ -462,7 +494,9 @@ It also reflects enforcement limits. Regulators cannot deal with every irritatin
 - [D] is rarely used by scholars
 
 <details>
-<summary>37 答案 C · 细节 · 否定词开关</summary>
+<summary>37 · 细节 · 否定词开关</summary>
+
+**答案：C**
 
 **定位**：P2——"'Dark pattern' is **not** a legal term with a clear boundary…the label covers a **broad** range."
 
@@ -481,7 +515,9 @@ It also reflects enforcement limits. Regulators cannot deal with every irritatin
 - [D] should be banned by consumer laws
 
 <details>
-<summary>38 答案 C · 类比例证 · 找相似点句</summary>
+<summary>38 · 类比例证 · 找相似点句</summary>
+
+**答案：C**
 
 **定位**：P4——汽车销售员不断推销高配车型 → "Salesmanship is nothing new. Digital design often **borrows from familiar techniques**."
 
@@ -500,7 +536,9 @@ It also reflects enforcement limits. Regulators cannot deal with every irritatin
 - [D] distinguishes annoyance from deception
 
 <details>
-<summary>39 答案 D · 推断 · not…but 结构改写</summary>
+<summary>39 · 推断 · not…but 结构改写</summary>
+
+**答案：D**
 
 **定位**：P5——"care about is **not** whether a design is **annoying**…but whether it is likely to **mislead a reasonable consumer**."
 
@@ -519,7 +557,9 @@ It also reflects enforcement limits. Regulators cannot deal with every irritatin
 - [D] the term has only one negative meaning
 
 <details>
-<summary>40 答案 A · 细节因果 · 原因句定位</summary>
+<summary>40 · 细节因果 · 原因句定位</summary>
+
+**答案：A**
 
 **定位**：末段——"Regulators cannot deal with every irritating screen…They have to **prioritize the worst cases**. That leaves a lot of borderline conduct in the wild."
 
