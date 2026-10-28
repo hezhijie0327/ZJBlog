@@ -109,9 +109,15 @@ If we look at these studies and what they seem to be telling us, loneliness is n
 - [D] improve emotional regulation
 
 <details>
-<summary>21 答案 B · 细节因果</summary>
+<summary>21 答案 B · 细节因果 · 同义替换链</summary>
 
-定位 P1："the feeling of loneliness so unpleasant often **motivates us to reconnect** with others" → 同义改写 drive to seek social ties。A/C/D 都是孤独对大脑的**生理影响**，不是"不适感的作用"。
+**定位**：P1——"the feeling of loneliness so unpleasant often **motivates** us to **reconnect** with others"。
+
+**替换链**：motivates → **drive**；reconnect with others → **seek social ties**。原文和选项没有一个词重复，但意思严丝合缝——这就是正确项的长相。
+
+**其他选项在装什么**：A、C、D 全是孤独对**大脑**的生理影响（白质密度、认知区、情绪调节）——它们偷换了主语：题目问的是"不适感**驱动人做什么**"，不是"孤独改变了什么"。
+
+**takeaway**：细节因果题 = 定位到因果句 + 认出动词短语的同义改写。原词复现的选项反而要警惕。
 </details>
 
 **22.** What did brain studies reveal about lonely young adults?
@@ -122,9 +128,15 @@ If we look at these studies and what they seem to be telling us, loneliness is n
 - [D] Larger brain regions for emotion control.
 
 <details>
-<summary>22 答案 C · 细节对比（张冠李戴陷阱）</summary>
+<summary>22 答案 C · 细节对比 · 张冠李戴识别</summary>
 
-定位 P2："In lonely **young** adults, areas related to social cognition and empathy have **less dense white matter**"。A/D 是**老年组**的特征（张冠李戴），B 与 less dense 相反。
+**定位**：P2——"In lonely **young** adults, areas of the brain related to social cognition and empathy have **less dense white matter**"。
+
+**替换链**：less dense white matter in social areas → 几乎原词搬运 → C。
+
+**其他选项在装什么**：A（体积更小）和 D（区域更大）是**老年组**（older adults）的特征——本段最大的陷阱就是 young/old 两组数据并列，考你有没有看清"谁是谁的"；B 把 less dense 反着说成 denser。
+
+**takeaway**：对比型段落（年轻人 vs 老人）出细节题，八成考"数据归谁"——定位后第一件事核对**主语人群**。
 </details>
 
 **23.** The MRI study on video-watching showed that lonely people ______.
@@ -135,9 +147,15 @@ If we look at these studies and what they seem to be telling us, loneliness is n
 - [D] show no empathy for others
 
 <details>
-<summary>23 答案 A · 细节</summary>
+<summary>23 答案 A · 细节 · 反向表达改写</summary>
 
-定位 P3：孤独者的脑活动"**dissimilar** to each other and to the non-lonely" → 处理世界的方式独特。B 与原文相反；C/D 无据。
+**定位**：P3——"lonely people showed brain activity that was **dissimilar** to each other and to the non-lonely participants"。
+
+**替换链**：dissimilar / view the world differently → process the world **uniquely** → A。
+
+**其他选项在装什么**：B 说神经活动相似——原文说的是非孤独者相似、孤独者**不**相似，反着拼的；C"反应更强烈"、D"毫无共情"——原文只说模式不同，没比较强弱、也没提共情，属于无中生有。
+
+**takeaway**：正确项常用**反向词**改写原文（dissimilar → unique），错误项则爱原词拼装（similar）。见到选项里有原文的原词组合，先怀疑它。
 </details>
 
 **24.** In the Game of Thrones study, lonelier participants tended to ______.
@@ -148,9 +166,15 @@ If we look at these studies and what they seem to be telling us, loneliness is n
 - [D] show weaker brain activity
 
 <details>
-<summary>24 答案 A · 细节</summary>
+<summary>24 答案 A · 细节 · 模糊边界 = 混淆</summary>
 
-定位 P4："the boundary was **blurred** for lonelier people… thinking of fictional characters in a way **similar to real-world friends**" → 虚构与现实混淆。
+**定位**：P4——"the boundary was **blurred** for lonelier people…thinking of fictional characters in a way **similar to real-world friends**"。
+
+**替换链**：boundary blurred → **confuse**；fictional characters ≈ real-world friends → **fictional with real people** → A。
+
+**其他选项在装什么**：B"更讨厌虚构角色"——原文没说好恶；C"准确描述所有角色"——方向反了，恰恰是分不清；D"脑活动更弱"——原文说的是模式不同，不是强弱。
+
+**takeaway**：metaphor（boundary blurred）必考它的**白话翻译**——看到比喻就问自己：它的大白话是什么？"边界模糊"="分不清"。
 </details>
 
 **25.** The author's overall view on the studies is that loneliness ______.
@@ -161,9 +185,15 @@ If we look at these studies and what they seem to be telling us, loneliness is n
 - [D] reflects a craving for relationships
 
 <details>
-<summary>25 答案 D · 观点态度</summary>
+<summary>25 答案 D · 观点态度 · 末段总结句</summary>
 
-末段主旨句："loneliness is **not only** the perceived absence of others, **but also a desire for connection**" → craving for relationships。A 与 not only 相悖；B 绝对化；C 只是单项研究的局限、非全文观点。
+**定位**：末段第一句——"loneliness is **not only** the perceived absence of others, **but also a desire for connection**"。
+
+**替换链**：a desire for connection → **craving for relationships** → D。
+
+**其他选项在装什么**：A 只取 not only 前半句（以偏概全）；B 的 always 绝对化（原文全是 may/possibly）；C"没有清晰因果"只是《权游》那项研究自己的 caveat，不是全文结论。
+
+**takeaway**：作者观点题看**末段总结句**；not only…but also 的重心永远在 but also 后半句。绝对化词（always/purely/only）出现即高度可疑。
 </details>
 
 ### Text 2（免费学校午餐 · 26–30 答案 ACBBD）
@@ -193,9 +223,15 @@ e on free school lunches more urgent?
 - [D] Improved economic equity nationwide.
 
 <details>
-<summary>26 答案 A · 细节因果</summary>
+<summary>26 答案 A · 细节因果 · as 引导原因</summary>
 
-定位 P1："has **gained urgency as** families struggle with **inflation**, **childhood obesity** rates climb to 21%"。B 是背景数字不是原因；C/D 无据。
+**定位**：P1——"has gained **urgency as** families struggle with **inflation**, **childhood obesity** rates climb to 21%"。
+
+**替换链**：inflation + obesity climbing → **Rising childhood obesity and inflation** → A。
+
+**其他选项在装什么**：B 的 35 billion 是背景数字，用来证明"这话题很大"，不是"变紧迫"的原因；C 参与度下降、D 经济公平改善——原文没提。
+
+**takeaway**：因果题的答案就藏在 as / because / owing to / thanks to 引导的从句里，定位词是题干里的 urgency 这类"结果词"。
 </details>
 
 **27.** What do free school lunch advocates emphasize as a key benefit?
@@ -206,9 +242,15 @@ e on free school lunches more urgent?
 - [D] Eliminating all forms of child poverty.
 
 <details>
-<summary>27 答案 C · 观点题</summary>
+<summary>27 答案 C · 观点题 · 主张句优先</summary>
 
-定位 P2："a smart **investment in public health**, educational outcomes, and **economic equity**" → C 原词对应。D 的 all forms 绝对化。
+**定位**：P2——"isn't just morally right — it's a smart **investment in public health**, educational outcomes, and **economic equity**"。
+
+**替换链**：smart investment in public health and equity → **Investing in public health and equity** → C（原词改写）。
+
+**其他选项在装什么**：B 认知发展确实在文中出现过，但那是第五段的**论据**，不是 advocates 开门见山的核心主张——细节对的选项不一定是"key benefit"那个层级；A 省家庭开支没提；D all forms of child poverty 绝对化。
+
+**takeaway**：观点题问"强调什么"，优先对准**主张句**（破折号/冒号后的那句话），别被文内其他细节勾走。
 </details>
 
 **28.** Compared with non-participating peers, children eating school meals ______.
@@ -219,9 +261,15 @@ e on free school lunches more urgent?
 - [D] gain excessive body weight
 
 <details>
-<summary>28 答案 B · 细节</summary>
+<summary>28 答案 B · 细节 · 方向词对照</summary>
 
-定位 P4："**higher intakes** of milk, fruits, and vegetables alongside **lower** consumption of snacks and desserts"。A/C 反向拼装。
+**定位**：P4——"**higher intakes** of milk, fruits, and vegetables alongside **lower** consumption of snacks and desserts"。
+
+**替换链**：higher intakes of fruits and vegetables → **consume more fruits and vegetables** → B。
+
+**其他选项在装什么**：A、C 把 higher/lower 反向拼装——数据和动词都对，就是方向拧了 180 度；D excessive body weight 无中生有。
+
+**takeaway**：对比句出细节题，先在草稿上抄下方向词（higher/lower、more/less），再逐个选项核对方向——出题人最爱在方向上动手脚。
 </details>
 
 **29.** The traditional tiered eligibility system is criticized mainly because it ______.
@@ -232,9 +280,15 @@ e on free school lunches more urgent?
 - [D] excludes low-income families
 
 <details>
-<summary>29 答案 B · 细节</summary>
+<summary>29 答案 B · 细节 · 评价词定位</summary>
 
-定位倒数 P2："face **stigma**…reluctance to participate in programs designed to help them" → 污名化打击参与意愿。D 理解反了——低收入家庭正是覆盖对象。
+**定位**：倒数 P2——"face **stigma**…emotional and psychological **burdens**, potential **bullying**, and **reluctance** to participate"。
+
+**替换链**：stigma + reluctance → **discourages participation via stigma** → B。
+
+**其他选项在装什么**：A 行政成本没提；C"提供不了营养"与原文相反（人家说营养更好）；D"把低收入家庭排除在外"——反了，低收入家庭正是这套制度的覆盖对象。
+
+**takeaway**：criticize / problem 类题目，定位段里的**评价性词汇**（stigma、burden、bullying）就是答案的原料库。
 </details>
 
 **30.** Universal free lunch programs remove stigma by ______.
@@ -245,9 +299,15 @@ e on free school lunches more urgent?
 - [D] serving all students equally
 
 <details>
-<summary>30 答案 D · 细节</summary>
+<summary>30 答案 D · 细节 · 方式状语</summary>
 
-定位末段："making meals available to **all** students **regardless of family income**" → 一视同仁。
+**定位**：末段——"making meals available to **all** students **regardless of family income**, ensuring **no child is identified** as receiving assistance"。
+
+**替换链**：all students regardless of income → **serving all students equally** → D。
+
+**其他选项在装什么**：A"识别出需要帮助的学生"——和原文正好相反，universal 的全部意义就是**不识别**任何人；B、C 限制餐食选择、减少供应量，纯无中生有。
+
+**takeaway**：by + 方式 = 手段题，答案必须和手段严格对应；"regardless of / no matter"这种短语是"一视同仁"的标准信号。
 </details>
 
 ### Text 3（美国博物馆资金 · 31–35 答案 DBCDA）
@@ -272,9 +332,15 @@ The United States, which holds the highest national debt in the world at nearly 
 - [D] Insufficient government funding.
 
 <details>
-<summary>31 答案 D · 细节</summary>
+<summary>31 答案 D · 细节 · 无中生有排除</summary>
 
-定位 P2："simply **lack adequate government funding**"。A/B/C 原文未提。
+**定位**：P2——"Museums in the United States simply **lack adequate government funding**"。
+
+**替换链**：lack adequate government funding → **Insufficient government funding** → D。
+
+**其他选项在装什么**：A 游客减少、B 设施老旧、C 人手不足——三个选项在原文**连同义句都找不到**，是最典型的无中生有三连。
+
+**takeaway**：细节题排除法的第一刀：回原文找每个选项的同义句，找不到的直接划掉——别跟它们辩论。
 </details>
 
 **32.** European museums differ from American ones in that ______.
@@ -285,9 +351,15 @@ The United States, which holds the highest national debt in the world at nearly 
 - [D] they have fewer active museums
 
 <details>
-<summary>32 答案 B · 对比细节</summary>
+<summary>32 答案 B · 对比细节 · 数字归位</summary>
 
-P3–4：欧洲多国划拨 1% 财政支出、最高 95% 靠政府补贴 → 公共资金远多于美国。A/C 与原文相反。
+**定位**：P3–4——欧洲"许多国家拨 **1%** 政府支出给博物馆"、"补贴高达 **95%**"；美国拨款持续缩水。
+
+**替换链**：欧洲公共资金远多于美国 → **receive far more public funds** → B。
+
+**其他选项在装什么**：A 反了（是欧洲更依赖政府）；C 把 1% 说成私人捐助——原文是政府支出占比，张冠李戴；D 博物馆数量对比不是本题考点。
+
+**takeaway**：对比题的铁律是**数字归位**——1%、95% 各属于谁，定位后当场写在草稿上，选项一对便知。
 </details>
 
 **33.** The funding systems in America and Europe show that ______.
@@ -298,9 +370,15 @@ P3–4：欧洲多国划拨 1% 财政支出、最高 95% 靠政府补贴 → 公
 - [D] Europe views art as entertainment
 
 <details>
-<summary>33 答案 C · 推理</summary>
+<summary>33 答案 C · 推理 · 段落结论句</summary>
 
-定位 P4 末："the U.S. government clearly **falls short of keeping museums a priority**"。B 张冠李戴（95% 是欧洲）；A/D 与原文相反。
+**定位**：P4 末——"This major difference…shows that the U.S. government clearly **falls short of keeping museums a priority**"。
+
+**替换链**：falls short of keeping museums a priority → **fails to prioritize museums** → C。
+
+**其他选项在装什么**：A 反了（美国才是私有化那一方）；B 把 95% 安到美国头上，张冠李戴；D 反了（欧洲把艺术当教育必需品）。
+
+**takeaway**：infer/show 类题目，答案往往就是**段落末尾的结论句**换个说法——作者已经替你推理完了，你只需要认出它。
 </details>
 
 **34.** The contrast between American and European views on art implies that ______.
@@ -311,9 +389,15 @@ P3–4：欧洲多国划拨 1% 财政支出、最高 95% 靠政府补贴 → 公
 - [D] cultural values shape funding priorities
 
 <details>
-<summary>34 答案 D · 推理（本质概括项）</summary>
+<summary>34 答案 D · 推理 · 本质概括项</summary>
 
-P5：价值观不同（美国视艺术为娱乐附属→私有化，欧洲视为教育必需→政府扶持）→ **文化价值观决定资金优先级**。
+**定位**：P5——美国把艺术当**娱乐附属品** → 私有化、政府撒手；欧洲把艺术当**教育必需品** → 政府重金扶持。
+
+**替换链**：两种对待艺术的态度 → **cultural values shape funding priorities**（文化价值观决定资金优先级）→ D。
+
+**其他选项在装什么**：A 教育总支出根本没比较；B "美国私有化更明智"——作者没有任何评价；C 博物馆在欧洲不重要——与文意相反。
+
+**takeaway**：implies / suggests 题的口诀——**选透过现象看本质的那个**，不选复述现象的。D 没有重复任何原文细节，却把两段现象收进一句话里，这就是"本质项"的长相。
 </details>
 
 **35.** The phrase "it's the opposite" at the end of the passage implies that ______.
@@ -324,9 +408,15 @@ P5：价值观不同（美国视艺术为娱乐附属→私有化，欧洲视为
 - [D] the deficit was finally eliminated
 
 <details>
-<summary>35 答案 A · 句意推理</summary>
+<summary>35 答案 A · 句意推理 · 转折后重音</summary>
 
-削减预算对政府财政目标几乎无影响，**but for museums, it's the opposite** → 结合前文"本就缺钱"→ 削减重创博物馆。B 是前半句的政府层面情况。
+**定位**：末句——"These budget cuts have barely influenced the administration's financial goals, **but for museums, it's the opposite**."
+
+**破句**：前半句说削减对政府的财政目标几乎没影响；**but** 一转——对博物馆恰恰相反 → 政府没伤到、博物馆伤惨了 → **A**（a heavy blow）。
+
+**其他选项在装什么**：B 是 but 前半句的内容，不是转折的重心；C 博物馆受益——方向反了；D 赤字消除——无中生有。
+
+**takeaway**：指代/短语推断题 = **前一句 + 转折词**连读；but / however 后面才是作者真正想说的话，it's the opposite 的 opposite 永远指向前半句的反面。
 </details>
 
 ### Text 4（暗黑模式 · 36–40 答案 BCCDA）
@@ -353,9 +443,15 @@ It also reflects enforcement limits. Regulators cannot deal with every irritatin
 - [D] the harm of frequent pop-ups
 
 <details>
-<summary>36 答案 B · 例证题</summary>
+<summary>36 答案 B · 例证题 · 看例子后那句话</summary>
 
-开篇例子服务于下文 **dark patterns 概念的引出**——例证题看例子**之后**的观点句。
+**定位**：开篇付费弹窗的例子 → 紧接着 "We even have a name for them, **'dark patterns'**" → 下文全是围绕这个词的定义展开。
+
+**破案**：例证题黄金法则——**例子本身不是目的，例子托起的观点才是**。本题例子直接托起 dark patterns 这个概念的定义 → B。
+
+**其他选项在装什么**：A 付费版流不流行、C 数字设计合不合法、D 弹窗多有害——全是例子**表面上的内容**，没有一句话是例子在论证的观点。
+
+**takeaway**：example / case 题的定位口诀：**答案在例子后面那句话里**（This shows… / We call… / That's why…）。例子细节熟悉的选项基本是陷阱。
 </details>
 
 **37.** According to the author, the term "dark pattern" ______.
@@ -366,9 +462,15 @@ It also reflects enforcement limits. Regulators cannot deal with every irritatin
 - [D] is rarely used by scholars
 
 <details>
-<summary>37 答案 C · 细节</summary>
+<summary>37 答案 C · 细节 · 否定词开关</summary>
 
-定位 P2："**not** a legal term with a clear boundary…covers a **broad** range"。A 与原文相反；B/D 无据。
+**定位**：P2——"'Dark pattern' is **not** a legal term with a clear boundary…the label covers a **broad** range."
+
+**替换链**：covers a broad range → **covers a wide range of conduct** → C。
+
+**其他选项在装什么**：A 有清晰法律边界——原文一个 not 直接反杀；B 只指非法伎俩——only 类绝对化；D 学者很少用——作者本人就是研究这个的 legal scholar。
+
+**takeaway**：not / only / merely 是排错最快的开关——选项与原文的否定词、绝对化词冲突时，一秒判死刑。
 </details>
 
 **38.** The analogy of the car salesperson suggests that digital designs ______.
@@ -379,9 +481,15 @@ It also reflects enforcement limits. Regulators cannot deal with every irritatin
 - [D] should be banned by consumer laws
 
 <details>
-<summary>38 答案 C · 例证题（类比）</summary>
+<summary>38 答案 C · 类比例证 · 找相似点句</summary>
 
-P4 类比点 = "Digital design often **borrows from familiar techniques**"（借鉴线下成熟推销手段）。D 把"法律不禁止"偷换成"应被禁止"。
+**定位**：P4——汽车销售员不断推销高配车型 → "Salesmanship is nothing new. Digital design often **borrows from familiar techniques**."
+
+**替换链**：borrows from familiar techniques → **are rooted in familiar techniques** → C。
+
+**其他选项在装什么**：A entirely new——原文说手法一点不新鲜，反着来；B 比线下更骗人——原文没做过比较；D 应该被法律禁止——原文恰恰在解释为什么法律**不禁**。
+
+**takeaway**：类比题 = 找作者点明"相似点"的那句话。类比的逻辑是"A 像 B"，考的永远是那个"像"字，不是 A 或 B 本身的属性。
 </details>
 
 **39.** It can be inferred that modern consumer protection law ______.
@@ -392,9 +500,15 @@ P4 类比点 = "Digital design often **borrows from familiar techniques**"（借
 - [D] distinguishes annoyance from deception
 
 <details>
-<summary>39 答案 D · 推断</summary>
+<summary>39 答案 D · 推断 · not…but 结构改写</summary>
 
-定位 P5：法律"不在乎是否 annoying，在乎是否 **mislead a reasonable consumer**" → 区分"惹人厌"与"欺诈"。
+**定位**：P5——"care about is **not** whether a design is **annoying**…but whether it is likely to **mislead a reasonable consumer**."
+
+**替换链**：区分 annoying 与 mislead → **distinguishes annoyance from deception** → D。
+
+**其他选项在装什么**：A 禁止一切推销、B 把所有 dark pattern 都当违法——两个 all 全称绝对化，原文明确说法律管不着"合法的烦人"；C 公司利益优先——立场反转。
+
+**takeaway**：infer 题的正确项常常是原文 **not A but B** 结构的压缩——把 A、B 提炼成一对反义概念（annoyance vs deception）就是答案。
 </details>
 
 **40.** Some think there are no laws against dark patterns because ______.
@@ -405,9 +519,15 @@ P4 类比点 = "Digital design often **borrows from familiar techniques**"（借
 - [D] the term has only one negative meaning
 
 <details>
-<summary>40 答案 A · 细节因果</summary>
+<summary>40 答案 A · 细节因果 · 原因句定位</summary>
 
-定位末段执法局限："They have to **prioritize the worst cases**"，大量灰色行为无人管 → 让人误以为无法可依。
+**定位**：末段——"Regulators cannot deal with every irritating screen…They have to **prioritize the worst cases**. That leaves a lot of borderline conduct in the wild."
+
+**替换链**：只处理最恶劣案例 → 大量灰色行为无人过问 → 让人**误以为无法可依** → A。
+
+**其他选项在装什么**：B"总有一天都合法"歪曲原文（原文说灰色地带存在，不是都会合法化）；C 用户从不抱怨——无中生有；D 这个词只有一个负面含义——原文说它覆盖极广。
+
+**takeaway**：原因题盯 reason is / this reflects / that's because 后面的内容；"人们误以为 X"的题，答案通常是"执法/监管的局限"这种**系统性原因**，而不是某个人的看法。
 </details>
 
 ### Part B · 新题型：小标题配对（41–45 答案 BDEAG）
