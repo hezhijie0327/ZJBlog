@@ -102,7 +102,11 @@ This is also evident in how lonely people view fictional characters. Researchers
 If we look at these studies and what they seem to be telling us, loneliness is not only the perceived absence of others, but also a desire for connection. Whether that's thinking of fictional characters like real friends or being drawn to happy objects, our brains seem to search for social connections wherever they might find them, especially when we don't feel like other humans are providing enough of these for us.
 
 **21.** According to the passage, the unpleasantness of loneliness can ______.
-[A] weaken social cognitive ability [B] drive people to seek social ties [C] reduce brain white matter density [D] improve emotional regulation
+
+- [A] weaken social cognitive ability
+- [B] drive people to seek social ties
+- [C] reduce brain white matter density
+- [D] improve emotional regulation
 
 <details>
 <summary>21 答案 B · 细节因果</summary>
@@ -111,7 +115,11 @@ If we look at these studies and what they seem to be telling us, loneliness is n
 </details>
 
 **22.** What did brain studies reveal about lonely young adults?
-[A] Smaller volume in cognitive regions. [B] Denser white matter in empathy areas. [C] Less dense white matter in social areas. [D] Larger brain regions for emotion control.
+
+- [A] Smaller volume in cognitive regions.
+- [B] Denser white matter in empathy areas.
+- [C] Less dense white matter in social areas.
+- [D] Larger brain regions for emotion control.
 
 <details>
 <summary>22 答案 C · 细节对比（张冠李戴陷阱）</summary>
@@ -120,7 +128,11 @@ If we look at these studies and what they seem to be telling us, loneliness is n
 </details>
 
 **23.** The MRI study on video-watching showed that lonely people ______.
-[A] process the world uniquely [B] share similar neural patterns [C] react more strongly to clips [D] show no empathy for others
+
+- [A] process the world uniquely
+- [B] share similar neural patterns
+- [C] react more strongly to clips
+- [D] show no empathy for others
 
 <details>
 <summary>23 答案 A · 细节</summary>
@@ -129,7 +141,11 @@ If we look at these studies and what they seem to be telling us, loneliness is n
 </details>
 
 **24.** In the Game of Thrones study, lonelier participants tended to ______.
-[A] confuse fictional with real people [B] dislike fictional characters more [C] accurately describe all characters [D] show weaker brain activity
+
+- [A] confuse fictional with real people
+- [B] dislike fictional characters more
+- [C] accurately describe all characters
+- [D] show weaker brain activity
 
 <details>
 <summary>24 答案 A · 细节</summary>
@@ -138,7 +154,11 @@ If we look at these studies and what they seem to be telling us, loneliness is n
 </details>
 
 **25.** The author's overall view on the studies is that loneliness ______.
-[A] is purely the absence of others [B] always results from negative thinking [C] has no clear cause-effect relation [D] reflects a craving for relationships
+
+- [A] is purely the absence of others
+- [B] always results from negative thinking
+- [C] has no clear cause-effect relation
+- [D] reflects a craving for relationships
 
 <details>
 <summary>25 答案 D · 观点态度</summary>
@@ -166,7 +186,11 @@ Universal free school lunches directly eliminate this stigma by making meals ava
 
 **26.** What has made the debat
 e on free school lunches more urgent?
-[A] Rising childhood obesity and inflation. [B] Expensive federal spending on food. [C] Reduced student participation in meals. [D] Improved economic equity nationwide.
+
+- [A] Rising childhood obesity and inflation.
+- [B] Expensive federal spending on food.
+- [C] Reduced student participation in meals.
+- [D] Improved economic equity nationwide.
 
 <details>
 <summary>26 答案 A · 细节因果</summary>
@@ -175,7 +199,11 @@ e on free school lunches more urgent?
 </details>
 
 **27.** What do free school lunch advocates emphasize as a key benefit?
-[A] Reducing household food expenses. [B] Promoting better cognitive development. [C] Investing in public health and equity. [D] Eliminating all forms of child poverty.
+
+- [A] Reducing household food expenses.
+- [B] Promoting better cognitive development.
+- [C] Investing in public health and equity.
+- [D] Eliminating all forms of child poverty.
 
 <details>
 <summary>27 答案 C · 观点题</summary>
@@ -184,7 +212,11 @@ e on free school lunches more urgent?
 </details>
 
 **28.** Compared with non-participating peers, children eating school meals ______.
-[A] show lower milk and fruit intake [B] consume more fruits and vegetables [C] eat more snacks and desserts [D] gain excessive body weight
+
+- [A] show lower milk and fruit intake
+- [B] consume more fruits and vegetables
+- [C] eat more snacks and desserts
+- [D] gain excessive body weight
 
 <details>
 <summary>28 答案 B · 细节</summary>
@@ -193,7 +225,11 @@ e on free school lunches more urgent?
 </details>
 
 **29.** The traditional tiered eligibility system is criticized mainly because it ______.
-[A] increases administrative costs greatly [B] discourages participation via stigma [C] fails to provide nutritious food [D] excludes low-income families
+
+- [A] increases administrative costs greatly
+- [B] discourages participation via stigma
+- [C] fails to provide nutritious food
+- [D] excludes low-income families
 
 <details>
 <summary>29 答案 B · 细节</summary>
@@ -202,7 +238,11 @@ e on free school lunches more urgent?
 </details>
 
 **30.** Universal free lunch programs remove stigma by ______.
-[A] identifying students in need [B] limiting meal options for all [C] reducing total meal servings [D] serving all students equally
+
+- [A] identifying students in need
+- [B] limiting meal options for all
+- [C] reducing total meal servings
+- [D] serving all students equally
 
 <details>
 <summary>30 答案 D · 细节</summary>
@@ -224,7 +264,12 @@ One difference in this shift of priority can be explained by the contrasting Ame
 
 The United States, which holds the highest national debt in the world at nearly 38 trillion dollars, has long faced concerns over fiscal stability. What began in 2016 as a vague promise to eliminate the budget deficit has since spiraled into one of the largest crises. These budget cuts are reported to have barely influenced in the Trump administration's financial goals, but for museums, it's the opposite.
 
-**31.** What has recently troubled American museums most? [A] Declining visitor numbers. [B] Outdated exhibition facilities. [C] Shortage of professional staff. [D] Insufficient government funding.
+**31.** What has recently troubled American museums most?
+
+- [A] Declining visitor numbers.
+- [B] Outdated exhibition facilities.
+- [C] Shortage of professional staff.
+- [D] Insufficient government funding.
 
 <details>
 <summary>31 答案 D · 细节</summary>
@@ -232,7 +277,12 @@ The United States, which holds the highest national debt in the world at nearly 
 定位 P2："simply **lack adequate government funding**"。A/B/C 原文未提。
 </details>
 
-**32.** European museums differ from American ones in that ______. [A] they rely less on government aid [B] they receive far more public funds [C] they allocate 1% to private donors [D] they have fewer active museums
+**32.** European museums differ from American ones in that ______.
+
+- [A] they rely less on government aid
+- [B] they receive far more public funds
+- [C] they allocate 1% to private donors
+- [D] they have fewer active museums
 
 <details>
 <summary>32 答案 B · 对比细节</summary>
@@ -240,7 +290,12 @@ The United States, which holds the highest national debt in the world at nearly 
 P3–4：欧洲多国划拨 1% 财政支出、最高 95% 靠政府补贴 → 公共资金远多于美国。A/C 与原文相反。
 </details>
 
-**33.** The funding systems in America and Europe show that ______. [A] Europe privatizes art more heavily [B] America depends 95% on subsidies [C] America fails to prioritize museums [D] Europe views art as entertainment
+**33.** The funding systems in America and Europe show that ______.
+
+- [A] Europe privatizes art more heavily
+- [B] America depends 95% on subsidies
+- [C] America fails to prioritize museums
+- [D] Europe views art as entertainment
 
 <details>
 <summary>33 答案 C · 推理</summary>
@@ -248,7 +303,12 @@ P3–4：欧洲多国划拨 1% 财政支出、最高 95% 靠政府补贴 → 公
 定位 P4 末："the U.S. government clearly **falls short of keeping museums a priority**"。B 张冠李戴（95% 是欧洲）；A/D 与原文相反。
 </details>
 
-**34.** The contrast between American and European views on art implies that ______. [A] Europe spends more on education than America [B] America's privatization is economically wiser [C] museums are less important in Europe [D] cultural values shape funding priorities
+**34.** The contrast between American and European views on art implies that ______.
+
+- [A] Europe spends more on education than America
+- [B] America's privatization is economically wiser
+- [C] museums are less important in Europe
+- [D] cultural values shape funding priorities
 
 <details>
 <summary>34 答案 D · 推理（本质概括项）</summary>
@@ -256,7 +316,12 @@ P3–4：欧洲多国划拨 1% 财政支出、最高 95% 靠政府补贴 → 公
 P5：价值观不同（美国视艺术为娱乐附属→私有化，欧洲视为教育必需→政府扶持）→ **文化价值观决定资金优先级**。
 </details>
 
-**35.** The phrase "it's the opposite" at the end of the passage implies that ______. [A] the cuts brought a heavy blow to museums [B] the cuts missed their financial target [C] museums have benefited from the cuts [D] the deficit was finally eliminated
+**35.** The phrase "it's the opposite" at the end of the passage implies that ______.
+
+- [A] the cuts brought a heavy blow to museums
+- [B] the cuts missed their financial target
+- [C] museums have benefited from the cuts
+- [D] the deficit was finally eliminated
 
 <details>
 <summary>35 答案 A · 句意推理</summary>
@@ -280,7 +345,12 @@ One reason people might think there are no laws against dark patterns is that th
 
 It also reflects enforcement limits. Regulators cannot deal with every irritating screen on every app and website. They have to prioritize the worst cases. That leaves a lot of borderline conduct in the wild, which makes the whole problem feel bigger and murkier to ordinary users.
 
-**36.** The example of the free app is used to illustrate ______. [A] the popularity of paid versions [B] the definition of dark patterns [C] the legality of digital designs [D] the harm of frequent pop-ups
+**36.** The example of the free app is used to illustrate ______.
+
+- [A] the popularity of paid versions
+- [B] the definition of dark patterns
+- [C] the legality of digital designs
+- [D] the harm of frequent pop-ups
 
 <details>
 <summary>36 答案 B · 例证题</summary>
@@ -288,7 +358,12 @@ It also reflects enforcement limits. Regulators cannot deal with every irritatin
 开篇例子服务于下文 **dark patterns 概念的引出**——例证题看例子**之后**的观点句。
 </details>
 
-**37.** According to the author, the term "dark pattern" ______. [A] has a clear legal boundary [B] refers only to illegal tricks [C] covers a wide range of conduct [D] is rarely used by scholars
+**37.** According to the author, the term "dark pattern" ______.
+
+- [A] has a clear legal boundary
+- [B] refers only to illegal tricks
+- [C] covers a wide range of conduct
+- [D] is rarely used by scholars
 
 <details>
 <summary>37 答案 C · 细节</summary>
@@ -296,7 +371,12 @@ It also reflects enforcement limits. Regulators cannot deal with every irritatin
 定位 P2："**not** a legal term with a clear boundary…covers a **broad** range"。A 与原文相反；B/D 无据。
 </details>
 
-**38.** The analogy of the car salesperson suggests that digital designs ______. [A] are entirely new forms of manipulation [B] are more deceptive than offline tricks [C] are rooted in familiar techniques [D] should be banned by consumer laws
+**38.** The analogy of the car salesperson suggests that digital designs ______.
+
+- [A] are entirely new forms of manipulation
+- [B] are more deceptive than offline tricks
+- [C] are rooted in familiar techniques
+- [D] should be banned by consumer laws
 
 <details>
 <summary>38 答案 C · 例证题（类比）</summary>
@@ -304,7 +384,12 @@ It also reflects enforcement limits. Regulators cannot deal with every irritatin
 P4 类比点 = "Digital design often **borrows from familiar techniques**"（借鉴线下成熟推销手段）。D 把"法律不禁止"偷换成"应被禁止"。
 </details>
 
-**39.** It can be inferred that modern consumer protection law ______. [A] bans all forms of salesmanship [B] treats all dark patterns as illegal [C] prioritizes company profits over users [D] distinguishes annoyance from deception
+**39.** It can be inferred that modern consumer protection law ______.
+
+- [A] bans all forms of salesmanship
+- [B] treats all dark patterns as illegal
+- [C] prioritizes company profits over users
+- [D] distinguishes annoyance from deception
 
 <details>
 <summary>39 答案 D · 推断</summary>
@@ -312,7 +397,12 @@ P4 类比点 = "Digital design often **borrows from familiar techniques**"（借
 定位 P5：法律"不在乎是否 annoying，在乎是否 **mislead a reasonable consumer**" → 区分"惹人厌"与"欺诈"。
 </details>
 
-**40.** Some think there are no laws against dark patterns because ______. [A] regulators have to focus on the worst cases [B] all dark patterns can be lawful one day [C] users never complain about their existence [D] the term has only one negative meaning
+**40.** Some think there are no laws against dark patterns because ______.
+
+- [A] regulators have to focus on the worst cases
+- [B] all dark patterns can be lawful one day
+- [C] users never complain about their existence
+- [D] the term has only one negative meaning
 
 <details>
 <summary>40 答案 A · 细节因果</summary>
