@@ -113,9 +113,14 @@ function Pages({ syncPages }: { syncPages?: SyncPages }) {
     );
   }
   if (isBlogPostData(data)) {
+    // key per slug: the page component instance persists across same-kind SPA navigation,
+    // and per-post state (the unlocked plaintext bundle, lightbox) must not leak into the
+    // next post; remounting also re-reads the session unlock cache for the new slug
     const Sync = syncPages?.["blog-post"];
     return (
-      <Suspense fallback={<PageFallback />}>{Sync ? <Sync data={data} /> : <LazyBlogPostPage data={data} />}</Suspense>
+      <Suspense fallback={<PageFallback />}>
+        {Sync ? <Sync data={data} /> : <LazyBlogPostPage data={data} key={data.post.slug} />}
+      </Suspense>
     );
   }
   if (isBlogTagData(data)) {
@@ -131,9 +136,12 @@ function Pages({ syncPages }: { syncPages?: SyncPages }) {
     );
   }
   if (isTravelData(data)) {
+    // Same per-item remount as blog posts above (locked-trip plaintext must not leak)
     const Sync = syncPages?.travel;
     return (
-      <Suspense fallback={<PageFallback />}>{Sync ? <Sync data={data} /> : <LazyTravelPage data={data} />}</Suspense>
+      <Suspense fallback={<PageFallback />}>
+        {Sync ? <Sync data={data} /> : <LazyTravelPage data={data} key={data.trip.slug} />}
+      </Suspense>
     );
   }
   if (isProjectsData(data)) {

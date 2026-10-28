@@ -100,11 +100,14 @@ export function RouterProvider({
         setData(pageData);
         setLoading(false);
         applyDocumentHead(pageData);
+        // behavior "instant" overrides the site-wide CSS scroll-behavior:smooth —
+        // a page swap must land at its scroll position in one frame, not animate
+        // a potentially multi-thousand-pixel flight
         if (historyMode === "none") {
           // Forward/back: restore the reading position from when we left
-          window.scrollTo(0, scrollPositions.get(key) ?? 0);
+          window.scrollTo({ top: scrollPositions.get(key) ?? 0, behavior: "instant" });
         } else {
-          window.scrollTo(0, 0);
+          window.scrollTo({ top: 0, behavior: "instant" });
         }
         focusPageHeading();
       };
