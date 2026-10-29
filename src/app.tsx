@@ -153,7 +153,9 @@ function Pages({ syncPages }: { syncPages?: SyncPages }) {
   if (isProjectData(data)) {
     const Sync = syncPages?.project;
     return (
-      <Suspense fallback={<PageFallback />}>{Sync ? <Sync data={data} /> : <LazyProjectPage data={data} />}</Suspense>
+      <Suspense fallback={<PageFallback />}>
+        {Sync ? <Sync data={data} /> : <LazyProjectPage data={data} key={data.project.slug} />}
+      </Suspense>
     );
   }
   if (isArchivesData(data)) {

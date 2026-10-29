@@ -107,9 +107,9 @@ function plgDevServer(): Plugin {
           try {
             const mod = (await server.ssrLoadModule("/tools/content.ts")) as {
               loadContent: () => {
-                blogs: Array<{ slug: string; locked?: unknown }>;
-                projects: Array<{ slug: string; locked?: unknown }>;
-                travels: Array<{ slug: string; locked?: unknown }>;
+                blogs: Array<{ slug: string; locked?: unknown; sourceRelPath: string }>;
+                projects: Array<{ slug: string; locked?: unknown; sourceRelPath: string }>;
+                travels: Array<{ slug: string; locked?: unknown; sourceRelPath: string }>;
               };
             };
             const kind = mdMatch[1] as "blogs" | "projects" | "travels";
@@ -125,7 +125,9 @@ function plgDevServer(): Plugin {
               res.end();
               return;
             }
-            const markdown = readFileSync(`content/${kind}/${slug}.md`, "utf8");
+            // Source lookup must go through sourceRelPath (slugs live in
+            // subfolders; reconstructing <slug>.md breaks every nested post)
+            const markdown = readFileSync(`content/${kind}/${entry.sourceRelPath}`, "utf8");
             res.statusCode = 200;
             res.setHeader("Content-Type", "text/markdown; charset=utf-8");
             res.end(markdown);
