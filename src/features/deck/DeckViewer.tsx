@@ -31,7 +31,7 @@ import { ensureKatexStyles } from "@/lib/katex.ts";
 import { startPrintPreview } from "@/lib/print.ts";
 import { CHIP, ICON_BTN, META } from "@/lib/styles.ts";
 
-export interface DeckViewerProps {
+interface DeckViewerProps {
   /** Slide HTML (build-time artifact; full post = contentHtml backfill,
    *  embed = extracted from the placeholder structure) */
   html: string;
@@ -280,6 +280,10 @@ export function DeckViewer({ html, css, embedded = false, needsKatex = false, ti
   // Whether the user has changed slides: the hash is written only after
   // interaction, so the initial load never stuffs #1 into the URL
   const interacted = useRef(false);
+  // startPrintPreview teardown contract: unmount (SPA navigation) tears the
+  // preview face down instead of carrying print state to the next page
+  const printTeardownRef = useRef<(() => void) | null>(null);
+  useEffect(() => () => printTeardownRef.current?.(), []);
 
   const slides = useMemo(() => splitSlides(html), [html]);
   const total = slides.length;
@@ -641,7 +645,8 @@ export function DeckViewer({ html, css, embedded = false, needsKatex = false, ti
               // Print uses the full paper flow (marpit @page per-slide breaks
               // take over pagination)
               setMode("stacked");
-              startPrintPreview({
+              printTeardownRef.current?.();
+              printTeardownRef.current = startPrintPreview({
                 closeLabel: t("print.close"),
                 hint: t("deck.print.hint"),
                 titleBase: titleBase ?? "",

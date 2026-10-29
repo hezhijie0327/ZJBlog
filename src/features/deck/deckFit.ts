@@ -23,7 +23,7 @@ const MIN_SCALE = 0.5;
 
 /** Fit one page: on overflow applies scale + width compensation to
  *  .deck-body; returns whether fitting was applied. */
-export function fitSlide(section: HTMLElement): boolean {
+function fitSlide(section: HTMLElement): boolean {
   const body = section.querySelector<HTMLElement>(":scope > .deck-body");
   if (!body) {
     return false;

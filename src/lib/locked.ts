@@ -99,6 +99,11 @@ export async function unlockPost(
   if (cached) {
     return cached.bundle;
   }
+  // Envelope format version: fail closed on anything this build didn't produce
+  // (stale cached bundles outliving a format change must never decrypt)
+  if (locked.v !== 1) {
+    throw new UnlockError();
+  }
   // hash-wasm (wasm inlined) is fetched only when unlocking an encrypted page, never in
   // regular page chunks; the output is copied into an explicitly ArrayBuffer-backed array
   // (BufferSource narrowing for importKey)

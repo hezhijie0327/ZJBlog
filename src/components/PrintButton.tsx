@@ -4,6 +4,7 @@
 // Hidden on the print/preview paper (styles/print.css).
 
 import { Printer } from "lucide-react";
+import { useEffect, useRef } from "react";
 import { cn } from "@/lib/cn.ts";
 import { useT } from "@/lib/i18n.ts";
 import { startPrintPreview } from "@/lib/print.ts";
@@ -20,6 +21,10 @@ export function PrintButton({
   wordmark?: boolean;
 }) {
   const t = useT();
+  // Honor the startPrintPreview teardown contract: SPA navigation while the
+  // preview face is open would otherwise carry print state to the next page
+  const teardownRef = useRef<(() => void) | null>(null);
+  useEffect(() => () => teardownRef.current?.(), []);
 
   return (
     <button
@@ -29,7 +34,8 @@ export function PrintButton({
         // hint + close chip = same as the ZJSearch print preview (in a webview
         // print is a silent no-op, the paper is the final state, and the hint
         // tells users to output via the browser menu)
-        startPrintPreview({
+        teardownRef.current?.();
+        teardownRef.current = startPrintPreview({
           closeLabel: t("print.close"),
           hint: t("print.hint"),
           titleBase,

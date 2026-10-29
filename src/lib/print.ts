@@ -24,7 +24,7 @@ const PREVIEW_CLASS = "print-preview";
 const MERMAID_LIGHT = "blog:print-mermaid-light";
 const MERMAID_RESTORE = "blog:print-mermaid-restore";
 
-export interface PrintPreviewOptions {
+interface PrintPreviewOptions {
   /** Base name for the default "Save as PDF" file (zjblog_<safe>) */
   titleBase: string;
   /** aria-label for the close chip (i18n copy supplied by the caller) */
