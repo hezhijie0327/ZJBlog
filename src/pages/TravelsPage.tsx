@@ -117,6 +117,10 @@ function attachMapController(container: HTMLDivElement, apiMap: Map<HTMLDivEleme
       );
       updateCityVisibility();
     };
+    // Reconcile cluster/detail visibility with the adopted build-time zoom:
+    // the auto-fit viewport can already sit past a cluster threshold, and the
+    // toggle otherwise only runs on the first interaction
+    clampApply();
     const toUser = (clientX: number, clientY: number): [number, number] => {
       const rect = svg.getBoundingClientRect();
       return [((clientX - rect.left) / rect.width) * MAP_W, ((clientY - rect.top) / rect.height) * MAP_H];
@@ -338,6 +342,11 @@ export function TravelsPage({ data }: { data: TravelsData }) {
         stops = [];
       }
       for (const stop of stops) {
+        // Unmount (SPA navigation) cancels the chain: detached DOM stops the
+        // choreography instead of firing timers against nothing
+        if (!map.isConnected) {
+          return;
+        }
         await flyTo(map, stop.v, 1000);
         for (const idx of stop.p) {
           light(map, idx);
