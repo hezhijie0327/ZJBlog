@@ -13,6 +13,7 @@ import type { Mermaid } from "mermaid";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/cn.ts";
 import { useT } from "@/lib/i18n.ts";
+import { ALERT_DANGER } from "@/lib/styles.ts";
 import { watchThemeDark } from "@/lib/theme.ts";
 import { useInView } from "@/lib/useInView.ts";
 
@@ -116,7 +117,7 @@ export function MermaidRenderer({ chart, lightbox = false }: MermaidRendererProp
     // Danger copy uses ink/ink-2 to keep AA contrast; danger only carries the
     // border semantics
     return (
-      <div className="my-4 rounded-lg border border-danger/60 bg-danger/10 p-4 text-sm" role="alert">
+      <div className={cn(ALERT_DANGER, "my-4")} role="alert">
         <p className="font-semibold text-ink">{t("mermaid.failed")}</p>
         <pre className="mt-2 overflow-x-auto whitespace-pre-wrap break-all text-xs text-ink-2">{error}</pre>
       </div>

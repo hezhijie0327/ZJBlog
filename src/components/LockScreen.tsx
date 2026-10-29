@@ -14,7 +14,7 @@ import { Tape } from "@/components/Tape.tsx";
 import { cn } from "@/lib/cn.ts";
 import { useT } from "@/lib/i18n.ts";
 import { UnlockError, type UnlockedBundle, unlockPost } from "@/lib/locked.ts";
-import { EYEBROW, PAPER_STRIP } from "@/lib/styles.ts";
+import { EYEBROW, PAPER_STRIP, STRIP_PRIMARY } from "@/lib/styles.ts";
 import type { LockedContent } from "@/lib/types.ts";
 
 export function LockScreen({
@@ -117,11 +117,7 @@ export function LockScreen({
             value={password}
           />
           <button
-            className={cn(
-              PAPER_STRIP,
-              "-rotate-1 mt-6 px-6 text-accent-contrast [--strip:var(--accent-strong)] hover:[--strip:var(--accent-strong-hover)]",
-              "disabled:pointer-events-none disabled:opacity-60",
-            )}
+            className={cn(PAPER_STRIP, STRIP_PRIMARY, "mt-6 px-6", "disabled:pointer-events-none disabled:opacity-60")}
             disabled={pending || password === ""}
             type="submit"
           >

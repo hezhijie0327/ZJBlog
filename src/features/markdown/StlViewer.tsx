@@ -9,6 +9,7 @@
 
 import { useEffect, useState } from "react";
 import { useT } from "@/lib/i18n.ts";
+import { ALERT_DANGER } from "@/lib/styles.ts";
 import { useInView } from "@/lib/useInView.ts";
 
 interface StlViewerProps {
@@ -138,7 +139,7 @@ export function StlViewer({ stl }: StlViewerProps) {
 
   if (failed) {
     return (
-      <div className="rounded-lg border border-danger/60 bg-danger/10 p-4 text-sm" role="alert">
+      <div className={ALERT_DANGER} role="alert">
         <p className="font-semibold text-ink">{t("stl.failed")}</p>
         <p className="mt-1 text-xs text-ink-2">{t("stl.failedHint")}</p>
       </div>

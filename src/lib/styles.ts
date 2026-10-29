@@ -38,6 +38,18 @@ export const BTN_OUTLINE =
 export const PAPER_STRIP =
   "paper-strip inline-flex h-10 items-center gap-2 px-5 text-sm font-medium text-ink transition-all hover:-translate-y-0.5 hover:rotate-0 active:translate-y-0";
 
+/** Gold paper strip action (accent-strong face, tilts left; hover deepens the
+ *  strip color) — combine with PAPER_STRIP */
+export const STRIP_PRIMARY =
+  "-rotate-1 text-accent-contrast [--strip:var(--accent-strong)] hover:[--strip:var(--accent-strong-hover)]";
+
+/** Neutral paper strip action (surface face, tilts right; hover reads accent)
+ *  — combine with PAPER_STRIP */
+export const STRIP_PAPER = "rotate-1 [--strip:var(--surface)] hover:text-accent";
+
+/** Danger alert box body (role=alert + copy stay at the call site) */
+export const ALERT_DANGER = "rounded-lg border border-danger/60 bg-danger/10 p-4 text-sm";
+
 /** Tag chip */
 export const CHIP = "inline-flex items-center rounded-full border border-line px-2.5 py-0.5 text-xs text-ink-2";
 

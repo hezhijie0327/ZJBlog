@@ -16,7 +16,16 @@ import { cn } from "@/lib/cn.ts";
 import { formatDateISO } from "@/lib/format.ts";
 import { useT } from "@/lib/i18n.ts";
 import { jumpToSection } from "@/lib/scroll.ts";
-import { CHIP, DIVIDE_LIST, EYEBROW, LIST_ROW, PAPER_STRIP, SECTION } from "@/lib/styles.ts";
+import {
+  CHIP,
+  DIVIDE_LIST,
+  EYEBROW,
+  LIST_ROW,
+  PAPER_STRIP,
+  SECTION,
+  STRIP_PAPER,
+  STRIP_PRIMARY,
+} from "@/lib/styles.ts";
 import type { HomeData } from "@/lib/types.ts";
 import { useInView } from "@/lib/useInView.ts";
 
@@ -82,10 +91,7 @@ export function IndexPage({ data }: { data: HomeData }) {
               {/* biome-ignore lint/a11y/useValidAnchor: in-page section navigation, keep the hash
                   deep link, scrolling handled by jumpToSection */}
               <a
-                className={cn(
-                  PAPER_STRIP,
-                  "-rotate-1 text-accent-contrast [--strip:var(--accent-strong)] hover:[--strip:var(--accent-strong-hover)]",
-                )}
+                className={cn(PAPER_STRIP, STRIP_PRIMARY)}
                 href="#projects"
                 onClick={(event) => {
                   jumpToSection(event, "projects");
@@ -96,7 +102,7 @@ export function IndexPage({ data }: { data: HomeData }) {
               </a>
               {/* biome-ignore lint/a11y/useValidAnchor: same as above, in-page section navigation */}
               <a
-                className={cn(PAPER_STRIP, "rotate-1 [--strip:var(--surface)] hover:text-accent")}
+                className={cn(PAPER_STRIP, STRIP_PAPER)}
                 href="#blogs"
                 onClick={(event) => {
                   jumpToSection(event, "blogs");
@@ -374,10 +380,7 @@ export function IndexPage({ data }: { data: HomeData }) {
               {/* Strip entries: gold primary strip (GitHub) + paper secondary strips (RSS /
                   support), same language as the Hero buttons */}
               <a
-                className={cn(
-                  PAPER_STRIP,
-                  "-rotate-1 text-accent-contrast [--strip:var(--accent-strong)] hover:[--strip:var(--accent-strong-hover)]",
-                )}
+                className={cn(PAPER_STRIP, STRIP_PRIMARY)}
                 href={siteConfig.social.github}
                 rel="noopener noreferrer"
                 target="_blank"
@@ -386,12 +389,12 @@ export function IndexPage({ data }: { data: HomeData }) {
                 GitHub
                 <ArrowUpRight aria-hidden="true" className="size-3.5 text-accent-contrast/70" />
               </a>
-              <a className={cn(PAPER_STRIP, "rotate-1 [--strip:var(--surface)] hover:text-accent")} href="/rss.xml">
+              <a className={cn(PAPER_STRIP, STRIP_PAPER)} href="/rss.xml">
                 <Rss aria-hidden="true" className="size-4" />
                 {t("nav.rss")}
                 <ArrowUpRight aria-hidden="true" className="size-3.5 text-ink-3" />
               </a>
-              <a className={cn(PAPER_STRIP, "rotate-1 [--strip:var(--surface)] hover:text-accent")} href="/support/">
+              <a className={cn(PAPER_STRIP, STRIP_PAPER)} href="/support/">
                 <Coffee aria-hidden="true" className="size-4" />
                 {t("nav.support")}
                 <ArrowUpRight aria-hidden="true" className="size-3.5 text-ink-3" />
