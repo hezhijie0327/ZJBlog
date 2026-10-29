@@ -21,6 +21,7 @@ pnpm lint
 pnpm tsc
 
 # Lighthouse 审计：对 sitemap 中每个页面审计，全类别必须 100 分
+# （性能类例外 = scripts/audit.mjs PERFORMANCE_FLOORS 登记的每页地板）
 pnpm run audit                        # 桌面端（默认）
 LH_FORM_FACTOR=mobile pnpm run audit  # 移动端；需先 pnpm build，本机需 Chromium/Edge（CHROME_PATH 可指定）
 LH_ONLY=/blogs,/support pnpm run audit # 只审计路径前缀匹配的页面（快速迭代）
@@ -131,7 +132,7 @@ scripts/
 1. `pnpm tsc` 零错误
 2. `pnpm lint` 零错误 = biome（lint + 格式）+ `lint:cjk`（audit-cjk 语言门禁：中文只在 `src/lib/i18n/**`，见 Conventions 首条）
 3. `pnpm build` 成功（全部路由预渲染）
-4. `pnpm run audit`（桌面）与 `LH_FORM_FACTOR=mobile pnpm run audit`（移动）每页全类别 100 分（性能/可访问性/最佳实践/SEO/Agentic Browsing；压缩用 brotli 镜像生产 CDN）——**不属于常规门禁，不是每次改动都要跑**：仅在用户明确要求审计时执行；注意 headless Chrome 连跑多页会不稳，audit 脚本每 4 页自动重启浏览器
+4. `pnpm run audit`（桌面）与 `LH_FORM_FACTOR=mobile pnpm run audit`（移动）每页全类别 100 分（性能/可访问性/最佳实践/SEO/Agentic Browsing；压缩用 brotli 镜像生产 CDN）——性能类例外 = `scripts/audit.mjs` PERFORMANCE_FLOORS 登记的 5 个内容重型页地板（85-95 + 理由，契约依据 DESIGN.md §15.4），其余类别仍须 100——**不属于常规门禁，不是每次改动都要跑**：仅在用户明确要求审计时执行；注意 headless Chrome 连跑多页会不稳，audit 脚本每 4 页自动重启浏览器
 5. 注意 `pnpm audit`（无 run）是 pnpm 内置安全审计，不是本项目的门禁
 
 ## Deployment

@@ -43,7 +43,11 @@ pnpm run linkcheck   # 外部死链手检（非门禁；429/5xx 记「未确认�
   三轮一致）——机制是**关键路径 HTML 体积**（预渲染整页 58–139KB 在慢速 4G
   仿真下 FCP 1.8–2.1s），TBT=0、CLS≈0，纯传输计时而非代码病。2026-09 的
   「双端全绿」实为 LH_ONLY 子集 + 管道假码（§8），全量移动门禁在本机从未绿过。
-  处置（阈值登记 vs 载荷优化）是产品决策，见 DESIGN.md §15.4 契约。
+  处置（2026-10-29 决策）：按 DESIGN.md §15.4 契约在 `scripts/audit.mjs`
+  PERFORMANCE_FLOORS 登记每页地板（markdown-demo 85、wow/双旅行 90、
+  zjsearch 95，观测地板下留 3-5 分余量），桌面与其余类别维持 100；
+  边缘方差页不登记（偶发掉分先重跑一次）。若未来做载荷优化（拆页/减重）
+  可再收回地板。
 - 静态镜像服务器用**临时端口**（listen 0，OS 分配）：固定端口曾被孤儿监听进程
   卡成 EADDRINUSE（netstat 的 LISTENING 行会被 head 截断漏看，用 node 试绑
   最可靠）。
