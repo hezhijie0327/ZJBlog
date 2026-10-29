@@ -27,6 +27,9 @@ LH_ONLY=/blogs,/support pnpm run audit # 只审计路径前缀匹配的页面（
 
 # 完整本地检查（lint + tsc + build）
 pnpm run ci
+
+# 外链死链手检（非构建门禁，周期性/审计轮跑；扫描 dist 全部外部 http(s) 链接）
+pnpm run linkcheck            # 全量；-- --fast 只抽每页前 10 条
 ```
 
 无测试框架；质量门禁 = tsc + biome + build：本地跑 `pnpm run ci`，push 到 main 后由 GitHub Actions（`.github/workflows/deploy.yml`）跑同一套门禁并自动部署。包管理器 **pnpm**（唯一 lockfile）。
@@ -41,6 +44,7 @@ src/
 ├── pages/               # *Page.tsx + registry.ts（每页一个 chunk；客户端懒取块，SSR 同步渲染）
 ├── features/
 │   ├── comments/        # GiscusComments.tsx（giscus，进视口才挂载 iframe）
+│   ├── deck/            # DeckViewer.tsx（幻灯片播放器，§Content deck 条目）+ deckFit.ts（缩放适配）
 │   └── markdown/        # Prose（注入构建期 HTML + 复制/灯箱委托 + KaTeX 样式补注）
 │                        # + MermaidRenderer / StlViewer（进视口懒加载，离屏停帧；
 │                        #   mermaid 整卡可点进全文灯箱——SVG 内联克隆进 Lightbox
@@ -48,7 +52,9 @@ src/
 │                        #   foreignObject 在 SVG-as-image 上下文不渲染，只剩框）；
 │                        #   deck 嵌入片内由 DeckViewer 自管、不带灯箱入口）
 ├── components/          # Shell(Link/ProgressBar/骨架) Navigation Footer CommandPalette
-│                        # ThemeToggle SectionHeading icons
+│                        # ThemeToggle SectionHeading Lightbox LockScreen PrintButton
+│                        # CopyMarkdownButton PostList PostNav StoryBar TableOfContents
+│                        # Tape EmptyState AuthorCard ProjectCard TagList BackToTop icons
 ├── lib/
 │   ├── router.tsx       # fetch-and-swap SPA 路由（pushState/popstate/回退整页/会话缓存）
 │   ├── pageData.ts      # payload 提取（内嵌/DOMParser）
@@ -58,15 +64,23 @@ src/
 │   ├── i18n.ts + i18n/  # EN 基准词库 + zh-CN；useT/translateFor；baseline.ts（构建期
 │   │                    #  中文基准字面量——中文在源码里的唯一合法居所，audit-cjk 豁免区）
 │   ├── styles.ts        # 设计片段单一来源（DESIGN.md §5）
+│   ├── locked.ts        # 信封解密（Argon2id + AES-GCM，会话内存缓存；fail-closed）
+│   ├── print.ts         # 打印预览管线（startPrintPreview，返回 teardown 契约）
+│   ├── installPrompt.ts # beforeinstallprompt 模块级捕获（PWA 安装钮）
+│   ├── katex.ts / scroll.ts  # KaTeX 幂等注链 / 站内锚点平滑滚动（replaceState 语义）
 │   └── cn / format / link
-├── styles/              # global.css 入口 → tokens → base → prose → behaviors
+├── styles/              # global.css 入口 → tokens → base → prose → behaviors → print
 │                        # （KaTeX 样式不在入口：仅 needsKatex 页面按 /katex.min.css 注入）
 └── config/site.ts       # 站点元数据、社交链接、giscus（个人内容）
 tools/
 ├── content.ts           # 构建期内容管线：frontmatter + 编译 HTML + TOC + needsKatex/图片尺寸注入
 ├── payloads.ts          # 路由 → payload（含 title/description/OG）
 ├── generators.ts        # rss/sitemap/robots/search-index/llms/llms-full/manifest 生成器
-└── ssr.tsx              # SSR 整页组装（dev 中间件与预渲染共用；含 KaTeX 按需注入）
+├── ssr.tsx              # SSR 整页组装（dev 中间件与预渲染共用；含 KaTeX 按需注入）
+├── crypto.ts / lockedImages.ts  # 信封加密（Argon2id fail-closed）/ 独占图 .bin 加密
+├── deck.ts + deckCallouts.ts + deckTheme.css  # marp-core 构建期编译（§Content deck 条目）
+├── diagrams.ts / travelMap.ts / geoBase.ts    # geojson/topojson 投影 / 旅行地图 / 共享底图模块
+├── shiki.ts / callouts.ts / html.ts / types/  # 高亮器单例 / Callout / HTML 工具 / 共享类型
 scripts/
 ├── prerender.mjs        # 预渲染全部路由 + 落盘静态资源到 dist/
 ├── audit.mjs            # Lighthouse 双端门禁（本地静态服务器镜像生产 CDN：压缩、缓存、404 语义、sw.js 头）+ PWA 安装性检查
@@ -122,6 +136,6 @@ scripts/
 
 ## Deployment
 
-`pnpm build` → `pnpm deploy`（= `wrangler deploy`，锁在 devDependencies；wrangler.jsonc 指向 ./dist；未知路径服用 404.html）。wrangler.jsonc 开了运行时 `cache.enabled`（边缘缓存 Worker 响应；`cross_version_cache` 保持默认关 —— 缓存按 Worker 版本隔离，每次 deploy 自动换新，不存在陈旧窗口）。robots.txt / sitemap.xml / rss.xml / search-index.json / llms.txt / manifest.json / katex.min.css(+fonts/) 由预渲染阶段生成到 dist/；根目录不要放静态文件（走 `public/`）。
+`pnpm build` → `pnpm deploy`（= `wrangler deploy`，锁在 devDependencies；wrangler.jsonc 指向 ./dist；未知路径服用 404.html）。wrangler.jsonc 开了运行时 `cache.enabled`（边缘缓存 Worker 响应；`cross_version_cache` 保持默认关 —— 缓存按 Worker 版本隔离，每次 deploy 自动换新，不存在陈旧窗口）。robots.txt / sitemap.xml / rss.xml / search-index.json / llms.txt / llms-full.txt / manifest.json / katex.min.css(+fonts/) 由预渲染阶段生成到 dist/；根目录不要放静态文件（走 `public/`）。
 
 **部署**：push 到 main 由 **Cloudflare Workers Builds**（Git 集成）自动构建部署；`.github/workflows/deploy.yml` 自 `30056d9` 起仅 `workflow_dispatch` 手动触发（跑同一套 `pnpm run ci` 门禁 → wrangler deploy）。锁定文口令走 `BLOG_SECRET_<NAME>`：fail-closed 意味着**CI/线上加了锁定文而构建环境没配对应变量会直接构建失败**（随机口令只在本地构建生成，绝不把本地随机口令的产物当部署物）——生产在 CF Dashboard 的 Build Variables 固定（Secret 类型即构建期环境变量，代码零改动）；手动跑 deploy.yml 时 GitHub Secrets 经 build 步骤 env 透传（`BLOG_SECRET_DEMO` 已内置），新增其他锁定文名时补一行透传（workflow 头注有操作说明）。

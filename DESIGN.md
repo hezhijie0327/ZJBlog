@@ -100,6 +100,7 @@
 - **OLED `.black` 档**：叠在 `.dark` 之上的第三调色板（`dark`+`black` 双 class），仅再压深表面档（`--bg/--surface/--surface-2/--line/--ink*/--accent-soft/--highlight-bg/--shadow-card`），强调色沿用 `.dark` 值。
 - **固定暗色媒体 chrome 豁免**：图片灯箱、缩略图角标（`TILE_BADGE`）与媒体浮层在**所有调色板下都渲染在同一暗色底上**，主题 token 不适用 —— 允许固定色值（灯箱的 zinc 系文字、`bg-black/70` 角标 scrim）；灯箱背板已收编为 `--scrim` token（明暗同值），不再豁免。canvas 画布内的 JS 颜色字面量同豁免（CSS 变量到不了 canvas）。豁免面仅限媒体浮层/角标/画布，页面 UI 一律走 token。
 - **扫码容器固定白底**（ZJBlog 支持页收款码）：二维码需要真实白底保证扫码器对比度，暗色下不能跟 token 翻黑 —— `bg-white` 固定值合法。
+- **theme-color meta 镜像常量**（ZJBlog `lib/theme.ts` 的 `THEME_COLOR_LIGHT/DARK`）：SSR 头部与 `applyThemeStyle` 需要字符串字面量直写 meta（CSS 变量到不了 `<meta content>`），值必须与 `--bg` 两档逐一相同 —— 改 token 时两处同步，注册于此即非「裸 hex」。
 
 **依赖样式按需加载**：大而少用的样式资产（如 KaTeX，25KB raw）不做全站 render-blocking —— 构建期标记需要的页面，仅对这些页注入对应样式（含字体资产），客户端 SPA 换页再幂等补注。
 
@@ -147,6 +148,8 @@
 | `BTN_PRIMARY` | 金底胶囊主操作（`h-10 px-5`，文字 `accent-contrast`） | hover：底色加深 + 阴影升 |
 | `BTN_OUTLINE` | 描边胶囊次操作 | hover：`surface-2` 底 |
 | `PAPER_STRIP` | 撕边纸条入口（纸色经 `--strip` 注入） | hover：抬起 `-translate-y-0.5` 回正 |
+| `STRIP_PRIMARY` / `STRIP_PAPER` | `PAPER_STRIP` 的两种标准面色组合：金条（`--strip: accent-strong`，左倾、字 `accent-contrast`）与素纸条（`--strip: surface`，右倾、hover 转 accent）——`cn(PAPER_STRIP, STRIP_*)` 消费 | hover 面色加深 / 字转 accent |
+| `ALERT_DANGER` | 渲染失败告警盒体（`border-danger/60` + `bg-danger/10`）；`role=alert` 与文案由调用方给，`cn(ALERT_DANGER, "my-4")` 调节奏 | — |
 | `CHIP` / `MONO_CHIP` | 标签胶囊 / 等宽小号版 | — |
 | `CODE_CHIP` | 方角行内代码令牌（算法名/配置键/许可证），12px 元层 | — |
 | `PILL` | 13px 控制层胶囊底座（导出条/建议条/媒体触发），调用方追加 `gap-*` 与 hover 色 | hover 由调用方给 |
@@ -154,6 +157,7 @@
 | `SEGMENT` / `SEGMENT_ACTIVE` / `SEGMENT_IDLE` | 分段控制（偏好页页签、信息页页签、行情区间） | 选中：`accent-strong` 填充 |
 | `SEGMENT_SM` | 紧凑分段（行内选项组：HTTP 方法、主题样式、行情胶囊） | 同上 |
 | `META` | 等宽元信息文字（日期/计数/键位） | — |
+| `GHOST_DATE` | 幽灵日期水印（Archives 年份行 / PostList 行右上，`hollow-text` + 4.5rem 等宽）——§7「装饰只落留白」，必须 `aria-hidden` + `pointer-events-none` | — |
 | `EYEBROW` | 眉标：等宽 11px 全大写间距标签（标题旁英文点缀、分组小标题） | — |
 | `TAPE` | 胶带装饰基底（§7）：`aria-hidden` + `pointer-events-none` 内置，定位/旋转/透明度由调用方给 | — |
 | `SECTION` / `SECTION_DETAIL` | 页面级 / 详情页 section 外壳（§6 节奏） | — |

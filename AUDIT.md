@@ -1,7 +1,8 @@
 # AUDIT.md — zjblog audit playbook
 
 ZJBlog 全站审计的可复用手册，沉淀自 2026-09 全量审计（代码结构 / 渲染验证 /
-视觉走查 / Lighthouse 双端门禁 / 依赖升级 / 文档同步）。下一轮审计照此执行：
+视觉走查 / Lighthouse 双端门禁 / 依赖升级 / 文档同步），2026-10 二轮全量审计
+补入加密实测 / 响应式 / 聚簇 / 新交互面并修正过时基线。下一轮审计照此执行：
 bootstrap → 门禁 → 测试矩阵 → 浏览器测量 → 修复 → 回归 → 文档。
 
 目标设定：**按轮审计，直到一轮审计不再产生新发现为止**。每个修复都要重跑
@@ -24,16 +25,17 @@ pnpm run ci                        # lint + tsc + build（每轮开头先跑到�
 ## 2. 质量门禁（每轮，浏览器工作之前）
 
 ```sh
-pnpm lint            # biome check 零错误
+pnpm lint            # biome check 零错误 + lint:cjk（中文只许活在 src/lib/i18n/**）
 pnpm tsc             # strict + noUncheckedIndexedAccess 零错误
 pnpm build           # 全路由预渲染成功
 pnpm run audit       # Lighthouse 桌面端：sitemap 每页全类别 100 分
 LH_FORM_FACTOR=mobile pnpm run audit   # 移动端同样 100 分
+pnpm run linkcheck   # 外部死链手检（非门禁；429/5xx 记「未确认」，exit 1 = 确认死链）
 ```
 
 - audit **不属于常规门禁**（AGENTS.md §Quality Gates）：仅审计轮执行；
-  本机需 Chromium/Edge，`CHROME_PATH` 可指定（本机用 Edge：`CHROME_PATH=
-  "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge"`）。
+  本机需 Chromium/Edge，`CHROME_PATH` 可指定（Windows 本机用 Edge：
+  `CHROME_PATH="C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"`）。
 - audit 输出里的 `!` 行是 insight（改进机会），不是门禁失败；门禁只看类别分数。
 - 已知 insight（接受现状，勿反复追）：`unused-javascript`（页面级 chunk 本来
   就按路由拆分）、`render-blocking-insight`、`cache-insight`、`bf-cache`
@@ -48,9 +50,12 @@ pnpm update <pkgs>   # 只动 in-range；锁版本包用 pnpm add -D pkg@<pin>
 ```
 
 - 升级后：`pnpm run ci` 全绿 → `pnpm run audit` 双端 → 回归受影响面。
-- 本项目重依赖的回归点：**mermaid**（渲染测试页 9 张图）、**three**（STL canvas）、
-  **shiki**（代码卡双主题）、**katex**（公式 6 处 + 已知错误边界 1 处）、
+- 本项目重依赖的回归点：**mermaid**（markdown-demo 基准页 24 张图，§5）、**three**
+  （STL canvas）、**shiki**（代码卡双主题）、**katex**（公式 5 处）、
   **vite/wrangler**（产物结构 + 部署契约）。
+- 2026-10 审计快照（in-range 可动）：mermaid 12.1→12.2、lucide-react 1.55→1.62、
+  wrangler 4.149→4.154、vite 8.3.4→8.3.5、biome 2.5.15→2.6.3、lighthouse 13.5→13.6、
+  unist-util-visit 5.1→5.2；零 major 跳变，升级后重跑 §5 矩阵。
 - 大版本升级单独立项，不搭审计便车。
 
 ## 4. 功能测试矩阵
@@ -68,12 +73,28 @@ pnpm update <pkgs>   # 只动 in-range；锁版本包用 pnpm add -D pkg@<pin>
 | 移动端 | 375×812 | 抽屉 `grid-rows 0fr↔1fr` 开合、`aria-expanded` 同步、无横向溢出 |
 | 命令面板 | ⌘K / 搜索按钮 | 懒取索引、`<mark>` 高亮、Enter 导航、ESC 关 + 焦点归还 |
 | 灯箱 | 点正文图片 | dialog 上浮动画、ESC/背板关闭、焦点归还触发图 |
+| mermaid 灯箱（2026-10 起） | 点 mermaid 图卡 | SVG 内联克隆进 dialog：foreignObject 文字必须在（断言灯箱内
+  **最大**的 svg——dialog 里还有缩放控件的小图标会干扰 `querySelector("svg")`）；
+  deck 嵌入片无灯箱入口 |
+| 上下篇换页隔离 | 已解锁 A 点上下篇进加密 B | B 必须是锁屏（`key={slug}` 强制重挂载，per-item state 不串）；
+  同一页面生命周期内点回 A，会话缓存还原明文免再输口令 |
+| 打印预览 | 「打印 / 存为 PDF」钮 | `.print-preview` 类挂在 **documentElement**；标题换 `zjblog_<标题>`；
+  Esc 关闭且标题还原。deck 页同验（打印幻灯片钮）。预览开着时 SPA 换页，
+  卸载 teardown 必须把打印态带走（print.ts teardown 契约，两个调用点都存 ref） |
+| PWA 安装钮 | 合成 `beforeinstallprompt` | 导航右侧图标组首位出现；**headless 常自然派发该事件**（站点达标即派发），
+  「派发前不可见」断言在 headless 恒假——接受任一初始态，只验出现后位置与行为 |
+| 旅行聚簇初始态（2026-10 新增回归点） | 载入 /travels/ 不交互 | 初始 zoom 自动适配可能已过聚簇阈值：`clampApply()` 现在会在装配时跑一次，
+  初始即 `cluster-agg.off` + 成员/细节层 `.on`；若回退（首次交互才同步），
+  首屏会出现「×N 聚合针悬在已达阈值视野上」的矛盾态（2026-10 实修） |
 
-### 4.1 加密内容实测（fixture 配方，2026-10 新增）
+### 4.1 加密内容实测（2026-10 新增；2026-10 二轮更新——真实加密文已常驻）
 
-加密路径平时休眠（内容库可以长期没有 `secret:` 文），**休眠功能必须用临时夹具实测**，
-否则与其他构建阶段的交互 bug 不会暴露（2026-10 审计实测出两个：compress-images
-删除密文引用的共享图原图；travel 解锁把缓存命名空间带进 .bin 资产名）。配方：
+内容库现有真实 `secret:` 文（locked-demo / innocare / study 199+204，secret 名
+demo / innocare / kaoyan），**泄漏面八扫与浏览器解锁流可直接对真实内容跑**；
+夹具只补真实内容没有的路径（当前缺口：锁定旅行——旅行解锁/封面加密处于休眠态，
+仍须按下述配方临时夹具实测，审计后删除）。休眠功能必须夹具实测的教训不变
+（2026-10 一轮实测出两个：compress-images 删除密文引用的共享图原图；travel 解锁
+把缓存命名空间带进 .bin 资产名）。配方：
 
 1. **夹具四件套**（本地临时，审计结束删除；`.env` 已 gitignore）：
    - `content/blogs/<slug>.md`：frontmatter 带 `secret: <name>` + 正文含
@@ -85,16 +106,22 @@ pnpm update <pkgs>   # 只动 in-range；锁版本包用 pnpm add -D pkg@<pin>
    - 一篇**不带 secret** 的旅行带 `cover`（明信片灯箱 + 与近邻坐标触发城市聚簇，
      与既有旅行针脚经纬距离 ≤0.7°）；
    - `.env` 写 `BLOG_SECRET_<NAME>=<≥16 字符>`。
-2. **fail-closed 双验**：无 `.env` 构建 → 必须失败；`BLOG_SECRET_<NAME>=short`
-   构建 → 必须失败。
+2. **fail-closed 双验（2026-10 更新语义）**：本地构建缺配置不再失败——按 secret
+   名随机生成临时口令并打印在构建输出（同名共钥，3f30709 起），本地随机产物绝不作
+   部署物；**fail-closed 只对 CI 生效**：`CI=true pnpm build`（缺口令或口令 <8 字符）
+   → 必须失败（exit 1）。注意负构建会把 dist 打残（vite 先清空再失败），验完必须
+   重建再跑浏览器/Lighthouse。验证管道退出码时勿接 `| tail`（§8）。
 3. **dist 泄漏面八扫**（正文哨兵 / summary / description 全 dist grep 应 0；
    rss/sitemap/search-index/llms(.full)/robots 应 0；详情页 noindex + 锁屏应 1；
    page-data 应无 toc/contentHtml/summary/description 且 ciphertext 解不出明文；
    .bin 存在且明文原图已删；列表 payload 仅标题+元信息+locked 标）。
 4. **浏览器全流程**：锁屏聚焦输入框 → 错码（`role=alert` + `aria-invalid` +
-   输入保留）→ 正码（正文/KaTeX/独占图 blob URL 全就位）→ SPA 换页再回
-   （会话缓存还原明文）→ 整页刷新（回锁屏）；EN 语言下解锁，解锁后正文里的
-   复制按钮必须显示 "Copy"（水合校正依赖 `[t, html]`）。
+   输入保留）→ 正码（正文/KaTeX/独占图 blob URL 全就位；共享图保持明文 http src）
+   → SPA 换页再回（会话缓存还原明文；断言前等水合，CDP 换页节奏慢）→
+   整页刷新（回锁屏）；EN 语言下解锁，解锁后正文里的复制按钮必须显示 "Copy"
+   （水合校正依赖 `[t, html]`）。**表单提交用坐标点击 submit 钮**——合成
+   KeyboardEvent 的 Enter 不触发 React 表单提交（§6）；解锁是 Argon2id WASM，
+   断言轮询 ≥15s 勿定值 sleep。
 5. **dev/生产对齐**：dev 明文独占图 404、.bin 现算；共享图 dev 直服原图。
 
 ### 4.2 旅行图集实测（2026-10 新增）
@@ -107,6 +134,11 @@ pnpm update <pkgs>   # 只动 in-range；锁版本包用 pnpm add -D pkg@<pin>
 - **重放**：按钮播放期 disabled、结束后恢复；所有针脚 `.on` 点亮；停留 .on 态
   （不回挂 .lit，设计如此）。
 - 明信片墙：锁定旅行无封面（占位盘）+ 锁标 + 无摘要；解锁旅行封面点击开灯箱。
+  注意当前内容库两篇公开旅行均未配 `cover`（封面位缺省不渲染）——「有封面」断言
+  需夹具，勿把内容缺省当 bug。
+- **聚簇点击**（2026-10 补）：`el.click()`（DOM dispatch）可触发聚合针推进，
+  供探针绕开坐标误差；推进目标 = `data-threshold` 倍率，到位后 `.off` 生效。
+  聚簇初始态回归点见 §4 矩阵行（auto-fit 初始 zoom 可能已过阈值）。
 
 ### 4.3 响应式走查（2026-10 新增）
 
@@ -125,18 +157,24 @@ pnpm update <pkgs>   # 只动 in-range；锁版本包用 pnpm add -D pkg@<pin>
 
 ```js
 (() => { const q = s => document.querySelectorAll(s).length; return {
-  mermaid: [...document.querySelectorAll(".mermaid-placeholder")].filter(p => p.querySelector("svg")).length, // 9
+  mermaid: [...document.querySelectorAll(".mermaid-placeholder")].filter(p => p.querySelector("svg")).length, // 24（v12 全图型，2026-10 基线）
   stlCanvas: q(".stl-stage canvas"),            // 1
-  katex: q(".katex"),                            // 6
-  katexErr: q(".katex-error"),                   // 1（见下方已知边界）
+  katex: q(".katex"),                            // 5
+  katexErr: q(".katex-error"),                   // 0（已知边界演示已从基准页移除，边界本身仍在）
   marks: q(".prose mark"),                       // 2（==高亮== + <mark>）
-  callouts: q(".callout"),                       // 43
-  details: q(".prose details"),                  // 7
-  geoMaps: q(".geo-map"),                        // 2
+  callouts: q(".callout"),                       // 15（2026-10-19 重写后）
+  details: q(".prose details"),                  // 3
+  geoMaps: q(".geo-map"),                        // 3（2 真实坐标带 world-atlas 底图 + 1 -nobasemap 纯矢量）
   plantuml: q(".plantuml-img"),                  // 1
-  images: [...document.querySelectorAll(".prose img")].filter(i => i.complete && i.naturalWidth > 0).length, // 6
+  images: [...document.querySelectorAll(".prose img")].filter(i => i.complete && i.naturalWidth > 0).length, // 4
+  copyButtons: q(".copy-code"),                  // 3
 }})()
 ```
+
+- **geojson 地图断言**（2026-10 起）：真实经纬窗口的 `.geo-map` 内含底图路径
+  （110m 陆地面 + 10m 海岸线）与点位标签；`-nobasemap` 围栏无底图（坐标作 x/y）；
+  贴近视口右缘的标签 `text-anchor=end` 自动换侧。基线数字随演示文重写会漂移，
+  **以当次构建实测为准回填本表**，趋势异常（渲染数骤降）才当 bug。
 
 - **懒渲染必须先滚动触发**：IO 进视口 300px 缓冲才挂 mermaid/three/giscus；
   headless/探针前先做一遍全页步进滚动（每屏 ~250ms），再等首块大依赖编译。
@@ -162,10 +200,18 @@ pnpm update <pkgs>   # 只动 in-range；锁版本包用 pnpm add -D pkg@<pin>
    探测：`new Promise(r => requestAnimationFrame(r))` 与 1.5s 超时 race。
    冻结时 **IO 依赖的懒渲染测量全部作废** —— 换 CDP 直驱的真实 headless
    Chromium（见下），或换新标签页/会话重试。冻结与 `visibility` capability
-   无关（实测 reported visible 仍冻结）。
+   无关（实测 reported visible 仍冻结）。**CDP 直驱同样会冻结**（2026-10 实锤：
+   同一浏览器第三个标签页 IO 全停，懒挂载控件永不出现；新开浏览器即恢复）——
+   探针脚本按「每个测量面一个新浏览器」组织，同浏览器多页只做非 IO 断言。
 2. **Playwright role/locator 点击超时**：快照明明有目标、`count()===1` 但
    click 30s 超时（连 `force:true` 也超时）—— 改 `tab.cua.click({x,y})`
    坐标点击（先截图定位），或 evaluate 内直接派发。
+   **坐标点击前必须 `scrollIntoView({ behavior: "instant" })`**（2026-10 新增）：
+   全站开了 `scroll-behavior: smooth`，默认 scrollIntoView 异步动画，
+   紧跟着的 getBoundingClientRect 取到滚动前坐标，点击落空且无报错。
+   **合成 KeyboardEvent 也不触发 React 表单提交**：Enter 走
+   `Input.dispatchKeyEvent` 对 `<form onSubmit>` 无效（原生隐式提交不派发）——
+   表单类断言（解锁等）一律坐标点击 submit 按钮 + 轮询结果。
 3. **全页截图 svh 重排**：`fullPage: true` 会把 `100svh` 元素撑成整页高，
    产物出现"内容重复"伪影 —— 视觉走查用固定视口 + 步进滚动截图代替。
 
@@ -201,14 +247,21 @@ WebSocket（Node 24 原生 WebSocket，chrome-launcher 在本机与 Edge 组合�
    的 HTML（解锁明文）同样要校正**（Prose 的校正 effect 必须依赖 `html`）。
 4. **设计 token**：亮/暗双扫、无裸 hex（豁免以 DESIGN.md §3 登记为准），
    `dark:` 零使用（图标显隐走 `[data-theme-mode]`）。
-4b. **加密泄漏面（审计轮 + 改动加密管线时）**：§4.1 的 dist 八扫 +
-   `grep -c "audit-locked" dist/{rss.xml,sitemap.xml,search-index.json,llms.txt,llms-full.txt}`
+4b. **加密泄漏面（审计轮 + 改动加密管线时）**：§4.1 的 dist 八扫直接对真实
+   加密文跑（哨兵 = 各锁定文正文独有串，如 study 预测卷的题干句）；
+   `grep -c "<slug>" dist/{rss.xml,sitemap.xml,search-index.json,llms.txt,llms-full.txt}`
    全 0；compress-images 日志应出现 `kept (referenced by locked post envelope)`
    行（有共享图时）；构建日志 `sealed N` 数与独占图数一致。
 4c. **跨构建阶段交互**：功能分布在不同构建阶段（content 编译 → prerender →
    compress）时，夹具必须**贯穿全链路构建后检查产物**，只测 dev 不够
    （compress 只发生在生产构建，dev 永远服务原图 —— 2026-10 的共享图 404
    就是 dev 全绿、生产必坏）。
+4d. **双管线同步不止生成器**（2026-10 新增）：dev 中间件（vite.config.ts）的每条
+   分支（index.md 导出 / .bin 现算 / 生成文件）都与 prerender 是独立实现，
+   加新特性时两侧都要过一遍——2026-10 二轮的 P1 即此类：ssr.tsx 迁
+   `sourceRelPath` 后 dev 中间件仍在按 `<slug>.md` 平铺反查，子文件夹迁移后
+   dev 里所有博客 index.md 500（生产正常，dev 全坏）。子文件夹契约：下游反查
+   源文件一律 `entry.sourceRelPath`，禁止拼 `<slug>.md`（含 dev 中间件）。
 5. **构建契约**：types.ts 是跨端契约单一来源（TocItem/SearchItem/LockedContent/
    TRAVEL_MAP_SIZE 无第二定义）；生成器双管线（dev 中间件 + prerender）同步登记。
 6. **文档一致性**：styles.ts 片段 = DESIGN.md §5 表；架构树 = 实际文件；
@@ -235,6 +288,10 @@ WebSocket（Node 24 原生 WebSocket，chrome-launcher 在本机与 Edge 组合�
 - `pnpm run ci` 管道接 `| tail` 会用 tail 的退出码伪装全绿（2026-10 实锤：
   HEAD 带着 lint 错误「通过」了 bootstrap）——门禁命令用 `set -o pipefail`
   或直接看输出。
+- **fail-closed 负构建会把 dist 打残**（vite 先清空产物再在加密阶段失败）——
+  跑完 `CI=true` 负构建验证必须重建 dist，才能继续浏览器/Lighthouse。
+- headless（新）里站点可达安装性达标时 Chromium 会**自然派发 beforeinstallprompt**，
+  「安装钮派发前不可见」断言恒假——接受任一初始态（§4 矩阵行）。
 
 ## 9. 收尾闭环
 
