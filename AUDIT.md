@@ -37,6 +37,16 @@ pnpm run linkcheck   # 外部死链手检（非门禁；429/5xx 记「未确认�
   本机需 Chromium/Edge，`CHROME_PATH` 可指定（Windows 本机用 Edge：
   `CHROME_PATH="C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"`）。
 - audit 输出里的 `!` 行是 insight（改进机会），不是门禁失败；门禁只看类别分数。
+- **mobile performance 双重事实**（2026-10 全量首跑发现）：① 边缘页有运行间
+  方差（deck 页 LCP 1.0s↔4.0s，分数 100↔85 摆动），性能分异常先原样重跑一次；
+  ② 重型内容页稳定不达 100（travels ×2 / wow 报告 95–96、markdown-demo 89–93
+  三轮一致）——机制是**关键路径 HTML 体积**（预渲染整页 58–139KB 在慢速 4G
+  仿真下 FCP 1.8–2.1s），TBT=0、CLS≈0，纯传输计时而非代码病。2026-09 的
+  「双端全绿」实为 LH_ONLY 子集 + 管道假码（§8），全量移动门禁在本机从未绿过。
+  处置（阈值登记 vs 载荷优化）是产品决策，见 DESIGN.md §15.4 契约。
+- 静态镜像服务器用**临时端口**（listen 0，OS 分配）：固定端口曾被孤儿监听进程
+  卡成 EADDRINUSE（netstat 的 LISTENING 行会被 head 截断漏看，用 node 试绑
+  最可靠）。
 - 已知 insight（接受现状，勿反复追）：`unused-javascript`（页面级 chunk 本来
   就按路由拆分）、`render-blocking-insight`、`cache-insight`、`bf-cache`
   （SPA scrollRestoration 手工接管与审计镜像头的组合，无 unload handler，实际
@@ -150,6 +160,10 @@ demo / innocare / kaoyan），**泄漏面八扫与浏览器解锁流可直接对
   基线：全部合格；唯一登记妥协 = 移动端地图呈现（DESIGN.md §9，标签媒体
   查询补偿 + 图例 `<sm` 隐藏已做，slice 裁切方案留设计专项）。
 - 灯箱移动端截图需用**正文图片**触发（明信片封面当前内容缺省，按钮不存在）。
+- **流式字号回归**（2026-10 起，DESIGN.md §4）：`.prose` 基准 `clamp(1rem, 0.97rem +
+  0.14vw, 1.0625rem)`——CDP 仿真断言 320px→16.00 / 375px→16.05 / 1440px→17.00
+  （封顶后 1920 恒 17），h2/h3/脚注对正文比例恒 1.5/1.25/0.875，代码卡语言标
+  12px 不跟。探针可复用审计工装 `probe-fluid.mjs`（截图走查同轮目检移动端密度）。
 
 ## 5. Markdown 渲染矩阵（`/blogs/markdown-demo/` 逐条验证）
 
@@ -226,6 +240,10 @@ WebSocket（Node 24 原生 WebSocket，chrome-launcher 在本机与 Edge 组合�
 - 交互断言走 evaluate（点击、键盘、断言状态），动画类用
   `getBoundingClientRect` 采样 + `transitionrun/end` 事件计数（参考 searxng
   AUDIT.md §5 的 sampler）。
+- **Windows headless 会把 `--window-size` 钳到约 492px 最小窗宽**（2026-10 实锤：
+  320/375/390 三档 `--window-size` 启动后 innerWidth 全是 492，vw 类 CSS 测量
+  全部失真）——视口敏感测量必须用 CDP `Emulation.setDeviceMetricsOverride`
+  精确设视口；Lighthouse 自带设备仿真不受影响。
 
 ## 7. 代码审计维度（扫查清单）
 
