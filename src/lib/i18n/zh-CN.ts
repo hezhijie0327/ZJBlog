@@ -137,6 +137,7 @@ export const ZH_CN: Record<StringKey, string> = {
   "lightbox.next": "下一张",
   "lightbox.zoomOut": "缩小",
   "lightbox.zoomIn": "放大",
+  "lightbox.zoomReset": "重置缩放",
 
   // 幻灯片（整篇 deck 博文与 ```marp 嵌入共用播放器）
   "blog.deck": "幻灯片",

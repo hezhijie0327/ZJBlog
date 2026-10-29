@@ -137,6 +137,7 @@ export const EN = {
   "lightbox.next": "Next image",
   "lightbox.zoomOut": "Zoom out",
   "lightbox.zoomIn": "Zoom in",
+  "lightbox.zoomReset": "Reset zoom",
 
   // 幻灯片（整篇 deck 博文与 ```marp 嵌入共用播放器）
   "blog.deck": "Slides",

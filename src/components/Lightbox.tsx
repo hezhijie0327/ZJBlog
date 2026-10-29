@@ -182,8 +182,10 @@ export function Lightbox({
         </button>
         {/* Clicking the percentage resets to 100% */}
         <button
+          aria-label={t("lightbox.zoomReset")}
           className="min-w-12 rounded px-1 font-mono text-xs text-ink-2 transition-colors hover:text-ink"
           onClick={resetZoom}
+          title={t("lightbox.zoomReset")}
           type="button"
         >
           {Math.round(zoom * 100)}%
