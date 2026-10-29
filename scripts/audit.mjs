@@ -25,8 +25,10 @@ import { brotliCompressSync, gzipSync } from "node:zlib";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, "..");
 const OUT_DIR = join(ROOT, "dist");
-const PORT = 8907;
-const BASE = `http://127.0.0.1:${PORT}`;
+/** The OS picks a free port at listen time; BASE is resolved in main() once the
+ *  static server is up. A fixed port made consecutive runs flake with
+ *  EADDRINUSE while the previous run's TIME_WAIT sockets were still draining. */
+let BASE = "http://127.0.0.1:0";
 const ARCHIVE_ROOT = process.env.LH_ARCHIVE_DIR ?? join(ROOT, ".lighthouse-archive");
 const MOBILE = process.env.LH_FORM_FACTOR === "mobile";
 
@@ -218,7 +220,12 @@ async function main() {
   const paths = only ? allPaths.filter((p) => only.split(",").some((prefix) => p.startsWith(prefix.trim()))) : allPaths;
   if (paths.length === 0) throw new Error(`no pages left after LH_ONLY filtering: ${only}`);
 
-  const server = await serveStatic(OUT_DIR, PORT);
+  const server = await serveStatic(OUT_DIR, 0);
+  const address = server.address();
+  if (!address || typeof address === "string") {
+    throw new Error("audit server did not report a listen port");
+  }
+  BASE = `http://127.0.0.1:${address.port}`;
   /** @type {import("chrome-launcher").LaunchedChrome | undefined} */
   let chrome;
   let failed = false;
