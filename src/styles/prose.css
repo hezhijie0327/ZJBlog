@@ -25,11 +25,14 @@
   --tw-prose-th-borders: var(--line);
   --tw-prose-td-borders: var(--line);
   font-family: var(--font-serif);
-  /* CJK serif long-form scale (DESIGN.md §4): 17px/1.8 — the Typography
-     plugin default of 16px/1.75 runs small for serif Chinese; headings,
-     code and tables are all em scales and grow with it. Like the color
-     overrides above, this must stay un-layered to beat the plugin. */
-  font-size: 1.0625rem;
+  /* CJK serif long-form scale (DESIGN.md §4): fluid base capped at 17px/1.8 —
+     the Typography plugin default of 16px/1.75 runs small for serif Chinese on
+     desktop, while a flat 17px runs heavy on phones; the base therefore ramps
+     16px @320 → 17px @≥1067px and every em scale (headings, code, tables,
+     footnotes) follows it proportionally. The absolute code tiers below (13px,
+     12px) intentionally do NOT follow. Like the color overrides above, this
+     must stay un-layered to beat the plugin. */
+  font-size: clamp(1rem, 0.97rem + 0.14vw, 1.0625rem);
   line-height: 1.8;
 }
 

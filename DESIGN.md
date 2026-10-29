@@ -123,14 +123,14 @@
 | 列表阅读位 | 行标题 `text-xl sm:text-2xl`；摘要/描述性正文 `text-sm leading-relaxed sm:text-base`（15px 半档已并入 `text-base`） | `PostList` / `ArchivesPage` / `IndexPage` 联系卡 |
 | 界面正文 | `text-sm`（说明性文字 `text-xs`） | 全站默认 |
 | 元信息 | `META` 片段（mono `text-xs`） | 日期/计数/键位 |
-| 长文正文 | `.prose` 显式刻度 **17px / line-height 1.8**（`1.0625rem`——中文衬线长文，标题/代码/表格为 em 刻度整体跟随；覆盖必须非分层压过 Typography 插件，同 `--tw-prose-*` 颜色覆盖） | `prose.css`；颜色全走 `--tw-prose-*` → token 映射 |
+| 长文正文 | `.prose` 显式刻度 **流式基准 + line-height 1.8**：`clamp(1rem, 0.97rem + 0.14vw, 1.0625rem)`——320px 视口 16px 起步（16.05 @375 / 16.6 @768），**桌面 ≥1067px 封顶 17px**；标题/代码/表格为 em 刻度随基准整体等比（六档链的 px 实测值均指桌面封顶态）；覆盖必须非分层压过 Typography 插件，同 `--tw-prose-*` 颜色覆盖 | `prose.css`；颜色全走 `--tw-prose-*` → token 映射 |
 | 文内标题（MD `#`→`######`） | 六档可辨链（17px 基准实测值）：h1 34 / h2 25.5 / h3 21.3 / h4 19.1 / h5 17 w600 / h6 14.9 w600——h1 收到 2em 防倒挂页题（36px），h4+ 加大、h5/h6 补字重（Typography 默认与正文同号同重完全隐身）；脚注区 0.875em 小于正文 | `prose.css` 显式覆盖 |
 | 幻灯片页题 | px 定尺（构建期主题 `tools/deckTheme.css`，按标题降级后的真实层级）：`#`→h2 60 / `##`→h3 44 / `###`→h4 32 / lead 76 | deck 画布（§5.2） |
 | 装饰水印 | `text-6xl font-black`（`text-accent/20` 或 `.hollow-text`） | 纯装饰，必须 `aria-hidden` |
 
 - 标题一律衬线 + `tracking-tight`；界面正文一律 sans —— 两套排印轨道不混用。
 - **信息文本字号地板 = 12px（`text-xs`）**：eyebrow / MONO_CHIP / 图例 / 上下篇导航 / 代码卡语言标等一切承载信息的微字号一律 ≥12px；11px 档已清零（2026-10 可读性审计）。**豁免**：`aria-hidden` 装饰（SEALED 印章 8px、胶片齿孔编号 10px、姓名便签）与 OG 画布定尺（生成器，非页面）不设限。
-- **响应式原则**：正文与元信息字号全端恒定（移动端不往小压）；展示级标题（Hero/页题/区块题/行标题）按 `sm:` 上探一档；品牌字标反向——移动端降一档保导航条密度。
+- **响应式原则**：界面正文与元信息字号全端恒定（移动端不往小压）；展示级标题（Hero/页题/区块题/行标题）按 `sm:` 上探一档；品牌字标反向——移动端降一档保导航条密度。**例外（2026-10 修订）**：长文正文渲染面（`.prose` 族）基准字号走上面登记的流式 clamp——17px 的衬线长文在小屏上偏胀，改为 16px 起步、桌面 17px 封顶的连续缩放，em 刻度层级关系不变；界面（导航/卡片/列表）不跟此机制。
 - 引入 webfont 前必须先过 Lighthouse 门禁评估（历史教训：webfont 曾致 CSS 276KB + perf 91）。
 - 产品变体（ZJSearch，已登记）：品牌区/词标与知识面板（infobox）标题走衬线；结果条目标题（16px 链接）与界面区块标题保持 sans —— 结果页密度优先。词标句号是实心金点图形（呼应 §2.2 favicon 句号），所有表面一律为惰性装饰（含 hero——曾有的「Powered by SearXNG」hover 揭示件已移除：噪音大于信息，About 入口在页头操作区）。
 
